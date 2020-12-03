@@ -103,6 +103,7 @@
 #include <uORB/topics/vehicle_trajectory_waypoint.h>
 #include <uORB/topics/vtol_vehicle_status.h>
 
+
 using matrix::Vector3f;
 using matrix::wrap_2pi;
 
@@ -126,6 +127,7 @@ using matrix::wrap_2pi;
 #include "streams/STATUSTEXT.hpp"
 #include "streams/STORAGE_INFORMATION.hpp"
 #include "streams/WIND_COV.hpp"
+#include "streams/INTEGRALE_INFO.hpp"
 
 #if !defined(CONSTRAINED_FLASH)
 # include "streams/DEBUG.hpp"

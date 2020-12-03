@@ -69,6 +69,7 @@ set(msg_files
 	home_position.msg
 	hover_thrust_estimate.msg
 	input_rc.msg
+	integrale.msg
 	iridiumsbd_status.msg
 	irlock_report.msg
 	landing_gear.msg

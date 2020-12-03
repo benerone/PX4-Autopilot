@@ -273,6 +273,15 @@ MulticopterRateControl::Run()
 			rate_ctrl_status.timestamp = hrt_absolute_time();
 			_controller_status_pub.publish(rate_ctrl_status);
 
+			//publish integrale
+			integrale_s integrale_data{};
+			auto integrale_values=_rate_control.getRateIntegral();
+			integrale_data.timestamp= hrt_absolute_time();
+			integrale_data.roll_rate_integral=integrale_values(0);
+			integrale_data.pitch_rate_integral=integrale_values(1);
+			integrale_data.yaw_rate_integral=integrale_values(2);
+			_integrales_pub.publish(integrale_data);
+
 			// publish actuator controls
 			actuator_controls_s actuators{};
 			actuators.control[actuator_controls_s::INDEX_ROLL] = PX4_ISFINITE(att_control(0)) ? att_control(0) : 0.0f;

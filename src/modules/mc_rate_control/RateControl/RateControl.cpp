@@ -112,3 +112,7 @@ void RateControl::getRateControlStatus(rate_ctrl_status_s &rate_ctrl_status)
 	rate_ctrl_status.pitchspeed_integ = _rate_int(1);
 	rate_ctrl_status.yawspeed_integ = _rate_int(2);
 }
+
+matrix::Vector3f RateControl::getRateIntegral() {
+	return _rate_int;
+}
