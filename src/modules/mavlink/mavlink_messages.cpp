@@ -4401,8 +4401,9 @@ static const StreamListItem streams_list[] = {
 	create_stream_list_item<MavlinkStreamStorageInformation>(),
 #endif // STORAGE_INFORMATION_HPP
 #if defined(RAW_RPM_HPP)
-	create_stream_list_item<MavlinkStreamRawRpm>()
+	create_stream_list_item<MavlinkStreamRawRpm>(),
 #endif // RAW_RPM_HPP
+	create_stream_list_item<MavlinkStreamIntegrale>()
 };
 
 const char *get_stream_name(const uint16_t msg_id)
