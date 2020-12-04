@@ -122,6 +122,7 @@ public:
 	static int start(int argc, char *argv[]);
 
 	void set_ip(InternetProtocol ip) { _ip = ip; }
+	void set_ipAddress(const char * adr) { _tcpAddress = std::string(adr); }
 	void set_port(unsigned port) { _port = port; }
 
 #if defined(ENABLE_LOCKSTEP_SCHEDULER)
@@ -200,6 +201,8 @@ private:
 	unsigned int _port{14560};
 
 	InternetProtocol _ip{InternetProtocol::UDP};
+
+	std::string _tcpAddress;
 
 	double _realtime_factor{1.0};		///< How fast the simulation runs in comparison to real system time
 

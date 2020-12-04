@@ -53,6 +53,7 @@
 #include <termios.h>
 
 #include <limits>
+#include <arpa/inet.h>
 
 #ifdef ENABLE_UART_RC_INPUT
 #ifndef B460800
@@ -665,7 +666,13 @@ void Simulator::run()
 
 	struct sockaddr_in _myaddr {};
 	_myaddr.sin_family = AF_INET;
-	_myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	if (_ip == InternetProtocol::UDP || _tcpAddress.empty()) {
+		_myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	} else {
+		if (inet_pton(AF_INET, _tcpAddress.c_str(), &_myaddr.sin_addr)<0) {
+			PX4_ERR("Fail to set ip address: %s", strerror(errno));
+		}
+	}
 	_myaddr.sin_port = htons(_port);
 
 	if (_ip == InternetProtocol::UDP) {
@@ -700,7 +707,12 @@ void Simulator::run()
 
 	} else {
 
-		PX4_INFO("Waiting for simulator to accept connection on TCP port %u", _port);
+		if (_tcpAddress.empty()) {
+			PX4_INFO("Waiting for simulator to accept connection on TCP port %u", _port);
+		} else {
+			PX4_INFO("Waiting for simulator to accept connection on TCP port %u on remote ip %s", _port,_tcpAddress.c_str());
+		}
+
 
 		while (true) {
 			if ((_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {

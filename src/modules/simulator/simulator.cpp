@@ -74,9 +74,12 @@ int Simulator::start(int argc, char *argv[])
 			_instance->set_port(atoi(argv[3]));
 		}
 
-		if (argc == 4 && strcmp(argv[2], "-c") == 0) {
+		if (argc >= 4 && strcmp(argv[2], "-c") == 0) {
 			_instance->set_ip(InternetProtocol::TCP);
 			_instance->set_port(atoi(argv[3]));
+			if (argc ==6 && strcmp(argv[4], "-r") == 0) {
+				_instance->set_ipAddress(argv[5]);
+			}
 		}
 
 		_instance->run();
