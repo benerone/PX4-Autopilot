@@ -100,6 +100,13 @@ public:
 	 */
 	void getRateControlStatus(rate_ctrl_status_s &rate_ctrl_status);
 
+	/**
+	 * @brief Get the Rate Integrale object
+	 *
+	 * @return matrix::Vector3f
+	 */
+	matrix::Vector3f getRateIntegral();
+
 private:
 	void updateIntegral(matrix::Vector3f &rate_error, const float dt);
 
