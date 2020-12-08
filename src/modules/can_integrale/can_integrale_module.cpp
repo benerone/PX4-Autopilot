@@ -4,6 +4,8 @@
 #include <px4_platform_common/log.h>
 #include <px4_platform_common/posix.h>
 
+using namespace time_literals;
+
 int ModuleCanIntegrale::print_status()
 {
 	PX4_INFO("Running");
@@ -54,8 +56,6 @@ ModuleCanIntegrale *ModuleCanIntegrale::instantiate(int argc, char *argv[])
 
 	if (instance == nullptr) {
 		PX4_ERR("alloc failed");
-	} else {
-		ScheduleOnInterval(40_ms); //50Hz
 	}
 
 	return instance;
@@ -68,23 +68,23 @@ ModuleCanIntegrale::ModuleCanIntegrale()
 
 void ModuleCanIntegrale::run()
 {
-	if (should_exit()) {
-		//Can stop if necessary
-		//TODO
-		ScheduleClear();
-		exit_and_cleanup();
-		return;
-	}
-
 	//Can start if necessary
-	//TODO
-	integrale_s integrale;
 
-	if (_integrale_sub.update(&integrale)) {
-		//Publish on can
+	while(!should_exit()) {
+
+		//TODO
+		integrale_s integrale;
+
+		if (_integrale_sub.update(&integrale)) {
+			//Publish on can
+		}
+
+		//Check for new incoming can msg
 	}
 
-	//Check for new incoming can msg
+
+	//Can stop
+
 
 }
 

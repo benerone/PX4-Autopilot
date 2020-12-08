@@ -64,6 +64,7 @@ px4_add_board(
 		attitude_estimator_q
 		battery_status
 		camera_feedback
+		can_integrale
 		commander
 		dataman
 		ekf2
