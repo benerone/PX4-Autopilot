@@ -8,6 +8,11 @@
 #include <uORB/topics/integrale.h>
 
 
+# include <uavcan_stm32/uavcan_stm32.hpp>
+
+
+
+
 extern "C" __EXPORT int can_integrale_main(int argc, char *argv[]);
 
 
@@ -37,7 +42,9 @@ public:
 	int print_status() override;
 
 private:
-
+	DEFINE_PARAMETERS(
+		(ParamInt<px4::params::MAV_SYS_ID>) _param_mav_sys_id
+	)
 	// Subscriptions=
 	uORB::Subscription 	_integrale_sub{ORB_ID(integrale)};
 };
