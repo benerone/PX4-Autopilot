@@ -36,7 +36,6 @@ protected:
 			msg.rollspeedintegral = integrale.roll_rate_integral;
 			msg.pitchspeedintegral = integrale.pitch_rate_integral;
 			msg.yawspeedintegral = integrale.yaw_rate_integral;
-
 			mavlink_msg_integrale_values_send_struct(_mavlink->get_channel(), &msg);
 			return true;
 		}

@@ -4,12 +4,14 @@
 #include <px4_platform_common/module_params.h>
 #include <parameters/param.h>
 #include <uORB/Subscription.hpp>
+#include <uORB/Publication.hpp>
 #include <uORB/topics/parameter_update.h>
 #include <uORB/topics/integrale.h>
 
 
 # include <uavcan_stm32/uavcan_stm32.hpp>
 
+#define MAX_REMOTE_INTEGRALE 3
 
 
 
@@ -47,7 +49,16 @@ private:
 	)
 	// Subscriptions=
 	uORB::Subscription 	_integrale_sub{ORB_ID(integrale)};
-	integrale_s r_integrale;
+	uORB::Publication<integrale_s>			_r1integrale_pub{ORB_ID(r1integrale)};
+	uORB::Publication<integrale_s>			_r2integrale_pub{ORB_ID(r2integrale)};
+	uORB::Publication<integrale_s>			_r3integrale_pub{ORB_ID(r3integrale)};
+	integrale_s r1_integrale;
+	integrale_s r2_integrale;
+	integrale_s r3_integrale;
+	integrale_s * rx_integrales[MAX_REMOTE_INTEGRALE];
+	int32_t nbReceivedR1;
+	int32_t nbReceivedR2;
+	int32_t nbReceivedR3;
 	int32_t nbReceived;
 	int32_t nbEmitted;
 	int32_t nbReceivedError;

@@ -22,14 +22,18 @@ typedef struct {
 } IntegralCanData;
 
 #define OFFSET_PITCH_ROLL 	0
-#define OFFSET_YOW 		8
-
+#define OFFSET_YOW 		16
+#define MASK_ID 		0b111
+#define MAX_DELAY_REFRESH	40000
 
 int ModuleCanIntegrale::print_status()
 {
 	PX4_INFO("Running");
 	// TODO: print additional runtime information about the state of the module
-	PX4_INFO("RxNb:%d TxNb:%d ri=%lf pi=%lf yi=%lf",nbReceived,nbEmitted,(double)r_integrale.pitch_rate_integral,(double)r_integrale.roll_rate_integral,(double)r_integrale.yaw_rate_integral);
+	PX4_INFO("RxNb:%d TxNb:%d",nbReceived,nbEmitted);
+	PX4_INFO("R1 Nb:%d ri=%lf pi=%lf yi=%lf status=%d",nbReceivedR1,(double)r1_integrale.pitch_rate_integral,(double)r1_integrale.roll_rate_integral,(double)r1_integrale.yaw_rate_integral,(int)r1_integrale.status);
+	PX4_INFO("R2 Nb:%d ri=%lf pi=%lf yi=%lf status=%d",nbReceivedR2,(double)r2_integrale.pitch_rate_integral,(double)r2_integrale.roll_rate_integral,(double)r2_integrale.yaw_rate_integral,(int)r2_integrale.status);
+	PX4_INFO("R3 Nb:%d ri=%lf pi=%lf yi=%lf status=%d",nbReceivedR3,(double)r3_integrale.pitch_rate_integral,(double)r3_integrale.roll_rate_integral,(double)r3_integrale.yaw_rate_integral,(int)r3_integrale.status);
 	PX4_INFO("RxNbE:%d TxNbE:%d",nbReceivedError,nbEmittedError);
 	return 0;
 }
@@ -92,10 +96,28 @@ void ModuleCanIntegrale::run()
 	int32_t sys_id=_param_mav_sys_id.get();
 	PX4_INFO("canid %d",sys_id);
 	nbReceived=0;
+	nbReceivedR1=0;
+	nbReceivedR2=0;
+	nbReceivedR3=0;
 	nbEmitted=0;
 	nbReceivedError=0;
 	nbEmittedError=0;
 	postYow=false;
+	r1_integrale={0L,0.0,0.0,0.0,integrale_s::INTEGRALE_STATUS_NONE};
+	r2_integrale={0L,0.0,0.0,0.0,integrale_s::INTEGRALE_STATUS_NONE};
+	r3_integrale={0L,0.0,0.0,0.0,integrale_s::INTEGRALE_STATUS_NONE};
+	_r1integrale_pub.publish(r1_integrale);
+	_r2integrale_pub.publish(r2_integrale);
+	_r3integrale_pub.publish(r3_integrale);
+	/*r1_integrale.status=integrale_s::INTEGRALE_STATUS_NONE;
+	r2_integrale.status=integrale_s::INTEGRALE_STATUS_NONE;
+	r3_integrale.status=integrale_s::INTEGRALE_STATUS_NONE;*/
+	rx_integrales[0]=&r1_integrale;
+	rx_integrales[1]=&r2_integrale;
+	rx_integrales[2]=&r3_integrale;
+	/*r1_integrale.timestamp=0L;
+	r2_integrale.timestamp=0L;
+	r3_integrale.timestamp=0L;*/
 	//Can start if necessary
 	static CanInitHelper *can = nullptr;
 	if (can == nullptr) {
@@ -125,11 +147,13 @@ void ModuleCanIntegrale::run()
 		IntegralCanData tmp;
 
 
-		if (_integrale_sub.update(&integrale)) {
+		if (_integrale_sub.updated() && !postYow) {
+			_integrale_sub.copy(&integrale);
 			//Publish on can
 			tmp.v1=integrale.pitch_rate_integral;
 			tmp.v2=integrale.roll_rate_integral;
 			uavcan::CanFrame canFrame=uavcan::CanFrame(sys_id | OFFSET_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8);
+			//PX4_INFO("send pr can id %x",canFrame.id);
 			auto sendResult=iFace->send(canFrame,uavcan::MonotonicTime::fromUSec(20000),0);
 			if (sendResult==0) {
 				//PX4_ERR("CAN driver TX full");
@@ -144,7 +168,6 @@ void ModuleCanIntegrale::run()
 			}
 			yowIntegraleValue=integrale.yaw_rate_integral;
 			postYow=true;
-			usleep(1000);
 
 		} else {
 			if(postYow) {
@@ -152,6 +175,7 @@ void ModuleCanIntegrale::run()
 				tmp.v1=yowIntegraleValue;
 				tmp.v2=0.0f;
 				uavcan::CanFrame canFrameY=uavcan::CanFrame(sys_id | OFFSET_YOW,(const uavcan::uint8_t *)&tmp,8);
+				//PX4_INFO("send y can id %x",canFrameY.id);
 				auto sendResultY=iFace->send(canFrameY,uavcan::MonotonicTime::fromUSec(20000),0);
 				if (sendResultY==0) {
 					//PX4_ERR("CAN driver TX full");
@@ -186,18 +210,77 @@ void ModuleCanIntegrale::run()
 			if (receiveResult==1) {
 				//Process received
 				IntegralCanData *tmpp=(IntegralCanData *)canFrame.data;
-				if ((canFrame.id & OFFSET_YOW) == OFFSET_YOW) {
-					r_integrale.yaw_rate_integral=tmpp->v1;
+				int32_t id=(int32_t)(canFrame.id & MASK_ID);
+				if (id<5) {
+					bool isValid=true;
+					auto offset=id;
+					if (id<sys_id) {
+						offset=id-1;
+					} else {
+						if (id>sys_id)  {
+							offset=id-2;
+						} else {
+							PX4_ERR("Duplicate id in use for can");
+							isValid=false;
+						}
+					}
+					if (isValid) {
+						//PX4_INFO(" can id %x",canFrame.id);
+						if ((canFrame.id & OFFSET_YOW) == OFFSET_YOW) {
+							//PX4_INFO(" offset yow id %x status:%d",canFrame.id,(int)rx_integrales[offset]->status);
+							rx_integrales[offset]->yaw_rate_integral=tmpp->v1;
+							if (rx_integrales[offset]->status==integrale_s::INTEGRALE_STATUS_PARTIAL) {
+								rx_integrales[offset]->status=	integrale_s::INTEGRALE_STATUS_COMPLETE;
+								if (offset==0) {
+									r1_integrale.timestamp=hrt_absolute_time();
+									_r1integrale_pub.publish(r1_integrale);
+									nbReceivedR1++;
+								}
+								if (offset==1) {
+									r2_integrale.timestamp=hrt_absolute_time();
+									_r2integrale_pub.publish(r2_integrale);
+									nbReceivedR2++;
+								}
+								if (offset==2) {
+									r3_integrale.timestamp=hrt_absolute_time();
+									_r3integrale_pub.publish(r3_integrale);
+									nbReceivedR3++;
+								}
+							}
+							rx_integrales[offset]->status=	integrale_s::INTEGRALE_STATUS_NONE;
+						} else {
+							//PX4_INFO(" offset pitch-roll id %x status:%d",canFrame.id,(int)rx_integrales[offset]->status);
+							rx_integrales[offset]->pitch_rate_integral=tmpp->v1;
+							rx_integrales[offset]->roll_rate_integral=tmpp->v2;
+							rx_integrales[offset]->status=integrale_s::INTEGRALE_STATUS_PARTIAL;
+						}
+					}
+
 				} else {
-					r_integrale.pitch_rate_integral=tmpp->v1;
-					r_integrale.roll_rate_integral=tmpp->v2;
+					PX4_ERR("Invalid can id %x",canFrame.id);
+					PX4_ERR("Invalid id %x",id);
 				}
+
 
 				nbReceived++;
 			}
 		}
+		//Check unrefresh
+		uint64_t currentTime=hrt_absolute_time();
+		if (currentTime-r1_integrale.timestamp>MAX_DELAY_REFRESH) {
+			r1_integrale.status=integrale_s::INTEGRALE_STATUS_NONE;
+			_r1integrale_pub.publish(r1_integrale);
+		}
+		if (currentTime-r2_integrale.timestamp>MAX_DELAY_REFRESH) {
+			r2_integrale.status=integrale_s::INTEGRALE_STATUS_NONE;
+			_r2integrale_pub.publish(r2_integrale);
+		}
+		if (currentTime-r3_integrale.timestamp>MAX_DELAY_REFRESH) {
+			r3_integrale.status=integrale_s::INTEGRALE_STATUS_NONE;
+			_r3integrale_pub.publish(r3_integrale);
+		}
 		//sleep
-		usleep(20000); //50Hz
+		usleep(10000); //100Hz
 	}
 
 
