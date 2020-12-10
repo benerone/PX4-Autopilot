@@ -16,11 +16,21 @@ using namespace time_literals;
 
 typedef UAVCAN_DRIVER::CanInitHelper<> CanInitHelper;
 
+typedef struct {
+	float32 v1;
+	float32 v2;
+} IntegralCanData;
+
+#define OFFSET_PITCH_ROLL 	0
+#define OFFSET_YOW 		8
+
+
 int ModuleCanIntegrale::print_status()
 {
 	PX4_INFO("Running");
 	// TODO: print additional runtime information about the state of the module
-
+	PX4_INFO("RxNb:%d TxNb:%d ri=%lf pi=%lf yi=%lf",nbReceived,nbEmitted,(double)r_integrale.pitch_rate_integral,(double)r_integrale.roll_rate_integral,(double)r_integrale.yaw_rate_integral);
+	PX4_INFO("RxNbE:%d TxNbE:%d",nbReceivedError,nbEmittedError);
 	return 0;
 }
 
@@ -45,10 +55,10 @@ int ModuleCanIntegrale::custom_command(int argc, char *argv[])
 
 int ModuleCanIntegrale::task_spawn(int argc, char *argv[])
 {
-	_task_id = px4_task_spawn_cmd("module",
+	_task_id = px4_task_spawn_cmd("can_integrale",
 				      SCHED_DEFAULT,
 				      SCHED_PRIORITY_DEFAULT,
-				      1024,
+				      4096,
 				      (px4_main_t)&run_trampoline,
 				      (char *const *)argv);
 
@@ -81,17 +91,22 @@ void ModuleCanIntegrale::run()
 	//Mavlink id serve as id
 	int32_t sys_id=_param_mav_sys_id.get();
 	PX4_INFO("canid %d",sys_id);
+	nbReceived=0;
+	nbEmitted=0;
+	nbReceivedError=0;
+	nbEmittedError=0;
+	postYow=false;
 	//Can start if necessary
 	static CanInitHelper *can = nullptr;
 	if (can == nullptr) {
 
-		can = new CanInitHelper(board_get_can_interfaces());
+		can = new CanInitHelper();
 
 		if (can == nullptr) {                    // We don't have exceptions so bad_alloc cannot be thrown
 			PX4_ERR("Out of memory");
 			return;
 		}
-		uavcan::uint32_t bitrate=1000000;
+		uavcan::uint32_t bitrate=125000; //1000000;
 		const int can_init_res = can->init(bitrate);
 
 		if (can_init_res < 0) {
@@ -100,17 +115,87 @@ void ModuleCanIntegrale::run()
 		}
 	}
 
+	uavcan::ICanIface * iFace=can->driver.getIface(0);
+
 	while(!should_exit()) {
+		//Get can interface
 
 		//TODO
 		integrale_s integrale;
+		IntegralCanData tmp;
+
 
 		if (_integrale_sub.update(&integrale)) {
 			//Publish on can
+			tmp.v1=integrale.pitch_rate_integral;
+			tmp.v2=integrale.roll_rate_integral;
+			uavcan::CanFrame canFrame=uavcan::CanFrame(sys_id | OFFSET_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8);
+			auto sendResult=iFace->send(canFrame,uavcan::MonotonicTime::fromUSec(20000),0);
+			if (sendResult==0) {
+				//PX4_ERR("CAN driver TX full");
+				nbEmittedError++;
+			}
+			if (sendResult<0) {
+				PX4_ERR("CAN driver TX error");
+				nbEmittedError++;
+			}
+			if (sendResult==1) {
+				nbEmitted++;
+			}
+			yowIntegraleValue=integrale.yaw_rate_integral;
+			postYow=true;
+			usleep(1000);
+
+		} else {
+			if(postYow) {
+				postYow=false;
+				tmp.v1=yowIntegraleValue;
+				tmp.v2=0.0f;
+				uavcan::CanFrame canFrameY=uavcan::CanFrame(sys_id | OFFSET_YOW,(const uavcan::uint8_t *)&tmp,8);
+				auto sendResultY=iFace->send(canFrameY,uavcan::MonotonicTime::fromUSec(20000),0);
+				if (sendResultY==0) {
+					//PX4_ERR("CAN driver TX full");
+					nbEmittedError++;
+				}
+				if (sendResultY<0) {
+					PX4_ERR("CAN driver TX error");
+					nbEmittedError++;
+				}
+				if (sendResultY==1) {
+					nbEmitted++;
+				}
+			}
 		}
 
 		//Check for new incoming can msg
+		uavcan::int16_t receiveResult=1;
+		while (receiveResult>0)  {
+			uavcan::MonotonicTime mtime;
+			uavcan::UtcTime out_ts_utc;
+			uavcan::CanIOFlags out_flags;
+			uavcan::CanFrame canFrame;
+			receiveResult=iFace->receive(canFrame,mtime,out_ts_utc,out_flags);
+			if (receiveResult==0) {
+				//PX4_ERR("CAN driver RX empty");
+				//nbReceivedError++;
+			}
+			if (receiveResult<0) {
+				PX4_ERR("CAN driver RX error");
+				nbReceivedError++;
+			}
+			if (receiveResult==1) {
+				//Process received
+				IntegralCanData *tmpp=(IntegralCanData *)canFrame.data;
+				if ((canFrame.id & OFFSET_YOW) == OFFSET_YOW) {
+					r_integrale.yaw_rate_integral=tmpp->v1;
+				} else {
+					r_integrale.pitch_rate_integral=tmpp->v1;
+					r_integrale.roll_rate_integral=tmpp->v2;
+				}
 
+				nbReceived++;
+			}
+		}
 		//sleep
 		usleep(20000); //50Hz
 	}

@@ -47,5 +47,12 @@ private:
 	)
 	// Subscriptions=
 	uORB::Subscription 	_integrale_sub{ORB_ID(integrale)};
+	integrale_s r_integrale;
+	int32_t nbReceived;
+	int32_t nbEmitted;
+	int32_t nbReceivedError;
+	int32_t nbEmittedError;
+	bool postYow;
+	float yowIntegraleValue;
 };
 
