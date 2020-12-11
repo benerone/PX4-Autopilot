@@ -38,7 +38,7 @@
  *
  * @author Beat Kueng <beat-kueng@gmx.net>
  */
-
+#include "stdvector.h"
 #include <px4_platform_common/px4_config.h>
 #include <px4_platform_common/defines.h>
 #include <px4_platform_common/module.h>
@@ -59,6 +59,7 @@
 #include <uORB/topics/rc_channels.h>
 #include <uORB/topics/rc_parameter_map.h>
 #include <uORB/topics/parameter_update.h>
+#include <uORB/topics/integrale.h>
 
 namespace RCUpdate
 {
@@ -123,6 +124,32 @@ private:
 	 */
 	void		set_params_from_rc();
 
+	/**
+	 * @brief process pipe correction
+	 *
+	 * @return matrix::Vector3f
+	 */
+	matrix::Vector3f pipeIntegrale();
+	/**
+	 * @brief Process median
+	 *
+	 * @param local local integrale
+	 * @param r1 r1 integrale
+	 * @param r2 r2 integrale
+	 * @param r3 r3 integrale
+	 * @return matrix::Vector3f
+	 */
+	matrix::Vector3f processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,bool * isvalid);
+
+	/**
+	 * @brief Process median on array of float values
+	 *
+	 * @param values
+	 * @return float
+	 */
+	float processMedianOnVector(zapata::StdVector<float> &values);
+
+
 	static constexpr unsigned RC_MAX_CHAN_COUNT{input_rc_s::RC_INPUT_MAX_CHANNELS}; /**< maximum number of r/c channels we handle */
 
 	struct Parameters {
@@ -159,6 +186,11 @@ private:
 
 	uORB::PublicationMulti<manual_control_setpoint_s>	_manual_control_setpoint_pub{ORB_ID(manual_control_setpoint), ORB_PRIO_HIGH};	/**< manual control signal topic */
 
+	uORB::Subscription _r1integrale_sub{ORB_ID(r1integrale)};
+	uORB::Subscription _r2integrale_sub{ORB_ID(r2integrale)};
+	uORB::Subscription _r3integrale_sub{ORB_ID(r3integrale)};
+	uORB::Subscription _integrale_sub{ORB_ID(integrale)};
+
 	rc_channels_s _rc {};			/**< r/c channel data */
 
 	rc_parameter_map_s _rc_parameter_map {};
@@ -169,6 +201,9 @@ private:
 	uint8_t _channel_count_previous{0};
 
 	perf_counter_t		_loop_perf;			/**< loop performance counter */
+
+	matrix::Vector3f _pi_coef;
+	matrix::Vector3f _pi_limit;
 
 	DEFINE_PARAMETERS(
 
@@ -220,7 +255,14 @@ private:
 		(ParamFloat<px4::params::RC_MAN_TH>) _param_rc_man_th,
 		(ParamFloat<px4::params::RC_RETURN_TH>) _param_rc_return_th,
 
-		(ParamInt<px4::params::RC_CHAN_CNT>) _param_rc_chan_cnt
+		(ParamInt<px4::params::RC_CHAN_CNT>) _param_rc_chan_cnt,
+
+		(ParamFloat<px4::params::RC_PI_COE_PITCH>) _param_rc_pi_coef_pitch,
+		(ParamFloat<px4::params::RC_PI_COE_ROLL>) _param_rc_pi_coef_roll,
+		(ParamFloat<px4::params::RC_PI_COE_YOW>) _param_rc_pi_coef_yow,
+		(ParamFloat<px4::params::RC_PI_LIM_PITCH>) _param_rc_pi_limit_pitch,
+		(ParamFloat<px4::params::RC_PI_LIM_ROLL>) _param_rc_pi_limit_roll,
+		(ParamFloat<px4::params::RC_PI_LIM_YOW>) _param_rc_pi_limit_yow
 	)
 
 };

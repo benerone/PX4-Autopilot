@@ -2228,3 +2228,17 @@ PARAM_DEFINE_FLOAT(RC_STAB_TH, 0.5f);
  * @group Radio Switches
  */
 PARAM_DEFINE_FLOAT(RC_MAN_TH, 0.75f);
+
+/*
+	multiplier of integrale
+*/
+PARAM_DEFINE_FLOAT(RC_PI_COE_PITCH, 1.0f); //IntegralePWM=1000+500*coef*integrale where -1.0<integrale<1.0
+PARAM_DEFINE_FLOAT(RC_PI_COE_ROLL, 1.0f); //IntegralePWM=1000+500*coef*integrale where -1.0<integrale<1.0
+PARAM_DEFINE_FLOAT(RC_PI_COE_YOW, 1.0f); //IntegralePWM=1000+500*coef*integrale where -1.0<integrale<1.0
+
+/*
+	limit of pipe
+*/
+PARAM_DEFINE_FLOAT(RC_PI_LIM_PITCH, 40.0f); //In PWM
+PARAM_DEFINE_FLOAT(RC_PI_LIM_ROLL, 40.0f); //In PWM
+PARAM_DEFINE_FLOAT(RC_PI_LIM_YOW, 40.0f); //In PWM
