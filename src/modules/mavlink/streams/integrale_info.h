@@ -16,7 +16,8 @@ public:
 
 	unsigned get_size() override
 	{
-		return _integrale_sub.advertised() ? MAVLINK_MSG_ID_INTEGRALE_VALUES_LEN + MAVLINK_NUM_NON_PAYLOAD_BYTES : 0;
+		//return _integrale_sub.advertised() ? MAVLINK_MSG_ID_INTEGRALE_VALUES_LEN + MAVLINK_NUM_NON_PAYLOAD_BYTES : 0;
+		return MAVLINK_MSG_ID_INTEGRALE_VALUES_LEN + MAVLINK_NUM_NON_PAYLOAD_BYTES;
 	}
 
 private:

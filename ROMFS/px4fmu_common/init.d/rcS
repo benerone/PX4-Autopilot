@@ -58,6 +58,8 @@ set STARTUP_TUNE 1
 set USE_IO no
 set VEHICLE_TYPE none
 
+
+
 # Airframe parameter versioning: airframe maintainers can set this in the
 # airframe startup script, and then increase it by one whenever an airframe
 # parameter is updated - it will ensure that these parameters will be updated
@@ -354,6 +356,18 @@ else
 		# disable GPS
 		param set GPS_1_CONFIG 0
 
+		param set BAT_CAPACITY 2750
+		param set BAT_CRIT_THR 0.15
+		param set BAT_EMERGEN_THR 0.075
+		param set BAT_LOW_THR 0.20
+		param set BAT_N_CELLS 4
+		param set BAT_R_INTERNAL 0.06
+		param set BAT_SOURCE 1
+		param set BAT_V_CHARGED 4.15
+		param set BAT_V_DIV 11.1625
+		param set BAT_V_EMPTY 3.65
+		param set BAT_V_OFFS_CURR -0.0045
+		param set BAT_V_LOAD_DROP 0.3
 		# start the simulator in hardware if needed
 		if param compare SYS_HITL 2
 		then
@@ -562,6 +576,9 @@ else
 		param save
 		reboot
 	fi
+
+
+
 
 #
 # End of autostart.
