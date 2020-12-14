@@ -391,6 +391,13 @@ RCUpdate::Run()
 			channel_limit = RC_MAX_CHAN_COUNT;
 		}
 
+		//Apply deadzone before pipe
+		for (unsigned int i = 0; i < channel_limit; i++) {
+			if (_rc.channels[i]<(_parameters.trim[i] + _parameters.dz[i]) || _rc.channels[i]>(_parameters.trim[i] - _parameters.dz[i])){
+				_rc.channels[i]=_parameters.trim[i];
+			}
+		}
+
 		//Pipe depending on integrale
 		if (channel_limit>=rc_channels_s::RC_CHANNELS_FUNCTION_YAW) {
 			matrix::Vector3f correction=pipeIntegrale();
@@ -424,13 +431,13 @@ RCUpdate::Run()
 			 *
 			 * DO NOT REMOVE OR ALTER STEP 1!
 			 */
-			if (rc_input.values[i] > (_parameters.trim[i] + _parameters.dz[i])) {
-				_rc.channels[i] = (rc_input.values[i] - _parameters.trim[i] - _parameters.dz[i]) / (float)(
-							  _parameters.max[i] - _parameters.trim[i] - _parameters.dz[i]);
+			if (rc_input.values[i] > _parameters.trim[i]) {
+				_rc.channels[i] = (rc_input.values[i] - _parameters.trim[i]) / (float)(
+							  _parameters.max[i] - _parameters.trim[i]);
 
-			} else if (rc_input.values[i] < (_parameters.trim[i] - _parameters.dz[i])) {
-				_rc.channels[i] = (rc_input.values[i] - _parameters.trim[i] + _parameters.dz[i]) / (float)(
-							  _parameters.trim[i] - _parameters.min[i] - _parameters.dz[i]);
+			} else if (rc_input.values[i] < _parameters.trim[i]) {
+				_rc.channels[i] = (rc_input.values[i] - _parameters.trim[i]) / (float)(
+							  _parameters.trim[i] - _parameters.min[i]);
 
 			} else {
 				/* in the configured dead zone, output zero */
