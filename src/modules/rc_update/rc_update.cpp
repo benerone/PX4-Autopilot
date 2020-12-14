@@ -394,9 +394,9 @@ RCUpdate::Run()
 		//Pipe depending on integrale
 		if (channel_limit>=rc_channels_s::RC_CHANNELS_FUNCTION_YAW) {
 			matrix::Vector3f correction=pipeIntegrale();
-			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_ROLL]+=correction(0);
-			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_PITCH]+=correction(1);
-			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_YAW]+=correction(2);
+			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_ROLL]-=correction(0);
+			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_PITCH]-=correction(1);
+			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_YAW]-=correction(2);
 		}
 
 
@@ -604,12 +604,11 @@ matrix::Vector3f RCUpdate::pipeIntegrale() {
 	matrix::Vector3f ierror_pwm=ilocal_pwm-imedian_pwm;
 
 	for(int i=0;i<3;i++) {
-		if (ierror_pwm(i)<(-_pi_limit(i)) || ierror_pwm(i)>_pi_limit(i)) {
-			if (ierror_pwm(i)<0) correction(i)=-_pi_limit(i);
-			if (ierror_pwm(i)>0) correction(i)=_pi_limit(i);
-		} else {
-			if (ierror_pwm(i)<0) correction(i)=-ierror_pwm(i);
-			if (ierror_pwm(i)>0) correction(i)=ierror_pwm(i);
+		correction(i)=ierror_pwm(i);
+
+		if (correction(i)<(-_pi_limit(i)) ||correction(i)>_pi_limit(i)) {
+			if (correction(i)<0) correction(i)=-_pi_limit(i);
+			if (correction(i)>0) correction(i)=_pi_limit(i);
 		}
 	}
 	return correction;
@@ -657,11 +656,13 @@ float RCUpdate::processMedianOnVector(zapata::StdVector<float> &values) {
 	if (values.size()==1) {
 		return values[0];
 	}
+	//Sort
+	zapata::quicksort(values,0,values.size()-1); //Lowest first
+	//Case 2
 	if (values.size()==2) {
 		return MIN(values[0],values[1]);
 	}
-	//Sort
-	zapata::quicksort(values,0,values.size()-1); //Lowest first
+
 	//if 4 values , remove farthest
 	if (values.size()==4) {
 		float distLow=values[1]-values[0];
