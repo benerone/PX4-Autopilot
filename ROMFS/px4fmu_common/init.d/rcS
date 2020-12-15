@@ -578,7 +578,7 @@ else
 	fi
 
 
-
+	can_integrale start
 
 #
 # End of autostart.
