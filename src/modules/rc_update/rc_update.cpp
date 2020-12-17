@@ -40,6 +40,7 @@
 #include "rc_update.h"
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MINABS(a,b) ((abs(a)) < (abs(b)) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 using namespace time_literals;
@@ -140,7 +141,7 @@ RCUpdate::parameters_updated()
 	//update coef integrale
 	_pi_coef=matrix::Vector3f(_param_rc_pi_coef_roll.get(),_param_rc_pi_coef_pitch.get(),_param_rc_pi_coef_yow.get());
 	_pi_limit=matrix::Vector3f(_param_rc_pi_limit_roll.get(),_param_rc_pi_limit_pitch.get(),_param_rc_pi_limit_yow.get());
-
+	_pi_mult=matrix::Vector3f(_param_rc_pi_mul_roll.get(),_param_rc_pi_mul_pitch.get(),_param_rc_pi_mul_yow.get());
 	update_rc_functions();
 }
 
@@ -400,10 +401,18 @@ RCUpdate::Run()
 
 		//Pipe depending on integrale
 		if (channel_limit>=rc_channels_s::RC_CHANNELS_FUNCTION_YAW) {
-			matrix::Vector3f correction=pipeIntegrale();
+			int nbMedian=0;
+			matrix::Vector3f correction=pipeIntegrale(&nbMedian);
+			pipe_correction_s pipe_correction{};
+			pipe_correction.timestamp=hrt_absolute_time();
+			pipe_correction.roll_correction=-correction(0);
+			pipe_correction.pitch_correction=-correction(1);
+			pipe_correction.yaw_correction=-correction(2);
+			pipe_correction.nb_median=(float)nbMedian;
 			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_ROLL]-=correction(0);
 			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_PITCH]-=correction(1);
 			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_YAW]-=correction(2);
+			_pipe_correction_pub.publish(pipe_correction);
 		}
 
 
@@ -575,7 +584,7 @@ RCUpdate::Run()
 
 	perf_end(_loop_perf);
 }
-matrix::Vector3f RCUpdate::pipeIntegrale() {
+matrix::Vector3f RCUpdate::pipeIntegrale(int * nbMedian) {
 	integrale_s _r1integrale;
 	integrale_s _r2integrale;
 	integrale_s _r3integrale;
@@ -599,7 +608,7 @@ matrix::Vector3f RCUpdate::pipeIntegrale() {
 	//Process Median
 	bool isValid=true;
 	matrix::Vector3f correction=matrix::Vector3f(0.0f,0.0f,0.0f);
-	matrix::Vector3f imedian=processMedian(_lintegrale,_r1integrale,_r2integrale,_r3integrale,&isValid);
+	matrix::Vector3f imedian=processMedian(_lintegrale,_r1integrale,_r2integrale,_r3integrale,&isValid,nbMedian);
 	if (!isValid) {
 		return correction;
 	}
@@ -618,10 +627,10 @@ matrix::Vector3f RCUpdate::pipeIntegrale() {
 			if (correction(i)>0) correction(i)=_pi_limit(i);
 		}
 	}
-	return correction;
+	return correction.emult(_pi_mult);
 
 }
-matrix::Vector3f RCUpdate::processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,bool * isvalid) {
+matrix::Vector3f RCUpdate::processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,bool * isvalid,int * nbMedian) {
 	matrix::Vector3f result;
 	zapata::StdVector<float> rolls;
 	zapata::StdVector<float> pitchs;
@@ -649,6 +658,7 @@ matrix::Vector3f RCUpdate::processMedian(const integrale_s &local,const integral
 		pitchs.push_back(r3.pitch_rate_integral);
 		yows.push_back(r3.yaw_rate_integral);
 	}
+	(*nbMedian)=rolls.size();
 	if (rolls.size()==0) {
 		//Case no valid value
 		*isvalid=false;
@@ -667,7 +677,7 @@ float RCUpdate::processMedianOnVector(zapata::StdVector<float> &values) {
 	zapata::quicksort(values,0,values.size()-1); //Lowest first
 	//Case 2
 	if (values.size()==2) {
-		return MIN(values[0],values[1]);
+		return MINABS(values[0],values[1]);
 	}
 
 	//if 4 values , remove farthest

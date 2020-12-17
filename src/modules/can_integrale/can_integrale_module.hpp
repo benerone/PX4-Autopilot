@@ -7,7 +7,7 @@
 #include <uORB/Publication.hpp>
 #include <uORB/topics/parameter_update.h>
 #include <uORB/topics/integrale.h>
-
+#include <uORB/topics/pipe_correction.h>
 
 # include <uavcan_stm32/uavcan_stm32.hpp>
 
@@ -49,6 +49,7 @@ private:
 	)
 	// Subscriptions=
 	uORB::Subscription 	_integrale_sub{ORB_ID(integrale)};
+	uORB::Subscription	_pipe_correction_sub{ORB_ID(pipe_correction)};
 	uORB::Publication<integrale_s>			_r1integrale_pub{ORB_ID(r1integrale)};
 	uORB::Publication<integrale_s>			_r2integrale_pub{ORB_ID(r2integrale)};
 	uORB::Publication<integrale_s>			_r3integrale_pub{ORB_ID(r3integrale)};
@@ -64,6 +65,9 @@ private:
 	int32_t nbReceivedError;
 	int32_t nbEmittedError;
 	bool postYow;
+	bool postCorrection;
 	float yowIntegraleValue;
+	float yowPipeCorrectionValue;
+	float nbMedianValue;
 };
 

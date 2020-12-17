@@ -60,6 +60,7 @@
 #include <uORB/topics/rc_parameter_map.h>
 #include <uORB/topics/parameter_update.h>
 #include <uORB/topics/integrale.h>
+#include <uORB/topics/pipe_correction.h>
 
 namespace RCUpdate
 {
@@ -129,7 +130,7 @@ private:
 	 *
 	 * @return matrix::Vector3f
 	 */
-	matrix::Vector3f pipeIntegrale();
+	matrix::Vector3f pipeIntegrale(int * nbMedian);
 	/**
 	 * @brief Process median
 	 *
@@ -139,7 +140,7 @@ private:
 	 * @param r3 r3 integrale
 	 * @return matrix::Vector3f
 	 */
-	matrix::Vector3f processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,bool * isvalid);
+	matrix::Vector3f processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,bool * isvalid,int * nbMedian);
 
 	/**
 	 * @brief Process median on array of float values
@@ -186,6 +187,8 @@ private:
 
 	uORB::PublicationMulti<manual_control_setpoint_s>	_manual_control_setpoint_pub{ORB_ID(manual_control_setpoint), ORB_PRIO_HIGH};	/**< manual control signal topic */
 
+	uORB::Publication<pipe_correction_s>	_pipe_correction_pub{ORB_ID(pipe_correction)};
+
 	uORB::Subscription _r1integrale_sub{ORB_ID(r1integrale)};
 	uORB::Subscription _r2integrale_sub{ORB_ID(r2integrale)};
 	uORB::Subscription _r3integrale_sub{ORB_ID(r3integrale)};
@@ -204,6 +207,7 @@ private:
 
 	matrix::Vector3f _pi_coef;
 	matrix::Vector3f _pi_limit;
+	matrix::Vector3f _pi_mult;
 
 	DEFINE_PARAMETERS(
 
@@ -262,7 +266,10 @@ private:
 		(ParamFloat<px4::params::RC_PI_COE_YOW>) _param_rc_pi_coef_yow,
 		(ParamFloat<px4::params::RC_PI_LIM_PITCH>) _param_rc_pi_limit_pitch,
 		(ParamFloat<px4::params::RC_PI_LIM_ROLL>) _param_rc_pi_limit_roll,
-		(ParamFloat<px4::params::RC_PI_LIM_YOW>) _param_rc_pi_limit_yow
+		(ParamFloat<px4::params::RC_PI_LIM_YOW>) _param_rc_pi_limit_yow,
+		(ParamFloat<px4::params::RC_PI_MUL_PITCH>) _param_rc_pi_mul_pitch,
+		(ParamFloat<px4::params::RC_PI_MUL_ROLL>) _param_rc_pi_mul_roll,
+		(ParamFloat<px4::params::RC_PI_MUL_YOW>) _param_rc_pi_mul_yow
 	)
 
 };

@@ -23,6 +23,8 @@ typedef struct {
 
 #define OFFSET_PITCH_ROLL 	0
 #define OFFSET_YOW 		16
+#define OFFSET_CORR_PITCH_ROLL 	32
+#define OFFSET_CORR_YOW 	64
 #define MASK_ID 		0b111
 #define MAX_DELAY_REFRESH	40000
 
@@ -103,6 +105,7 @@ void ModuleCanIntegrale::run()
 	nbReceivedError=0;
 	nbEmittedError=0;
 	postYow=false;
+	postCorrection=false;
 	r1_integrale={0L,0.0,0.0,0.0,integrale_s::INTEGRALE_STATUS_NONE};
 	r2_integrale={0L,0.0,0.0,0.0,integrale_s::INTEGRALE_STATUS_NONE};
 	r3_integrale={0L,0.0,0.0,0.0,integrale_s::INTEGRALE_STATUS_NONE};
@@ -144,10 +147,11 @@ void ModuleCanIntegrale::run()
 
 		//TODO
 		integrale_s integrale;
+		pipe_correction_s pipe_correction;
 		IntegralCanData tmp;
 
 
-		if (_integrale_sub.updated() && !postYow) {
+		if (_integrale_sub.updated() && !postYow && !postCorrection) {
 			_integrale_sub.copy(&integrale);
 			//Publish on can
 			tmp.v1=integrale.pitch_rate_integral;
@@ -170,7 +174,7 @@ void ModuleCanIntegrale::run()
 			postYow=true;
 
 		} else {
-			if(postYow) {
+			if(postYow && !postCorrection) {
 				postYow=false;
 				tmp.v1=yowIntegraleValue;
 				tmp.v2=0.0f;
@@ -188,6 +192,55 @@ void ModuleCanIntegrale::run()
 				if (sendResultY==1) {
 					nbEmitted++;
 				}
+				postCorrection=true;
+			}
+			if (!postYow && postCorrection) {
+				//Publish correction pitch roll
+				if (_pipe_correction_sub.updated()) {
+					postYow=true;
+					_pipe_correction_sub.copy(&pipe_correction);
+					tmp.v1=pipe_correction.pitch_correction;
+					tmp.v2=pipe_correction.roll_correction;
+					uavcan::CanFrame canFrameC=uavcan::CanFrame(sys_id | OFFSET_CORR_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8);
+					yowPipeCorrectionValue=pipe_correction.yaw_correction;
+					nbMedianValue=pipe_correction.nb_median;
+					auto sendResultC=iFace->send(canFrameC,uavcan::MonotonicTime::fromUSec(20000),0);
+					if (sendResultC==0) {
+						//PX4_ERR("CAN driver TX full");
+						nbEmittedError++;
+					}
+					if (sendResultC<0) {
+						PX4_ERR("CAN driver TX error");
+						nbEmittedError++;
+					}
+					if (sendResultC==1) {
+						nbEmitted++;
+					}
+				} else {
+					postYow=false;
+					postCorrection=false;
+				}
+
+			}
+			if (postYow && postCorrection) {
+				//Publish correction yaw
+				tmp.v1=yowPipeCorrectionValue;
+				tmp.v2=nbMedianValue;
+				uavcan::CanFrame canFrameCY=uavcan::CanFrame(sys_id | OFFSET_CORR_YOW,(const uavcan::uint8_t *)&tmp,8);
+				auto sendResultCY=iFace->send(canFrameCY,uavcan::MonotonicTime::fromUSec(20000),0);
+				if (sendResultCY==0) {
+					//PX4_ERR("CAN driver TX full");
+					nbEmittedError++;
+				}
+				if (sendResultCY<0) {
+					PX4_ERR("CAN driver TX error");
+					nbEmittedError++;
+				}
+				if (sendResultCY==1) {
+					nbEmitted++;
+				}
+				postYow=false;
+				postCorrection=false;
 			}
 		}
 
@@ -249,10 +302,13 @@ void ModuleCanIntegrale::run()
 							}
 							rx_integrales[offset]->status=	integrale_s::INTEGRALE_STATUS_NONE;
 						} else {
-							//PX4_INFO(" offset pitch-roll id %x status:%d",canFrame.id,(int)rx_integrales[offset]->status);
-							rx_integrales[offset]->pitch_rate_integral=tmpp->v1;
-							rx_integrales[offset]->roll_rate_integral=tmpp->v2;
-							rx_integrales[offset]->status=integrale_s::INTEGRALE_STATUS_PARTIAL;
+							if (((canFrame.id & OFFSET_CORR_PITCH_ROLL) == 0) && ((canFrame.id & OFFSET_CORR_YOW) == 0)) {
+								//PX4_INFO(" offset pitch-roll id %x status:%d",canFrame.id,(int)rx_integrales[offset]->status);
+								rx_integrales[offset]->pitch_rate_integral=tmpp->v1;
+								rx_integrales[offset]->roll_rate_integral=tmpp->v2;
+								rx_integrales[offset]->status=integrale_s::INTEGRALE_STATUS_PARTIAL;
+							}
+
 						}
 					}
 
