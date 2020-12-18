@@ -194,6 +194,13 @@ private:
 	uORB::Subscription _r3integrale_sub{ORB_ID(r3integrale)};
 	uORB::Subscription _integrale_sub{ORB_ID(integrale)};
 
+	integrale_s lastR1;
+	int cntR1;
+	integrale_s lastR2;
+	int cntR2;
+	integrale_s lastR3;
+	int cntR3;
+
 	rc_channels_s _rc {};			/**< r/c channel data */
 
 	rc_parameter_map_s _rc_parameter_map {};

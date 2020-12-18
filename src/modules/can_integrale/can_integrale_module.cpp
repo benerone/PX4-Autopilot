@@ -26,7 +26,10 @@ typedef struct {
 #define OFFSET_CORR_PITCH_ROLL 	32
 #define OFFSET_CORR_YOW 	64
 #define MASK_ID 		0b111
-#define MAX_DELAY_REFRESH	40000
+#define MAX_DELAY_REFRESH	500000
+//Time Cycle in us
+//#define TIME_CYCLE 		1160
+#define TIME_CYCLE 		2000
 
 int ModuleCanIntegrale::print_status()
 {
@@ -104,23 +107,21 @@ void ModuleCanIntegrale::run()
 	nbEmitted=0;
 	nbReceivedError=0;
 	nbEmittedError=0;
+	int32_t cycle=0;
 	postYow=false;
 	postCorrection=false;
+
 	r1_integrale={0L,0.0,0.0,0.0,integrale_s::INTEGRALE_STATUS_NONE};
 	r2_integrale={0L,0.0,0.0,0.0,integrale_s::INTEGRALE_STATUS_NONE};
 	r3_integrale={0L,0.0,0.0,0.0,integrale_s::INTEGRALE_STATUS_NONE};
 	_r1integrale_pub.publish(r1_integrale);
 	_r2integrale_pub.publish(r2_integrale);
 	_r3integrale_pub.publish(r3_integrale);
-	/*r1_integrale.status=integrale_s::INTEGRALE_STATUS_NONE;
-	r2_integrale.status=integrale_s::INTEGRALE_STATUS_NONE;
-	r3_integrale.status=integrale_s::INTEGRALE_STATUS_NONE;*/
 	rx_integrales[0]=&r1_integrale;
 	rx_integrales[1]=&r2_integrale;
 	rx_integrales[2]=&r3_integrale;
-	/*r1_integrale.timestamp=0L;
-	r2_integrale.timestamp=0L;
-	r3_integrale.timestamp=0L;*/
+
+
 	//Can start if necessary
 	static CanInitHelper *can = nullptr;
 	if (can == nullptr) {
@@ -142,108 +143,79 @@ void ModuleCanIntegrale::run()
 
 	uavcan::ICanIface * iFace=can->driver.getIface(0);
 
-	while(!should_exit()) {
-		//Get can interface
+	usleep(sys_id*TIME_CYCLE*4); //id*packet_transfert_delay*nbpacket (2I and 2C)
 
-		//TODO
+	while(!should_exit()) {
+
 		integrale_s integrale;
 		pipe_correction_s pipe_correction;
 		IntegralCanData tmp;
 
-
-		if (_integrale_sub.updated() && !postYow && !postCorrection) {
-			_integrale_sub.copy(&integrale);
-			//Publish on can
-			tmp.v1=integrale.pitch_rate_integral;
-			tmp.v2=integrale.roll_rate_integral;
-			uavcan::CanFrame canFrame=uavcan::CanFrame(sys_id | OFFSET_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8);
-			//PX4_INFO("send pr can id %x",canFrame.id);
-			auto sendResult=iFace->send(canFrame,uavcan::MonotonicTime::fromUSec(20000),0);
-			if (sendResult==0) {
-				//PX4_ERR("CAN driver TX full");
-				nbEmittedError++;
+		auto startTime=hrt_absolute_time();
+		//Transmit
+		switch(cycle) {
+			case 0: //I Pitch Roll
+			if (_integrale_sub.updated()) {
+				_integrale_sub.copy(&integrale);
+				tmp.v1=integrale.pitch_rate_integral;
+				tmp.v2=integrale.roll_rate_integral;
+				yowIntegraleValue=integrale.yaw_rate_integral;
+				if (sendFrame(iFace,sys_id | OFFSET_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8)) {
+					cycle++;
+					postYow=true;
+				}
+			} else {
+				cycle++;
 			}
-			if (sendResult<0) {
-				PX4_ERR("CAN driver TX error");
-				nbEmittedError++;
-			}
-			if (sendResult==1) {
-				nbEmitted++;
-			}
-			yowIntegraleValue=integrale.yaw_rate_integral;
-			postYow=true;
-
-		} else {
-			if(postYow && !postCorrection) {
-				postYow=false;
+			break;
+			case 1: //I Yow
+			if (postYow) {
 				tmp.v1=yowIntegraleValue;
 				tmp.v2=0.0f;
-				uavcan::CanFrame canFrameY=uavcan::CanFrame(sys_id | OFFSET_YOW,(const uavcan::uint8_t *)&tmp,8);
-				//PX4_INFO("send y can id %x",canFrameY.id);
-				auto sendResultY=iFace->send(canFrameY,uavcan::MonotonicTime::fromUSec(20000),0);
-				if (sendResultY==0) {
-					//PX4_ERR("CAN driver TX full");
-					nbEmittedError++;
-				}
-				if (sendResultY<0) {
-					PX4_ERR("CAN driver TX error");
-					nbEmittedError++;
-				}
-				if (sendResultY==1) {
-					nbEmitted++;
-				}
-				postCorrection=true;
-			}
-			if (!postYow && postCorrection) {
-				//Publish correction pitch roll
-				if (_pipe_correction_sub.updated()) {
-					postYow=true;
-					_pipe_correction_sub.copy(&pipe_correction);
-					tmp.v1=pipe_correction.pitch_correction;
-					tmp.v2=pipe_correction.roll_correction;
-					uavcan::CanFrame canFrameC=uavcan::CanFrame(sys_id | OFFSET_CORR_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8);
-					yowPipeCorrectionValue=pipe_correction.yaw_correction;
-					nbMedianValue=pipe_correction.nb_median;
-					auto sendResultC=iFace->send(canFrameC,uavcan::MonotonicTime::fromUSec(20000),0);
-					if (sendResultC==0) {
-						//PX4_ERR("CAN driver TX full");
-						nbEmittedError++;
-					}
-					if (sendResultC<0) {
-						PX4_ERR("CAN driver TX error");
-						nbEmittedError++;
-					}
-					if (sendResultC==1) {
-						nbEmitted++;
-					}
-				} else {
+				if (sendFrame(iFace,sys_id | OFFSET_YOW,(const uavcan::uint8_t *)&tmp,8)) {
+					cycle++;
 					postYow=false;
-					postCorrection=false;
 				}
-
+			} else {
+				cycle++;
 			}
-			if (postYow && postCorrection) {
-				//Publish correction yaw
+			break;
+			case 2: //C Pitch Roll
+			if (_pipe_correction_sub.updated()) {
+				_pipe_correction_sub.copy(&pipe_correction);
+				tmp.v1=pipe_correction.pitch_correction;
+				tmp.v2=pipe_correction.roll_correction;
+				yowPipeCorrectionValue=pipe_correction.yaw_correction;
+				nbMedianValue=pipe_correction.nb_median;
+				if (sendFrame(iFace,sys_id | OFFSET_CORR_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8)) {
+					cycle++;
+					postCorrection=true;
+				}
+			} else {
+				cycle++;
+			}
+			break;
+			case 3: //C Yow
+			if (postCorrection) {
 				tmp.v1=yowPipeCorrectionValue;
 				tmp.v2=nbMedianValue;
-				uavcan::CanFrame canFrameCY=uavcan::CanFrame(sys_id | OFFSET_CORR_YOW,(const uavcan::uint8_t *)&tmp,8);
-				auto sendResultCY=iFace->send(canFrameCY,uavcan::MonotonicTime::fromUSec(20000),0);
-				if (sendResultCY==0) {
-					//PX4_ERR("CAN driver TX full");
-					nbEmittedError++;
+				if (sendFrame(iFace,sys_id | OFFSET_CORR_YOW,(const uavcan::uint8_t *)&tmp,8)) {
+					cycle++;
+					postCorrection=false;
 				}
-				if (sendResultCY<0) {
-					PX4_ERR("CAN driver TX error");
-					nbEmittedError++;
-				}
-				if (sendResultCY==1) {
-					nbEmitted++;
-				}
-				postYow=false;
-				postCorrection=false;
+			} else {
+				cycle++;
 			}
+			break;
+			default:
+				cycle++;
+				if (cycle%16==0) {
+					cycle=0;
+				}
+			break;
 		}
 
+		//Receive
 		//Check for new incoming can msg
 		uavcan::int16_t receiveResult=1;
 		while (receiveResult>0)  {
@@ -335,8 +307,14 @@ void ModuleCanIntegrale::run()
 			r3_integrale.status=integrale_s::INTEGRALE_STATUS_NONE;
 			_r3integrale_pub.publish(r3_integrale);
 		}
+
+		int64_t deltaTime=((int64_t)TIME_CYCLE)-((int64_t)(currentTime-startTime));
+		if (deltaTime<0) {
+			deltaTime=0;
+		}
+
 		//sleep
-		usleep(10000); //100Hz
+		usleep(deltaTime);
 	}
 
 
@@ -344,7 +322,25 @@ void ModuleCanIntegrale::run()
 
 
 }
-
+bool ModuleCanIntegrale::sendFrame(uavcan::ICanIface * iFace,uint32_t can_id, const uint8_t* can_data, uint8_t data_len) {
+	uavcan::CanFrame canFrame=uavcan::CanFrame(can_id,can_data,data_len);
+	//PX4_INFO("send pr can id %x",canFrame.id);
+	auto sendResult=iFace->send(canFrame,uavcan::MonotonicTime::fromUSec(20000),0);
+	if (sendResult==0) {
+		//PX4_ERR("CAN driver TX full");
+		nbEmittedError++;
+		return false;
+	}
+	if (sendResult<0) {
+		PX4_ERR("CAN driver TX error");
+		nbEmittedError++;
+		return false;
+	}
+	if (sendResult==1) {
+		nbEmitted++;
+	}
+	return true;
+}
 int ModuleCanIntegrale::print_usage(const char *reason)
 {
 	if (reason) {

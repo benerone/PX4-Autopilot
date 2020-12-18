@@ -42,6 +42,7 @@
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MINABS(a,b) ((abs(a)) < (abs(b)) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MAX_CNT_R 3
 
 using namespace time_literals;
 
@@ -89,6 +90,9 @@ RCUpdate::RCUpdate() :
 	rc_parameter_map_poll(true /* forced */);
 
 	parameters_updated();
+	cntR1=-1;
+	cntR2=-1;
+	cntR3=-1;
 }
 
 RCUpdate::~RCUpdate()
@@ -636,29 +640,73 @@ matrix::Vector3f RCUpdate::processMedian(const integrale_s &local,const integral
 	zapata::StdVector<float> pitchs;
 	zapata::StdVector<float> yows;
 	*isvalid=true;
+	(*nbMedian)=0;
 	//Local contrib
 	if (local.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
 		rolls.push_back(local.roll_rate_integral);
 		pitchs.push_back(local.pitch_rate_integral);
 		yows.push_back(local.yaw_rate_integral);
+		(*nbMedian)|=1;
 	}
 	//Remote contrib
 	if (r1.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
 		rolls.push_back(r1.roll_rate_integral);
 		pitchs.push_back(r1.pitch_rate_integral);
 		yows.push_back(r1.yaw_rate_integral);
-	}
+		cntR1=0;
+		lastR1=r1;
+		(*nbMedian)|=2;
+	} /*else {
+		if (cntR1>=0) {
+			if (cntR1<MAX_CNT_R) {
+				rolls.push_back(lastR1.roll_rate_integral);
+				pitchs.push_back(lastR1.pitch_rate_integral);
+				yows.push_back(lastR1.yaw_rate_integral);
+				cntR1++;
+			} else {
+				cntR1=-1;
+			}
+		}
+	} */
 	if (r2.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
 		rolls.push_back(r2.roll_rate_integral);
 		pitchs.push_back(r2.pitch_rate_integral);
 		yows.push_back(r2.yaw_rate_integral);
-	}
+		cntR2=0;
+		lastR2=r2;
+		(*nbMedian)|=4;
+	} /*else {
+		if (cntR2>=0) {
+			if (cntR2<MAX_CNT_R) {
+				rolls.push_back(lastR2.roll_rate_integral);
+				pitchs.push_back(lastR2.pitch_rate_integral);
+				yows.push_back(lastR2.yaw_rate_integral);
+				cntR2++;
+			} else {
+				cntR2=-1;
+			}
+		}
+	} */
 	if (r3.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
 		rolls.push_back(r3.roll_rate_integral);
 		pitchs.push_back(r3.pitch_rate_integral);
 		yows.push_back(r3.yaw_rate_integral);
-	}
-	(*nbMedian)=rolls.size();
+		cntR3=0;
+		lastR3=r3;
+		(*nbMedian)|=8;
+	} /*else {
+		if (cntR3>=0) {
+			if (cntR3<MAX_CNT_R) {
+				rolls.push_back(lastR3.roll_rate_integral);
+				pitchs.push_back(lastR3.pitch_rate_integral);
+				yows.push_back(lastR3.yaw_rate_integral);
+				cntR3++;
+			} else {
+				cntR3=-1;
+			}
+		}
+	} */
+	//(*nbMedian)=rolls.size();
 	if (rolls.size()==0) {
 		//Case no valid value
 		*isvalid=false;

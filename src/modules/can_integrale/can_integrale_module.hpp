@@ -47,6 +47,9 @@ private:
 	DEFINE_PARAMETERS(
 		(ParamInt<px4::params::MAV_SYS_ID>) _param_mav_sys_id
 	)
+
+	bool sendFrame(uavcan::ICanIface * iFace,uint32_t can_id, const uint8_t* can_data, uint8_t data_len);
+
 	// Subscriptions=
 	uORB::Subscription 	_integrale_sub{ORB_ID(integrale)};
 	uORB::Subscription	_pipe_correction_sub{ORB_ID(pipe_correction)};
