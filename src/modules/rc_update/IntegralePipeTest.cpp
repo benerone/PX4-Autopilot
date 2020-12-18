@@ -302,4 +302,39 @@ TEST_F(IntegralePipeTest, testProcessPipe) {
 	EXPECT_FLOAT_EQ(40.0f,c4(0));
 	EXPECT_FLOAT_EQ(50.0f,c4(1));
 	EXPECT_FLOAT_EQ(60.0f,c4(2));
+
+
+	zapata::StdVector<matrix::Vector3f> accuCorrection;
+	accuCorrection.push_back(matrix::Vector3f(1.0f,2.0f,3.0f));
+	accuCorrection.push_back(matrix::Vector3f(2.0f,3.0f,4.0f));
+	accuCorrection.push_back(matrix::Vector3f(3.0f,4.0f,5.0f));
+	accuCorrection.push_back(matrix::Vector3f(4.0f,5.0f,6.0f));
+	accuCorrection.push_back(matrix::Vector3f(5.0f,6.0f,7.0f));
+	matrix::Vector3f finalCorrection=matrix::Vector3f(0.0f,0.0f,0.0f);
+	for(unsigned int i=0;i<accuCorrection.size();i++) {
+		finalCorrection+=accuCorrection[i];
+	}
+	EXPECT_FLOAT_EQ(15.0f,finalCorrection(0));
+	EXPECT_FLOAT_EQ(20.0f,finalCorrection(1));
+	EXPECT_FLOAT_EQ(25.0f,finalCorrection(2));
+	finalCorrection=finalCorrection/accuCorrection.size();
+	EXPECT_FLOAT_EQ(3.0f,finalCorrection(0));
+	EXPECT_FLOAT_EQ(4.0f,finalCorrection(1));
+	EXPECT_FLOAT_EQ(5.0f,finalCorrection(2));
+	accuCorrection.push_back(matrix::Vector3f(6.0f,7.0f,8.0f));
+	for(unsigned int i=0;i<accuCorrection.size()-1;i++) {
+		accuCorrection[i]=accuCorrection[i+1];
+	}
+	accuCorrection.pop_back();
+	finalCorrection=matrix::Vector3f(0.0f,0.0f,0.0f);
+	for(unsigned int i=0;i<accuCorrection.size();i++) {
+		finalCorrection+=accuCorrection[i];
+	}
+	EXPECT_FLOAT_EQ(20.0f,finalCorrection(0));
+	EXPECT_FLOAT_EQ(25.0f,finalCorrection(1));
+	EXPECT_FLOAT_EQ(30.0f,finalCorrection(2));
+	finalCorrection=finalCorrection/accuCorrection.size();
+	EXPECT_FLOAT_EQ(4.0f,finalCorrection(0));
+	EXPECT_FLOAT_EQ(5.0f,finalCorrection(1));
+	EXPECT_FLOAT_EQ(6.0f,finalCorrection(2));
 }

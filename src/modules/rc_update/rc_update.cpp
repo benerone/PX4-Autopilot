@@ -411,12 +411,13 @@ RCUpdate::Run()
 			matrix::Vector3f correction=pipeIntegrale(&nbMedian);
 			accuCorrection.push_back(correction);
 			if (accuCorrection.size()>(unsigned int)moyCorItems) {
-				for(unsigned int i=0;i<accuCorrection.size()-2;i++) {
+				for(unsigned int i=0;i<accuCorrection.size()-1;i++) {
 					accuCorrection[i]=accuCorrection[i+1];
 				}
+				accuCorrection.pop_back();
 			}
 			matrix::Vector3f finalCorrection=matrix::Vector3f(0.0f,0.0f,0.0f);
-			for(unsigned int i=0;i<accuCorrection.size()-1;i++) {
+			for(unsigned int i=0;i<accuCorrection.size();i++) {
 				finalCorrection+=accuCorrection[i];
 			}
 			finalCorrection=finalCorrection/accuCorrection.size();
