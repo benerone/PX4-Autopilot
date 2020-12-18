@@ -43,6 +43,7 @@
 #define MINABS(a,b) ((abs(a)) < (abs(b)) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #define MAX_CNT_R 3
+#define MOY_CORREC_NBITEM 5
 
 using namespace time_literals;
 
@@ -146,6 +147,7 @@ RCUpdate::parameters_updated()
 	_pi_coef=matrix::Vector3f(_param_rc_pi_coef_roll.get(),_param_rc_pi_coef_pitch.get(),_param_rc_pi_coef_yow.get());
 	_pi_limit=matrix::Vector3f(_param_rc_pi_limit_roll.get(),_param_rc_pi_limit_pitch.get(),_param_rc_pi_limit_yow.get());
 	_pi_mult=matrix::Vector3f(_param_rc_pi_mul_roll.get(),_param_rc_pi_mul_pitch.get(),_param_rc_pi_mul_yow.get());
+	moyCorItems=_param_rc_pi_moy_cor.get();
 	update_rc_functions();
 }
 
@@ -407,15 +409,26 @@ RCUpdate::Run()
 		if (channel_limit>=rc_channels_s::RC_CHANNELS_FUNCTION_YAW) {
 			int nbMedian=0;
 			matrix::Vector3f correction=pipeIntegrale(&nbMedian);
+			accuCorrection.push_back(correction);
+			if (accuCorrection.size()>(unsigned int)moyCorItems) {
+				for(unsigned int i=0;i<accuCorrection.size()-2;i++) {
+					accuCorrection[i]=accuCorrection[i+1];
+				}
+			}
+			matrix::Vector3f finalCorrection=matrix::Vector3f(0.0f,0.0f,0.0f);
+			for(unsigned int i=0;i<accuCorrection.size()-1;i++) {
+				finalCorrection+=accuCorrection[i];
+			}
+			finalCorrection=finalCorrection/accuCorrection.size();
 			pipe_correction_s pipe_correction{};
 			pipe_correction.timestamp=hrt_absolute_time();
-			pipe_correction.roll_correction=-correction(0);
-			pipe_correction.pitch_correction=-correction(1);
-			pipe_correction.yaw_correction=-correction(2);
+			pipe_correction.roll_correction=-finalCorrection(0);
+			pipe_correction.pitch_correction=-finalCorrection(1);
+			pipe_correction.yaw_correction=-finalCorrection(2);
 			pipe_correction.nb_median=(float)nbMedian;
-			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_ROLL]-=correction(0);
-			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_PITCH]-=correction(1);
-			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_YAW]-=correction(2);
+			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_ROLL]-=finalCorrection(0);
+			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_PITCH]-=finalCorrection(1);
+			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_YAW]-=finalCorrection(2);
 			_pipe_correction_pub.publish(pipe_correction);
 		}
 

@@ -200,6 +200,8 @@ private:
 	int cntR2;
 	integrale_s lastR3;
 	int cntR3;
+	zapata::StdVector<matrix::Vector3f> accuCorrection;
+
 
 	rc_channels_s _rc {};			/**< r/c channel data */
 
@@ -215,6 +217,7 @@ private:
 	matrix::Vector3f _pi_coef;
 	matrix::Vector3f _pi_limit;
 	matrix::Vector3f _pi_mult;
+	int32_t moyCorItems;
 
 	DEFINE_PARAMETERS(
 
@@ -276,7 +279,8 @@ private:
 		(ParamFloat<px4::params::RC_PI_LIM_YOW>) _param_rc_pi_limit_yow,
 		(ParamFloat<px4::params::RC_PI_MUL_PITCH>) _param_rc_pi_mul_pitch,
 		(ParamFloat<px4::params::RC_PI_MUL_ROLL>) _param_rc_pi_mul_roll,
-		(ParamFloat<px4::params::RC_PI_MUL_YOW>) _param_rc_pi_mul_yow
+		(ParamFloat<px4::params::RC_PI_MUL_YOW>) _param_rc_pi_mul_yow,
+		(ParamInt<px4::params::RC_PI_MOY_COR>) _param_rc_pi_moy_cor
 	)
 
 };
