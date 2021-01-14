@@ -70,7 +70,9 @@ private:
 	bool postYow;
 	bool postCorrection;
 	float yowIntegraleValue;
+	float thrustValue;
 	float yowPipeCorrectionValue;
+	float thrustPipeCorrectionValue;
 	float nbMedianValue;
 };
 

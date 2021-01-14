@@ -160,6 +160,7 @@ void ModuleCanIntegrale::run()
 				tmp.v1=integrale.pitch_rate_integral;
 				tmp.v2=integrale.roll_rate_integral;
 				yowIntegraleValue=integrale.yaw_rate_integral;
+				thrustValue=integrale.thrust;
 				if (sendFrame(iFace,sys_id | OFFSET_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8)) {
 					cycle++;
 					postYow=true;
@@ -171,7 +172,7 @@ void ModuleCanIntegrale::run()
 			case 1: //I Yow
 			if (postYow) {
 				tmp.v1=yowIntegraleValue;
-				tmp.v2=0.0f;
+				tmp.v2=thrustValue;
 				if (sendFrame(iFace,sys_id | OFFSET_YOW,(const uavcan::uint8_t *)&tmp,8)) {
 					cycle++;
 					postYow=false;
@@ -186,6 +187,7 @@ void ModuleCanIntegrale::run()
 				tmp.v1=pipe_correction.pitch_correction;
 				tmp.v2=pipe_correction.roll_correction;
 				yowPipeCorrectionValue=pipe_correction.yaw_correction;
+				thrustPipeCorrectionValue=pipe_correction.thrust_correction;
 				nbMedianValue=pipe_correction.nb_median;
 				if (sendFrame(iFace,sys_id | OFFSET_CORR_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8)) {
 					cycle++;
@@ -198,7 +200,7 @@ void ModuleCanIntegrale::run()
 			case 3: //C Yow
 			if (postCorrection) {
 				tmp.v1=yowPipeCorrectionValue;
-				tmp.v2=nbMedianValue;
+				tmp.v2=thrustPipeCorrectionValue;
 				if (sendFrame(iFace,sys_id | OFFSET_CORR_YOW,(const uavcan::uint8_t *)&tmp,8)) {
 					cycle++;
 					postCorrection=false;
@@ -254,6 +256,7 @@ void ModuleCanIntegrale::run()
 						if ((canFrame.id & OFFSET_YOW) == OFFSET_YOW) {
 							//PX4_INFO(" offset yow id %x status:%d",canFrame.id,(int)rx_integrales[offset]->status);
 							rx_integrales[offset]->yaw_rate_integral=tmpp->v1;
+							rx_integrales[offset]->thrust=tmpp->v2;
 							if (rx_integrales[offset]->status==integrale_s::INTEGRALE_STATUS_PARTIAL) {
 								rx_integrales[offset]->status=	integrale_s::INTEGRALE_STATUS_COMPLETE;
 								if (offset==0) {

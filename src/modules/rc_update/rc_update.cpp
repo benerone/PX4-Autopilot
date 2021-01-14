@@ -144,9 +144,9 @@ RCUpdate::parameters_updated()
 	}
 
 	//update coef integrale
-	_pi_coef=matrix::Vector3f(_param_rc_pi_coef_roll.get(),_param_rc_pi_coef_pitch.get(),_param_rc_pi_coef_yow.get());
-	_pi_limit=matrix::Vector3f(_param_rc_pi_limit_roll.get(),_param_rc_pi_limit_pitch.get(),_param_rc_pi_limit_yow.get());
-	_pi_mult=matrix::Vector3f(_param_rc_pi_mul_roll.get(),_param_rc_pi_mul_pitch.get(),_param_rc_pi_mul_yow.get());
+	_pi_coef=matrix::Vector4f(_param_rc_pi_coef_roll.get(),_param_rc_pi_coef_pitch.get(),_param_rc_pi_coef_yow.get(),_param_rc_pi_coef_thrust.get());
+	_pi_limit=matrix::Vector4f(_param_rc_pi_limit_roll.get(),_param_rc_pi_limit_pitch.get(),_param_rc_pi_limit_yow.get(),_param_rc_pi_limit_thrust.get());
+	_pi_mult=matrix::Vector4f(_param_rc_pi_mul_roll.get(),_param_rc_pi_mul_pitch.get(),_param_rc_pi_mul_yow.get(),_param_rc_pi_mul_thrust.get());
 	moyCorItems=_param_rc_pi_moy_cor.get();
 	update_rc_functions();
 }
@@ -408,7 +408,7 @@ RCUpdate::Run()
 		//Pipe depending on integrale
 		if (channel_limit>=rc_channels_s::RC_CHANNELS_FUNCTION_YAW) {
 			int nbMedian=0;
-			matrix::Vector3f correction=pipeIntegrale(&nbMedian);
+			matrix::Vector4f correction=pipeIntegrale(&nbMedian);
 			accuCorrection.push_back(correction);
 			if (accuCorrection.size()>(unsigned int)moyCorItems) {
 				for(unsigned int i=0;i<accuCorrection.size()-1;i++) {
@@ -416,7 +416,7 @@ RCUpdate::Run()
 				}
 				accuCorrection.pop_back();
 			}
-			matrix::Vector3f finalCorrection=matrix::Vector3f(0.0f,0.0f,0.0f);
+			matrix::Vector4f finalCorrection=matrix::Vector4f(0.0f,0.0f,0.0f,0.0f);
 			for(unsigned int i=0;i<accuCorrection.size();i++) {
 				finalCorrection+=accuCorrection[i];
 			}
@@ -426,10 +426,12 @@ RCUpdate::Run()
 			pipe_correction.roll_correction=-finalCorrection(0);
 			pipe_correction.pitch_correction=-finalCorrection(1);
 			pipe_correction.yaw_correction=-finalCorrection(2);
+			pipe_correction.thrust_correction=-finalCorrection(3);
 			pipe_correction.nb_median=(float)nbMedian;
 			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_ROLL]-=finalCorrection(0);
 			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_PITCH]-=finalCorrection(1);
 			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_YAW]-=finalCorrection(2);
+			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_THROTTLE]-=finalCorrection(3);
 			_pipe_correction_pub.publish(pipe_correction);
 		}
 
@@ -602,7 +604,7 @@ RCUpdate::Run()
 
 	perf_end(_loop_perf);
 }
-matrix::Vector3f RCUpdate::pipeIntegrale(int * nbMedian) {
+matrix::Vector4f RCUpdate::pipeIntegrale(int * nbMedian) {
 	integrale_s _r1integrale;
 	integrale_s _r2integrale;
 	integrale_s _r3integrale;
@@ -625,19 +627,19 @@ matrix::Vector3f RCUpdate::pipeIntegrale(int * nbMedian) {
 
 	//Process Median
 	bool isValid=true;
-	matrix::Vector3f correction=matrix::Vector3f(0.0f,0.0f,0.0f);
-	matrix::Vector3f imedian=processMedian(_lintegrale,_r1integrale,_r2integrale,_r3integrale,&isValid,nbMedian);
+	matrix::Vector4f correction=matrix::Vector4f(0.0f,0.0f,0.0f,0.0f);
+	matrix::Vector4f imedian=processMedian(_lintegrale,_r1integrale,_r2integrale,_r3integrale,&isValid,nbMedian);
 	if (!isValid) {
 		return correction;
 	}
 	//Process in pwm
-	matrix::Vector3f ilocal=matrix::Vector3f(_lintegrale.roll_rate_integral,_lintegrale.pitch_rate_integral,_lintegrale.yaw_rate_integral);
+	matrix::Vector4f ilocal=matrix::Vector4f(_lintegrale.roll_rate_integral,_lintegrale.pitch_rate_integral,_lintegrale.yaw_rate_integral,_lintegrale.thrust);
 
-	matrix::Vector3f imedian_pwm=(imedian.emult(_pi_coef)*500.0f)+1000.0f;
-	matrix::Vector3f ilocal_pwm=(ilocal.emult(_pi_coef)*500.0f)+1000.0f;
-	matrix::Vector3f ierror_pwm=ilocal_pwm-imedian_pwm;
+	matrix::Vector4f imedian_pwm=(imedian.emult(_pi_coef)*500.0f)+1000.0f;
+	matrix::Vector4f ilocal_pwm=(ilocal.emult(_pi_coef)*500.0f)+1000.0f;
+	matrix::Vector4f ierror_pwm=ilocal_pwm-imedian_pwm;
 
-	for(int i=0;i<3;i++) {
+	for(int i=0;i<4;i++) {
 		correction(i)=ierror_pwm(i);
 
 		if (correction(i)<(-_pi_limit(i)) ||correction(i)>_pi_limit(i)) {
@@ -648,11 +650,12 @@ matrix::Vector3f RCUpdate::pipeIntegrale(int * nbMedian) {
 	return correction.emult(_pi_mult);
 
 }
-matrix::Vector3f RCUpdate::processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,bool * isvalid,int * nbMedian) {
-	matrix::Vector3f result;
+matrix::Vector4f RCUpdate::processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,bool * isvalid,int * nbMedian) {
+	matrix::Vector4f result;
 	zapata::StdVector<float> rolls;
 	zapata::StdVector<float> pitchs;
 	zapata::StdVector<float> yows;
+	zapata::StdVector<float> thrusts;
 	*isvalid=true;
 	(*nbMedian)=0;
 	//Local contrib
@@ -660,6 +663,7 @@ matrix::Vector3f RCUpdate::processMedian(const integrale_s &local,const integral
 		rolls.push_back(local.roll_rate_integral);
 		pitchs.push_back(local.pitch_rate_integral);
 		yows.push_back(local.yaw_rate_integral);
+		thrusts.push_back(local.thrust);
 		(*nbMedian)|=1;
 	}
 	//Remote contrib
@@ -667,6 +671,7 @@ matrix::Vector3f RCUpdate::processMedian(const integrale_s &local,const integral
 		rolls.push_back(r1.roll_rate_integral);
 		pitchs.push_back(r1.pitch_rate_integral);
 		yows.push_back(r1.yaw_rate_integral);
+		thrusts.push_back(r1.thrust);
 		cntR1=0;
 		lastR1=r1;
 		(*nbMedian)|=2;
@@ -686,6 +691,7 @@ matrix::Vector3f RCUpdate::processMedian(const integrale_s &local,const integral
 		rolls.push_back(r2.roll_rate_integral);
 		pitchs.push_back(r2.pitch_rate_integral);
 		yows.push_back(r2.yaw_rate_integral);
+		thrusts.push_back(r2.thrust);
 		cntR2=0;
 		lastR2=r2;
 		(*nbMedian)|=4;
@@ -705,6 +711,7 @@ matrix::Vector3f RCUpdate::processMedian(const integrale_s &local,const integral
 		rolls.push_back(r3.roll_rate_integral);
 		pitchs.push_back(r3.pitch_rate_integral);
 		yows.push_back(r3.yaw_rate_integral);
+		thrusts.push_back(r3.thrust);
 		cntR3=0;
 		lastR3=r3;
 		(*nbMedian)|=8;
@@ -724,11 +731,12 @@ matrix::Vector3f RCUpdate::processMedian(const integrale_s &local,const integral
 	if (rolls.size()==0) {
 		//Case no valid value
 		*isvalid=false;
-		return matrix::Vector3f(0.0f,0.0f,0.0f);
+		return matrix::Vector4f(0.0f,0.0f,0.0f,0.0f);
 	}
 	result(0)=processMedianOnVector(rolls);
 	result(1)=processMedianOnVector(pitchs);
 	result(2)=processMedianOnVector(yows);
+	result(3)=processMedianOnVector(thrusts);
 	return result;
 }
 float RCUpdate::processMedianOnVector(zapata::StdVector<float> &values) {

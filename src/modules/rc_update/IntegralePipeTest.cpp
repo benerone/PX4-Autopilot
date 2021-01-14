@@ -1,6 +1,7 @@
 #include "stdvector.h"
 #include <lib/mathlib/mathlib.h>
 #include <platforms/posix/apps.h>
+#include <lib/matrix/matrix/Vector4.hpp>
 #include <uORB/topics/integrale.h>
 #include <uORB/Publication.hpp>
 #include <uORB/Subscription.hpp>
@@ -39,49 +40,59 @@ float processMedianOnVector(zapata::StdVector<float> &values) {
 	return values[1];
 }
 
-matrix::Vector3f processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,bool * isvalid) {
-	matrix::Vector3f result;
+matrix::Vector4f processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,bool * isvalid) {
+	matrix::Vector4f result;
 	zapata::StdVector<float> rolls;
 	zapata::StdVector<float> pitchs;
 	zapata::StdVector<float> yows;
+	zapata::StdVector<float> thrusts;
 	*isvalid=true;
+
 	//Local contrib
 	if (local.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
 		rolls.push_back(local.roll_rate_integral);
 		pitchs.push_back(local.pitch_rate_integral);
 		yows.push_back(local.yaw_rate_integral);
+		thrusts.push_back(local.thrust);
+
 	}
 	//Remote contrib
 	if (r1.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
 		rolls.push_back(r1.roll_rate_integral);
 		pitchs.push_back(r1.pitch_rate_integral);
 		yows.push_back(r1.yaw_rate_integral);
+		thrusts.push_back(r1.thrust);
 	}
 	if (r2.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
 		rolls.push_back(r2.roll_rate_integral);
 		pitchs.push_back(r2.pitch_rate_integral);
 		yows.push_back(r2.yaw_rate_integral);
+		thrusts.push_back(r2.thrust);
 	}
 	if (r3.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
 		rolls.push_back(r3.roll_rate_integral);
 		pitchs.push_back(r3.pitch_rate_integral);
 		yows.push_back(r3.yaw_rate_integral);
+		thrusts.push_back(r3.thrust);
+
 	}
+	//(*nbMedian)=rolls.size();
 	if (rolls.size()==0) {
 		//Case no valid value
 		*isvalid=false;
-		return matrix::Vector3f(0.0f,0.0f,0.0f);
+		return matrix::Vector4f(0.0f,0.0f,0.0f,0.0f);
 	}
 	result(0)=processMedianOnVector(rolls);
 	result(1)=processMedianOnVector(pitchs);
 	result(2)=processMedianOnVector(yows);
+	result(3)=processMedianOnVector(thrusts);
 	return result;
 }
 
 
 
 
-matrix::Vector3f pipeIntegrale(matrix::Vector3f & _pi_coef,matrix::Vector3f &_pi_limit,
+matrix::Vector4f pipeIntegrale(matrix::Vector4f & _pi_coef,matrix::Vector4f &_pi_limit,
 				uORB::Subscription &_integrale_sub,uORB::Subscription &_r1integrale_sub,uORB::Subscription &_r2integrale_sub,uORB::Subscription &_r3integrale_sub) {
 	integrale_s _r1integrale;
 	integrale_s _r2integrale;
@@ -105,19 +116,19 @@ matrix::Vector3f pipeIntegrale(matrix::Vector3f & _pi_coef,matrix::Vector3f &_pi
 
 	//Process Median
 	bool isValid=true;
-	matrix::Vector3f correction=matrix::Vector3f(0.0f,0.0f,0.0f);
-	matrix::Vector3f imedian=processMedian(_lintegrale,_r1integrale,_r2integrale,_r3integrale,&isValid);
+	matrix::Vector4f correction=matrix::Vector4f(0.0f,0.0f,0.0f,0.0f);
+	matrix::Vector4f imedian=processMedian(_lintegrale,_r1integrale,_r2integrale,_r3integrale,&isValid);
 	if (!isValid) {
 		return correction;
 	}
 	//Process in pwm
-	matrix::Vector3f ilocal=matrix::Vector3f(_lintegrale.roll_rate_integral,_lintegrale.pitch_rate_integral,_lintegrale.yaw_rate_integral);
+	matrix::Vector4f ilocal=matrix::Vector4f(_lintegrale.roll_rate_integral,_lintegrale.pitch_rate_integral,_lintegrale.yaw_rate_integral,_lintegrale.thrust);
 
-	matrix::Vector3f imedian_pwm=(imedian.emult(_pi_coef)*500.0f)+1000.0f;
-	matrix::Vector3f ilocal_pwm=(ilocal.emult(_pi_coef)*500.0f)+1000.0f;
-	matrix::Vector3f ierror_pwm=ilocal_pwm-imedian_pwm;
+	matrix::Vector4f imedian_pwm=(imedian.emult(_pi_coef)*500.0f)+1000.0f;
+	matrix::Vector4f ilocal_pwm=(ilocal.emult(_pi_coef)*500.0f)+1000.0f;
+	matrix::Vector4f ierror_pwm=ilocal_pwm-imedian_pwm;
 
-	for(int i=0;i<3;i++) {
+	for(int i=0;i<4;i++) {
 		correction(i)=ierror_pwm(i);
 
 		if (correction(i)<(-_pi_limit(i)) ||correction(i)>_pi_limit(i)) {
@@ -126,7 +137,6 @@ matrix::Vector3f pipeIntegrale(matrix::Vector3f & _pi_coef,matrix::Vector3f &_pi
 		}
 	}
 	return correction;
-
 }
 
 class IntegralePipeTest : public ::testing::Test
@@ -171,43 +181,47 @@ TEST_F(IntegralePipeTest, testProcessMedian) {
 	integrale_s r3;
 	bool isValid;
 
-	l={0L,0.0f,0.0f,0.0f,integrale_s::INTEGRALE_STATUS_NONE};
-	r1={0L,0.0f,0.0f,0.0f,integrale_s::INTEGRALE_STATUS_NONE};
-	r2={0L,0.0f,0.0f,0.0f,integrale_s::INTEGRALE_STATUS_NONE};
-	r3={0L,0.0f,0.0f,0.0f,integrale_s::INTEGRALE_STATUS_NONE};
-	matrix::Vector3f result1=processMedian(l,r1,r2,r3,&isValid);
+	l={0L,0.0f,0.0f,0.0f,0.0f,integrale_s::INTEGRALE_STATUS_NONE};
+	r1={0L,0.0f,0.0f,0.0f,0.0f,integrale_s::INTEGRALE_STATUS_NONE};
+	r2={0L,0.0f,0.0f,0.0f,0.0f,integrale_s::INTEGRALE_STATUS_NONE};
+	r3={0L,0.0f,0.0f,0.0f,0.0f,integrale_s::INTEGRALE_STATUS_NONE};
+	matrix::Vector4f result1=processMedian(l,r1,r2,r3,&isValid);
 	EXPECT_FLOAT_EQ(0.0f,result1(0));
 	EXPECT_FLOAT_EQ(0.0f,result1(1));
 	EXPECT_FLOAT_EQ(0.0f,result1(2));
+	EXPECT_FLOAT_EQ(0.0f,result1(3));
 	EXPECT_EQ(false, isValid);
 
-	l={0L,4.0f,2.0f,5.0f,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	r1={0L,3.0f,4.0f,7.0f,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	r2={0L,1.0f,5.0f,3.0f,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	r3={0L,0.0f,0.0f,0.0f,integrale_s::INTEGRALE_STATUS_NONE};
-	matrix::Vector3f result2=processMedian(l,r1,r2,r3,&isValid);
+	l={0L,4.0f,2.0f,5.0f,5.0f,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	r1={0L,3.0f,4.0f,7.0f,7.0f,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	r2={0L,1.0f,5.0f,3.0f,3.0f,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	r3={0L,0.0f,0.0f,0.0f,0.0f,integrale_s::INTEGRALE_STATUS_NONE};
+	matrix::Vector4f result2=processMedian(l,r1,r2,r3,&isValid);
 	EXPECT_FLOAT_EQ(3.0f,result2(0));
 	EXPECT_FLOAT_EQ(4.0f,result2(1));
 	EXPECT_FLOAT_EQ(5.0f,result2(2));
+	EXPECT_FLOAT_EQ(5.0f,result2(3));
 	EXPECT_EQ(true, isValid);
 
-	l={0L,4.0f,2.0f,5.0f,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	r1={0L,3.0f,4.0f,7.0f,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	r2={0L,1.0f,5.0f,3.0f,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	r3={0L,0.0f,0.0f,0.0f,integrale_s::INTEGRALE_STATUS_NONE};
-	matrix::Vector3f result3=processMedian(l,r1,r2,r3,&isValid);
+	l={0L,4.0f,2.0f,5.0f,5.0f,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	r1={0L,3.0f,4.0f,7.0f,7.0f,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	r2={0L,1.0f,5.0f,3.0f,3.0f,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	r3={0L,0.0f,0.0f,0.0f,0.0f,integrale_s::INTEGRALE_STATUS_NONE};
+	matrix::Vector4f result3=processMedian(l,r1,r2,r3,&isValid);
 	EXPECT_FLOAT_EQ(3.0f,result3(0));
 	EXPECT_FLOAT_EQ(4.0f,result3(1));
 	EXPECT_FLOAT_EQ(5.0f,result3(2));
+	EXPECT_FLOAT_EQ(5.0f,result3(3));
 	EXPECT_EQ(true, isValid);
-	l={0L,4.0f,2.0f,40.0f,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	r1={0L,3.0f,-10.0f,7.0f,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	r2={0L,1.0f,5.0f,3.0f,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	r3={0L,9.0f,4.0f,5.0f,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	matrix::Vector3f result4=processMedian(l,r1,r2,r3,&isValid);
+	l={0L,4.0f,2.0f,40.0f,40.0f,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	r1={0L,3.0f,-10.0f,7.0f,7.0f,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	r2={0L,1.0f,5.0f,3.0f,3.0f,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	r3={0L,9.0f,4.0f,5.0f,5.0f,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	matrix::Vector4f result4=processMedian(l,r1,r2,r3,&isValid);
 	EXPECT_FLOAT_EQ(3.0f,result4(0));
 	EXPECT_FLOAT_EQ(4.0f,result4(1));
 	EXPECT_FLOAT_EQ(5.0f,result4(2));
+	EXPECT_FLOAT_EQ(5.0f,result4(3));
 	EXPECT_EQ(true, isValid);
 }
 /*
@@ -259,82 +273,90 @@ TEST_F(IntegralePipeTest, testProcessPipe) {
 	uORB::Subscription _r3integrale_sub{ORB_ID(r3integrale)};
 	uORB::Subscription _integrale_sub{ORB_ID(integrale)};
 
-	matrix::Vector3f _pi_coef=matrix::Vector3f(1.0f,2.0f,3.0f);
-	matrix::Vector3f _pi_limit=matrix::Vector3f(40.0f,50.0f,60.0f);
+	matrix::Vector4f _pi_coef=matrix::Vector4f(1.0f,2.0f,3.0f,4.0f);
+	matrix::Vector4f _pi_limit=matrix::Vector4f(40.0f,50.0f,60.0f,70.0f);
 
-	integrale_s ls={0L,0.2f,0.2f,0.2f,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	integrale_s r1={0L,0.21f,0.21f,0.21f,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	integrale_s r2={0L,0.22f,0.22f,0.22f,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	integrale_s ls={0L,0.2f,0.2f,0.2f,0.2f,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	integrale_s r1={0L,0.21f,0.21f,0.21f,0.21f,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	integrale_s r2={0L,0.22f,0.22f,0.22f,0.22f,integrale_s::INTEGRALE_STATUS_COMPLETE};
 	//integrale_s r3={0L,0.22f,0.22f,0.22f,integrale_s::INTEGRALE_STATUS_NONE};
 	_integrales_pub.publish(ls);
 	_r1integrales_pub.publish(r1);
 	_r2integrales_pub.publish(r2);
 
-	matrix::Vector3f c1=pipeIntegrale(_pi_coef,_pi_limit,_integrale_sub,_r1integrale_sub,_r2integrale_sub,_r3integrale_sub);
+	matrix::Vector4f c1=pipeIntegrale(_pi_coef,_pi_limit,_integrale_sub,_r1integrale_sub,_r2integrale_sub,_r3integrale_sub);
 	EXPECT_FLOAT_EQ(-0.01f*500.0f,c1(0));
 	EXPECT_FLOAT_EQ(-0.02f*500.0f,c1(1));
 	EXPECT_FLOAT_EQ(-0.03f*500.0f,c1(2));
+	EXPECT_FLOAT_EQ(-0.04f*500.0f,c1(3));
 
-	_pi_coef=matrix::Vector3f(10.0f,20.0f,30.0f);
+	_pi_coef=matrix::Vector4f(10.0f,20.0f,30.0f,40.0f);
 	_integrales_pub.publish(ls);
 	_r1integrales_pub.publish(r1);
 	_r2integrales_pub.publish(r2);
-	matrix::Vector3f c2=pipeIntegrale(_pi_coef,_pi_limit,_integrale_sub,_r1integrale_sub,_r2integrale_sub,_r3integrale_sub);
+	matrix::Vector4f c2=pipeIntegrale(_pi_coef,_pi_limit,_integrale_sub,_r1integrale_sub,_r2integrale_sub,_r3integrale_sub);
 	EXPECT_FLOAT_EQ(-40.0f,c2(0));
 	EXPECT_FLOAT_EQ(-50.0f,c2(1));
 	EXPECT_FLOAT_EQ(-60.0f,c2(2));
+	EXPECT_FLOAT_EQ(-70.0f,c2(3));
 
-	_pi_coef=matrix::Vector3f(-1.0f,-2.0f,-3.0f);
+	_pi_coef=matrix::Vector4f(-1.0f,-2.0f,-3.0f,-4.0f);
 	_integrales_pub.publish(ls);
 	_r1integrales_pub.publish(r1);
 	_r2integrales_pub.publish(r2);
 
-	matrix::Vector3f c3=pipeIntegrale(_pi_coef,_pi_limit,_integrale_sub,_r1integrale_sub,_r2integrale_sub,_r3integrale_sub);
+	matrix::Vector4f c3=pipeIntegrale(_pi_coef,_pi_limit,_integrale_sub,_r1integrale_sub,_r2integrale_sub,_r3integrale_sub);
 	EXPECT_FLOAT_EQ(0.01f*500.0f,c3(0));
 	EXPECT_FLOAT_EQ(0.02f*500.0f,c3(1));
 	EXPECT_FLOAT_EQ(0.03f*500.0f,c3(2));
+	EXPECT_FLOAT_EQ(0.04f*500.0f,c3(3));
 
-	_pi_coef=matrix::Vector3f(-10.0f,-20.0f,-30.0f);
+	_pi_coef=matrix::Vector4f(-10.0f,-20.0f,-30.0f,-40.0f);
 	_integrales_pub.publish(ls);
 	_r1integrales_pub.publish(r1);
 	_r2integrales_pub.publish(r2);
-	matrix::Vector3f c4=pipeIntegrale(_pi_coef,_pi_limit,_integrale_sub,_r1integrale_sub,_r2integrale_sub,_r3integrale_sub);
+	matrix::Vector4f c4=pipeIntegrale(_pi_coef,_pi_limit,_integrale_sub,_r1integrale_sub,_r2integrale_sub,_r3integrale_sub);
 	EXPECT_FLOAT_EQ(40.0f,c4(0));
 	EXPECT_FLOAT_EQ(50.0f,c4(1));
 	EXPECT_FLOAT_EQ(60.0f,c4(2));
+	EXPECT_FLOAT_EQ(70.0f,c4(3));
 
 
-	zapata::StdVector<matrix::Vector3f> accuCorrection;
-	accuCorrection.push_back(matrix::Vector3f(1.0f,2.0f,3.0f));
-	accuCorrection.push_back(matrix::Vector3f(2.0f,3.0f,4.0f));
-	accuCorrection.push_back(matrix::Vector3f(3.0f,4.0f,5.0f));
-	accuCorrection.push_back(matrix::Vector3f(4.0f,5.0f,6.0f));
-	accuCorrection.push_back(matrix::Vector3f(5.0f,6.0f,7.0f));
-	matrix::Vector3f finalCorrection=matrix::Vector3f(0.0f,0.0f,0.0f);
+	zapata::StdVector<matrix::Vector4f> accuCorrection;
+	accuCorrection.push_back(matrix::Vector4f(1.0f,2.0f,3.0f,4.0f));
+	accuCorrection.push_back(matrix::Vector4f(2.0f,3.0f,4.0f,5.0f));
+	accuCorrection.push_back(matrix::Vector4f(3.0f,4.0f,5.0f,6.0f));
+	accuCorrection.push_back(matrix::Vector4f(4.0f,5.0f,6.0f,7.0f));
+	accuCorrection.push_back(matrix::Vector4f(5.0f,6.0f,7.0f,8.0f));
+	matrix::Vector4f finalCorrection=matrix::Vector4f(0.0f,0.0f,0.0f,0.0f);
 	for(unsigned int i=0;i<accuCorrection.size();i++) {
 		finalCorrection+=accuCorrection[i];
 	}
 	EXPECT_FLOAT_EQ(15.0f,finalCorrection(0));
 	EXPECT_FLOAT_EQ(20.0f,finalCorrection(1));
 	EXPECT_FLOAT_EQ(25.0f,finalCorrection(2));
+	EXPECT_FLOAT_EQ(30.0f,finalCorrection(3));
 	finalCorrection=finalCorrection/accuCorrection.size();
 	EXPECT_FLOAT_EQ(3.0f,finalCorrection(0));
 	EXPECT_FLOAT_EQ(4.0f,finalCorrection(1));
 	EXPECT_FLOAT_EQ(5.0f,finalCorrection(2));
-	accuCorrection.push_back(matrix::Vector3f(6.0f,7.0f,8.0f));
+	EXPECT_FLOAT_EQ(6.0f,finalCorrection(3));
+	accuCorrection.push_back(matrix::Vector4f(6.0f,7.0f,8.0f,9.0f));
 	for(unsigned int i=0;i<accuCorrection.size()-1;i++) {
 		accuCorrection[i]=accuCorrection[i+1];
 	}
 	accuCorrection.pop_back();
-	finalCorrection=matrix::Vector3f(0.0f,0.0f,0.0f);
+	finalCorrection=matrix::Vector4f(0.0f,0.0f,0.0f,0.0f);
 	for(unsigned int i=0;i<accuCorrection.size();i++) {
 		finalCorrection+=accuCorrection[i];
 	}
 	EXPECT_FLOAT_EQ(20.0f,finalCorrection(0));
 	EXPECT_FLOAT_EQ(25.0f,finalCorrection(1));
 	EXPECT_FLOAT_EQ(30.0f,finalCorrection(2));
+	EXPECT_FLOAT_EQ(35.0f,finalCorrection(3));
 	finalCorrection=finalCorrection/accuCorrection.size();
 	EXPECT_FLOAT_EQ(4.0f,finalCorrection(0));
 	EXPECT_FLOAT_EQ(5.0f,finalCorrection(1));
 	EXPECT_FLOAT_EQ(6.0f,finalCorrection(2));
+	EXPECT_FLOAT_EQ(7.0f,finalCorrection(3));
 }

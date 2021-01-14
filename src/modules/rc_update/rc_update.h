@@ -49,6 +49,7 @@
 #include <lib/mathlib/mathlib.h>
 #include <lib/mathlib/math/filter/LowPassFilter2p.hpp>
 #include <lib/perf/perf_counter.h>
+#include <lib/matrix/matrix/Vector4.hpp>
 #include <uORB/Publication.hpp>
 #include <uORB/PublicationMulti.hpp>
 #include <uORB/Subscription.hpp>
@@ -128,9 +129,9 @@ private:
 	/**
 	 * @brief process pipe correction
 	 *
-	 * @return matrix::Vector3f
+	 * @return matrix::Vector4f
 	 */
-	matrix::Vector3f pipeIntegrale(int * nbMedian);
+	matrix::Vector4f pipeIntegrale(int * nbMedian);
 	/**
 	 * @brief Process median
 	 *
@@ -138,9 +139,9 @@ private:
 	 * @param r1 r1 integrale
 	 * @param r2 r2 integrale
 	 * @param r3 r3 integrale
-	 * @return matrix::Vector3f
+	 * @return matrix::Vector4f
 	 */
-	matrix::Vector3f processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,bool * isvalid,int * nbMedian);
+	matrix::Vector4f processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,bool * isvalid,int * nbMedian);
 
 	/**
 	 * @brief Process median on array of float values
@@ -200,7 +201,7 @@ private:
 	int cntR2;
 	integrale_s lastR3;
 	int cntR3;
-	zapata::StdVector<matrix::Vector3f> accuCorrection;
+	zapata::StdVector<matrix::Vector4f> accuCorrection;
 
 
 	rc_channels_s _rc {};			/**< r/c channel data */
@@ -214,9 +215,9 @@ private:
 
 	perf_counter_t		_loop_perf;			/**< loop performance counter */
 
-	matrix::Vector3f _pi_coef;
-	matrix::Vector3f _pi_limit;
-	matrix::Vector3f _pi_mult;
+	matrix::Vector4f _pi_coef;
+	matrix::Vector4f _pi_limit;
+	matrix::Vector4f _pi_mult;
 	int32_t moyCorItems;
 
 	DEFINE_PARAMETERS(
@@ -274,12 +275,15 @@ private:
 		(ParamFloat<px4::params::RC_PI_COE_PITCH>) _param_rc_pi_coef_pitch,
 		(ParamFloat<px4::params::RC_PI_COE_ROLL>) _param_rc_pi_coef_roll,
 		(ParamFloat<px4::params::RC_PI_COE_YOW>) _param_rc_pi_coef_yow,
+		(ParamFloat<px4::params::RC_PI_COE_THRUST>) _param_rc_pi_coef_thrust,
 		(ParamFloat<px4::params::RC_PI_LIM_PITCH>) _param_rc_pi_limit_pitch,
 		(ParamFloat<px4::params::RC_PI_LIM_ROLL>) _param_rc_pi_limit_roll,
 		(ParamFloat<px4::params::RC_PI_LIM_YOW>) _param_rc_pi_limit_yow,
+		(ParamFloat<px4::params::RC_PI_LIM_THRUST>) _param_rc_pi_limit_thrust,
 		(ParamFloat<px4::params::RC_PI_MUL_PITCH>) _param_rc_pi_mul_pitch,
 		(ParamFloat<px4::params::RC_PI_MUL_ROLL>) _param_rc_pi_mul_roll,
 		(ParamFloat<px4::params::RC_PI_MUL_YOW>) _param_rc_pi_mul_yow,
+		(ParamFloat<px4::params::RC_PI_MUL_THRUST>) _param_rc_pi_mul_thrust,
 		(ParamInt<px4::params::RC_PI_MOY_COR>) _param_rc_pi_moy_cor
 	)
 

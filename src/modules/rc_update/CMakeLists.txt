@@ -34,6 +34,7 @@
 px4_add_module(
 	MODULE modules__rc_update
 	MAIN rc_update
+	STACK_MAIN 4096
 	SRCS
 		rc_update.cpp
 		rc_update.h

@@ -2235,6 +2235,7 @@ PARAM_DEFINE_FLOAT(RC_MAN_TH, 0.75f);
 PARAM_DEFINE_FLOAT(RC_PI_COE_PITCH, 1.0f); //IntegralePWM=1000+500*coef*integrale where -1.0<integrale<1.0
 PARAM_DEFINE_FLOAT(RC_PI_COE_ROLL, 1.0f); //IntegralePWM=1000+500*coef*integrale where -1.0<integrale<1.0
 PARAM_DEFINE_FLOAT(RC_PI_COE_YOW, 1.0f); //IntegralePWM=1000+500*coef*integrale where -1.0<integrale<1.0
+PARAM_DEFINE_FLOAT(RC_PI_COE_THRUST, 1.0f); //IntegralePWM=1000+500*coef*integrale where -1.0<integrale<1.0
 
 /*
 	limit of pipe
@@ -2242,12 +2243,14 @@ PARAM_DEFINE_FLOAT(RC_PI_COE_YOW, 1.0f); //IntegralePWM=1000+500*coef*integrale 
 PARAM_DEFINE_FLOAT(RC_PI_LIM_PITCH, 40.0f); //In PWM
 PARAM_DEFINE_FLOAT(RC_PI_LIM_ROLL, 40.0f); //In PWM
 PARAM_DEFINE_FLOAT(RC_PI_LIM_YOW, 40.0f); //In PWM
+PARAM_DEFINE_FLOAT(RC_PI_LIM_THRUST, 40.0f); //In PWM
 /*
 	pipe multiplier
 */
 PARAM_DEFINE_FLOAT(RC_PI_MUL_PITCH, 1.0f);
 PARAM_DEFINE_FLOAT(RC_PI_MUL_ROLL, 1.0f);
 PARAM_DEFINE_FLOAT(RC_PI_MUL_YOW, 1.0f);
+PARAM_DEFINE_FLOAT(RC_PI_MUL_THRUST, 1.0f);
 /*
 Moyenne
 */

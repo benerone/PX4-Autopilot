@@ -280,6 +280,7 @@ MulticopterRateControl::Run()
 			integrale_data.roll_rate_integral=integrale_values(0);
 			integrale_data.pitch_rate_integral=integrale_values(1);
 			integrale_data.yaw_rate_integral=integrale_values(2);
+			integrale_data.thrust=_thrust_sp;
 			integrale_data.status=integrale_s::INTEGRALE_STATUS_COMPLETE;
 			_integrales_pub.publish(integrale_data);
 
