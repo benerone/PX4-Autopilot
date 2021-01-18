@@ -69,10 +69,12 @@ private:
 	int32_t nbEmittedError;
 	bool postYow;
 	bool postCorrection;
+	bool postNbMedian;
 	float yowIntegraleValue;
 	float thrustValue;
 	float yowPipeCorrectionValue;
 	float thrustPipeCorrectionValue;
 	float nbMedianValue;
+
 };
 

@@ -25,6 +25,7 @@ typedef struct {
 #define OFFSET_YOW 		16
 #define OFFSET_CORR_PITCH_ROLL 	32
 #define OFFSET_CORR_YOW 	64
+#define OFFSET_STAT	 	128
 #define MASK_ID 		0b111
 #define MAX_DELAY_REFRESH	500000
 //Time Cycle in us
@@ -110,10 +111,11 @@ void ModuleCanIntegrale::run()
 	int32_t cycle=0;
 	postYow=false;
 	postCorrection=false;
+	postNbMedian=false;
 
-	r1_integrale={0L,0.0,0.0,0.0,integrale_s::INTEGRALE_STATUS_NONE};
-	r2_integrale={0L,0.0,0.0,0.0,integrale_s::INTEGRALE_STATUS_NONE};
-	r3_integrale={0L,0.0,0.0,0.0,integrale_s::INTEGRALE_STATUS_NONE};
+	r1_integrale={0L,0.0,0.0,0.0,0.0,integrale_s::INTEGRALE_STATUS_NONE};
+	r2_integrale={0L,0.0,0.0,0.0,0.0,integrale_s::INTEGRALE_STATUS_NONE};
+	r3_integrale={0L,0.0,0.0,0.0,0.0,integrale_s::INTEGRALE_STATUS_NONE};
 	_r1integrale_pub.publish(r1_integrale);
 	_r2integrale_pub.publish(r2_integrale);
 	_r3integrale_pub.publish(r3_integrale);
@@ -143,7 +145,7 @@ void ModuleCanIntegrale::run()
 
 	uavcan::ICanIface * iFace=can->driver.getIface(0);
 
-	usleep(sys_id*TIME_CYCLE*4); //id*packet_transfert_delay*nbpacket (2I and 2C)
+	usleep(sys_id*TIME_CYCLE*5); //id*packet_transfert_delay*nbpacket (2I and 2C)
 
 	while(!should_exit()) {
 
@@ -204,6 +206,19 @@ void ModuleCanIntegrale::run()
 				if (sendFrame(iFace,sys_id | OFFSET_CORR_YOW,(const uavcan::uint8_t *)&tmp,8)) {
 					cycle++;
 					postCorrection=false;
+					postNbMedian=true;
+				}
+			} else {
+				cycle++;
+			}
+			break;
+			case 4:
+			if (postNbMedian) {
+				tmp.v1=nbMedianValue;
+				tmp.v2=0.0f;
+				if (sendFrame(iFace,sys_id | OFFSET_STAT,(const uavcan::uint8_t *)&tmp,8)) {
+					cycle++;
+					postNbMedian=false;
 				}
 			} else {
 				cycle++;
@@ -211,7 +226,7 @@ void ModuleCanIntegrale::run()
 			break;
 			default:
 				cycle++;
-				if (cycle%16==0) {
+				if (cycle%20==0) {
 					cycle=0;
 				}
 			break;

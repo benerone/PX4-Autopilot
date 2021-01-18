@@ -428,6 +428,10 @@ RCUpdate::Run()
 			pipe_correction.yaw_correction=-finalCorrection(2);
 			pipe_correction.thrust_correction=-finalCorrection(3);
 			pipe_correction.nb_median=(float)nbMedian;
+			pipe_correction.param_mr=_pi_coef(0);
+			pipe_correction.param_mp=_pi_coef(1);
+			pipe_correction.param_my=_pi_coef(2);
+			pipe_correction.param_mt=_pi_coef(3);
 			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_ROLL]-=finalCorrection(0);
 			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_PITCH]-=finalCorrection(1);
 			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_YAW]-=finalCorrection(2);
