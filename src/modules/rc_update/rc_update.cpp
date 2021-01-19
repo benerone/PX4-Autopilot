@@ -432,13 +432,19 @@ RCUpdate::Run()
 			pipe_correction.param_mp=_pi_coef(1);
 			pipe_correction.param_my=_pi_coef(2);
 			pipe_correction.param_mt=_pi_coef(3);
-			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_ROLL]-=finalCorrection(0);
-			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_PITCH]-=finalCorrection(1);
-			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_YAW]-=finalCorrection(2);
-			rc_input.values[rc_channels_s::RC_CHANNELS_FUNCTION_THROTTLE]-=finalCorrection(3);
+			rc_input.values[_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_ROLL]]-=finalCorrection(0);
+			rc_input.values[_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_PITCH]]-=finalCorrection(1);
+			rc_input.values[_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_YAW]]-=finalCorrection(2);
+			rc_input.values[_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_THROTTLE]]-=finalCorrection(3);
 			_pipe_correction_pub.publish(pipe_correction);
 		}
 
+		input_rc_changed_s changes;
+		changes.input_source=rc_input.input_source;
+		for(int i=0;i<18;i++) {
+			changes.values[i]=rc_input.values[i];
+		}
+		_input_rc_pub.publish(changes);
 
 		/* read out and scale values from raw message even if signal is invalid */
 		for (unsigned int i = 0; i < channel_limit; i++) {

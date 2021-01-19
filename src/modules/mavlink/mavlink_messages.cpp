@@ -51,6 +51,7 @@
 #include "streams/storage_information.h"
 #include "streams/integrale_info.h"
 #include "streams/correction_info.h"
+#include "streams/rcinput_changed.h"
 
 #include <commander/px4_custom_mode.h>
 #include <drivers/drv_pwm_output.h>
@@ -5311,7 +5312,8 @@ static const StreamListItem streams_list[] = {
 	create_stream_list_item<MavlinkStreamStorageInformation>(),
 	create_stream_list_item<MavlinkStreamRawRpm>(),
 	create_stream_list_item<MavlinkStreamIntegrale>(),
-	create_stream_list_item<MavlinkStreamCorrection>()
+	create_stream_list_item<MavlinkStreamCorrection>(),
+	create_stream_list_item<MavlinkStreamRCInputChanged>()
 };
 
 const char *get_stream_name(const uint16_t msg_id)
