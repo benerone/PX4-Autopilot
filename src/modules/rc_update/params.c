@@ -2255,3 +2255,8 @@ PARAM_DEFINE_FLOAT(RC_PI_MUL_THRUST, 1.0f);
 Moyenne
 */
 PARAM_DEFINE_INT32(RC_PI_MOY_COR, 5);
+/*
+override correction if necessary on yaw near middle
+*/
+PARAM_DEFINE_INT32(RC_PI_MIN_YAW_TH, 2);
+PARAM_DEFINE_INT32(RC_PI_MIN_YAW_CR, 40);

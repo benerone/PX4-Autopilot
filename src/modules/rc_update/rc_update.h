@@ -63,6 +63,7 @@
 #include <uORB/topics/integrale.h>
 #include <uORB/topics/pipe_correction.h>
 #include <uORB/topics/input_rc_changed.h>
+#include <uORB/topics/vehicle_control_mode.h>
 
 namespace RCUpdate
 {
@@ -183,6 +184,7 @@ private:
 
 	uORB::Subscription	_parameter_update_sub{ORB_ID(parameter_update)};	/**< notification of parameter updates */
 	uORB::Subscription	_rc_parameter_map_sub{ORB_ID(rc_parameter_map)};	/**< rc parameter map subscription */
+	uORB::Subscription      _v_control_mode_sub{ORB_ID(vehicle_control_mode)};
 
 	uORB::Publication<rc_channels_s>	_rc_pub{ORB_ID(rc_channels)};
 	uORB::Publication<input_rc_changed_s>	_input_rc_pub{ORB_ID(input_rc_changed)};				/**< raw r/c control topic */
@@ -221,6 +223,8 @@ private:
 	matrix::Vector4f _pi_limit;
 	matrix::Vector4f _pi_mult;
 	int32_t moyCorItems;
+	int32_t _pi_min_yaw_th;
+	int32_t _pi_min_yaw_cr;
 
 	DEFINE_PARAMETERS(
 
@@ -286,7 +290,9 @@ private:
 		(ParamFloat<px4::params::RC_PI_MUL_ROLL>) _param_rc_pi_mul_roll,
 		(ParamFloat<px4::params::RC_PI_MUL_YOW>) _param_rc_pi_mul_yow,
 		(ParamFloat<px4::params::RC_PI_MUL_THRUST>) _param_rc_pi_mul_thrust,
-		(ParamInt<px4::params::RC_PI_MOY_COR>) _param_rc_pi_moy_cor
+		(ParamInt<px4::params::RC_PI_MOY_COR>) _param_rc_pi_moy_cor,
+		(ParamInt<px4::params::RC_PI_MIN_YAW_TH>) _param_rc_pi_min_yaw_th,
+		(ParamInt<px4::params::RC_PI_MIN_YAW_CR>) _param_rc_pi_min_yaw_cr
 	)
 
 };

@@ -148,6 +148,8 @@ RCUpdate::parameters_updated()
 	_pi_limit=matrix::Vector4f(_param_rc_pi_limit_roll.get(),_param_rc_pi_limit_pitch.get(),_param_rc_pi_limit_yow.get(),_param_rc_pi_limit_thrust.get());
 	_pi_mult=matrix::Vector4f(_param_rc_pi_mul_roll.get(),_param_rc_pi_mul_pitch.get(),_param_rc_pi_mul_yow.get(),_param_rc_pi_mul_thrust.get());
 	moyCorItems=_param_rc_pi_moy_cor.get();
+	_pi_min_yaw_th=_param_rc_pi_min_yaw_th.get();
+	_pi_min_yaw_cr=_param_rc_pi_min_yaw_cr.get();
 	update_rc_functions();
 }
 
@@ -331,8 +333,9 @@ RCUpdate::Run()
 
 	/* read low-level values from FMU or IO RC inputs (PPM, Spektrum, S.Bus) */
 	input_rc_s rc_input;
+	vehicle_control_mode_s control_mode{};
 
-	if (_input_rc_sub.copy(&rc_input)) {
+	if (_input_rc_sub.copy(&rc_input) && _v_control_mode_sub.copy(&control_mode)) {
 
 		// warn if the channel count is changing (possibly indication of error)
 		if (!rc_input.rc_lost && (_channel_count_previous != rc_input.channel_count) && (_channel_count_previous > 0)) {
@@ -406,37 +409,49 @@ RCUpdate::Run()
 		}
 
 		//Pipe depending on integrale
-		if (channel_limit>=rc_channels_s::RC_CHANNELS_FUNCTION_YAW) {
-			int nbMedian=0;
-			matrix::Vector4f correction=pipeIntegrale(&nbMedian);
-			accuCorrection.push_back(correction);
-			if (accuCorrection.size()>(unsigned int)moyCorItems) {
-				for(unsigned int i=0;i<accuCorrection.size()-1;i++) {
-					accuCorrection[i]=accuCorrection[i+1];
+
+		int nbMedian=0;
+		matrix::Vector4f correction=pipeIntegrale(&nbMedian);
+		accuCorrection.push_back(correction);
+		if (accuCorrection.size()>(unsigned int)moyCorItems) {
+			for(unsigned int i=0;i<accuCorrection.size()-1;i++) {
+				accuCorrection[i]=accuCorrection[i+1];
+			}
+			accuCorrection.pop_back();
+		}
+		matrix::Vector4f finalCorrection=matrix::Vector4f(0.0f,0.0f,0.0f,0.0f);
+		for(unsigned int i=0;i<accuCorrection.size();i++) {
+			finalCorrection+=accuCorrection[i];
+		}
+		finalCorrection=finalCorrection/accuCorrection.size();
+		pipe_correction_s pipe_correction{};
+		pipe_correction.timestamp=hrt_absolute_time();
+		pipe_correction.roll_correction=-finalCorrection(0);
+		pipe_correction.pitch_correction=-finalCorrection(1);
+		pipe_correction.yaw_correction=-finalCorrection(2);
+		pipe_correction.thrust_correction=-finalCorrection(3);
+		pipe_correction.nb_median=(float)nbMedian;
+		pipe_correction.param_mr=_pi_coef(0);
+		pipe_correction.param_mp=_pi_coef(1);
+		pipe_correction.param_my=_pi_coef(2);
+		pipe_correction.param_mt=_pi_coef(3);
+		rc_input.values[_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_ROLL]]-=finalCorrection(0);
+		rc_input.values[_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_PITCH]]-=finalCorrection(1);
+		rc_input.values[_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_YAW]]-=finalCorrection(2);
+		rc_input.values[_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_THROTTLE]]-=finalCorrection(3);
+		_pipe_correction_pub.publish(pipe_correction);
+		//Override correction on yaw in altitude mode if not median
+		if (control_mode.flag_control_altitude_enabled &&
+		    control_mode.flag_control_climb_rate_enabled && fabs(finalCorrection(2))>0.0) {
+			int8_t yaw_ch=_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_YAW];
+			int32_t diffyaw=abs(rc_input.values[yaw_ch]-_parameters.trim[yaw_ch]);
+			if (diffyaw>=_pi_min_yaw_th && diffyaw<_pi_min_yaw_cr) {
+				if (finalCorrection(2)<0.0f) {
+					rc_input.values[yaw_ch]=_parameters.trim[yaw_ch]+_pi_min_yaw_cr;
+				} else {
+					rc_input.values[yaw_ch]=_parameters.trim[yaw_ch]-_pi_min_yaw_cr;
 				}
-				accuCorrection.pop_back();
 			}
-			matrix::Vector4f finalCorrection=matrix::Vector4f(0.0f,0.0f,0.0f,0.0f);
-			for(unsigned int i=0;i<accuCorrection.size();i++) {
-				finalCorrection+=accuCorrection[i];
-			}
-			finalCorrection=finalCorrection/accuCorrection.size();
-			pipe_correction_s pipe_correction{};
-			pipe_correction.timestamp=hrt_absolute_time();
-			pipe_correction.roll_correction=-finalCorrection(0);
-			pipe_correction.pitch_correction=-finalCorrection(1);
-			pipe_correction.yaw_correction=-finalCorrection(2);
-			pipe_correction.thrust_correction=-finalCorrection(3);
-			pipe_correction.nb_median=(float)nbMedian;
-			pipe_correction.param_mr=_pi_coef(0);
-			pipe_correction.param_mp=_pi_coef(1);
-			pipe_correction.param_my=_pi_coef(2);
-			pipe_correction.param_mt=_pi_coef(3);
-			rc_input.values[_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_ROLL]]-=finalCorrection(0);
-			rc_input.values[_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_PITCH]]-=finalCorrection(1);
-			rc_input.values[_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_YAW]]-=finalCorrection(2);
-			rc_input.values[_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_THROTTLE]]-=finalCorrection(3);
-			_pipe_correction_pub.publish(pipe_correction);
 		}
 
 		input_rc_changed_s changes;
