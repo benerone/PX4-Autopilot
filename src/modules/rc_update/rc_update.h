@@ -206,6 +206,10 @@ private:
 	integrale_s lastR3;
 	int cntR3;
 	zapata::StdVector<matrix::Vector4f> accuCorrection;
+	zapata::StdVector<float> accuCorrectionPitch;
+	zapata::StdVector<float> accuCorrectionRoll;
+	zapata::StdVector<float> accuCorrectionYaw;
+	zapata::StdVector<float> accuCorrectionThrust;
 
 
 	rc_channels_s _rc {};			/**< r/c channel data */
@@ -223,6 +227,10 @@ private:
 	matrix::Vector4f _pi_limit;
 	matrix::Vector4f _pi_mult;
 	int32_t moyCorItems;
+	int32_t moyCorItems_pitch;
+	int32_t moyCorItems_roll;
+	int32_t moyCorItems_yaw;
+	int32_t moyCorItems_thrust;
 	int32_t _pi_min_yaw_th;
 	int32_t _pi_min_yaw_cr;
 
@@ -291,6 +299,10 @@ private:
 		(ParamFloat<px4::params::RC_PI_MUL_YOW>) _param_rc_pi_mul_yow,
 		(ParamFloat<px4::params::RC_PI_MUL_THRUST>) _param_rc_pi_mul_thrust,
 		(ParamInt<px4::params::RC_PI_MOY_COR>) _param_rc_pi_moy_cor,
+		(ParamInt<px4::params::RC_PI_MOY_COR_PI>) _param_rc_pi_moy_cor_pitch,
+		(ParamInt<px4::params::RC_PI_MOY_COR_RO>) _param_rc_pi_moy_cor_roll,
+		(ParamInt<px4::params::RC_PI_MOY_COR_YO>) _param_rc_pi_moy_cor_yaw,
+		(ParamInt<px4::params::RC_PI_MOY_COR_TH>) _param_rc_pi_moy_cor_thrust,
 		(ParamInt<px4::params::RC_PI_MIN_YAW_TH>) _param_rc_pi_min_yaw_th,
 		(ParamInt<px4::params::RC_PI_MIN_YAW_CR>) _param_rc_pi_min_yaw_cr
 	)

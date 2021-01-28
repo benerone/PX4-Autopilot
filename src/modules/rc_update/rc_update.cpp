@@ -148,6 +148,10 @@ RCUpdate::parameters_updated()
 	_pi_limit=matrix::Vector4f(_param_rc_pi_limit_roll.get(),_param_rc_pi_limit_pitch.get(),_param_rc_pi_limit_yow.get(),_param_rc_pi_limit_thrust.get());
 	_pi_mult=matrix::Vector4f(_param_rc_pi_mul_roll.get(),_param_rc_pi_mul_pitch.get(),_param_rc_pi_mul_yow.get(),_param_rc_pi_mul_thrust.get());
 	moyCorItems=_param_rc_pi_moy_cor.get();
+	moyCorItems_pitch=_param_rc_pi_moy_cor_pitch.get();
+	moyCorItems_roll=_param_rc_pi_moy_cor_roll.get();
+	moyCorItems_yaw=_param_rc_pi_moy_cor_yaw.get();
+	moyCorItems_thrust=_param_rc_pi_moy_cor_thrust.get();
 	_pi_min_yaw_th=_param_rc_pi_min_yaw_th.get();
 	_pi_min_yaw_cr=_param_rc_pi_min_yaw_cr.get();
 	update_rc_functions();
@@ -412,18 +416,70 @@ RCUpdate::Run()
 
 		int nbMedian=0;
 		matrix::Vector4f correction=pipeIntegrale(&nbMedian);
-		accuCorrection.push_back(correction);
+		accuCorrectionRoll.push_back(correction(0));
+		accuCorrectionPitch.push_back(correction(1));
+		accuCorrectionYaw.push_back(correction(2));
+		accuCorrectionThrust.push_back(correction(3));
+		if (accuCorrectionRoll.size()>(unsigned int)moyCorItems_roll) {
+			for(unsigned int i=0;i<accuCorrectionRoll.size()-1;i++) {
+				accuCorrectionRoll[i]=accuCorrectionRoll[i+1];
+			}
+			accuCorrectionRoll.pop_back();
+		}
+		if (accuCorrectionPitch.size()>(unsigned int)moyCorItems_pitch) {
+			for(unsigned int i=0;i<accuCorrectionPitch.size()-1;i++) {
+				accuCorrectionPitch[i]=accuCorrectionPitch[i+1];
+			}
+			accuCorrectionPitch.pop_back();
+		}
+		if (accuCorrectionYaw.size()>(unsigned int)moyCorItems_yaw) {
+			for(unsigned int i=0;i<accuCorrectionYaw.size()-1;i++) {
+				accuCorrectionYaw[i]=accuCorrectionYaw[i+1];
+			}
+			accuCorrectionYaw.pop_back();
+		}
+		if (accuCorrectionThrust.size()>(unsigned int)moyCorItems_thrust) {
+			for(unsigned int i=0;i<accuCorrectionThrust.size()-1;i++) {
+				accuCorrectionThrust[i]=accuCorrectionThrust[i+1];
+			}
+			accuCorrectionThrust.pop_back();
+		}
+
+
+		/*accuCorrection.push_back(correction);
 		if (accuCorrection.size()>(unsigned int)moyCorItems) {
 			for(unsigned int i=0;i<accuCorrection.size()-1;i++) {
 				accuCorrection[i]=accuCorrection[i+1];
 			}
 			accuCorrection.pop_back();
-		}
+		}*/
 		matrix::Vector4f finalCorrection=matrix::Vector4f(0.0f,0.0f,0.0f,0.0f);
-		for(unsigned int i=0;i<accuCorrection.size();i++) {
+		for(unsigned int i=0;i<accuCorrectionRoll.size();i++) {
+			finalCorrection(0)+=accuCorrectionRoll[i];
+		}
+		finalCorrection(0)=finalCorrection(0)/accuCorrectionRoll.size();
+		for(unsigned int i=0;i<accuCorrectionPitch.size();i++) {
+			finalCorrection(1)+=accuCorrectionPitch[i];
+		}
+		finalCorrection(1)=finalCorrection(1)/accuCorrectionPitch.size();
+		for(unsigned int i=0;i<accuCorrectionYaw.size();i++) {
+			finalCorrection(2)+=accuCorrectionYaw[i];
+		}
+		finalCorrection(2)=finalCorrection(2)/accuCorrectionYaw.size();
+		for(unsigned int i=0;i<accuCorrectionThrust.size();i++) {
+			finalCorrection(3)+=accuCorrectionThrust[i];
+		}
+		finalCorrection(3)=finalCorrection(3)/accuCorrectionThrust.size();
+
+
+
+		/*for(unsigned int i=0;i<accuCorrection.size();i++) {
 			finalCorrection+=accuCorrection[i];
 		}
-		finalCorrection=finalCorrection/accuCorrection.size();
+		finalCorrection=finalCorrection/accuCorrection.size();*/
+
+
+
 		pipe_correction_s pipe_correction{};
 		pipe_correction.timestamp=hrt_absolute_time();
 		pipe_correction.roll_correction=-finalCorrection(0);
