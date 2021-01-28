@@ -210,7 +210,7 @@ private:
 	zapata::StdVector<float> accuCorrectionRoll;
 	zapata::StdVector<float> accuCorrectionYaw;
 	zapata::StdVector<float> accuCorrectionThrust;
-
+	int32_t sys_id;
 
 	rc_channels_s _rc {};			/**< r/c channel data */
 
@@ -304,7 +304,8 @@ private:
 		(ParamInt<px4::params::RC_PI_MOY_COR_YO>) _param_rc_pi_moy_cor_yaw,
 		(ParamInt<px4::params::RC_PI_MOY_COR_TH>) _param_rc_pi_moy_cor_thrust,
 		(ParamInt<px4::params::RC_PI_MIN_YAW_TH>) _param_rc_pi_min_yaw_th,
-		(ParamInt<px4::params::RC_PI_MIN_YAW_CR>) _param_rc_pi_min_yaw_cr
+		(ParamInt<px4::params::RC_PI_MIN_YAW_CR>) _param_rc_pi_min_yaw_cr,
+		(ParamInt<px4::params::MAV_SYS_ID>) _param_mav_sys_id
 	)
 
 };

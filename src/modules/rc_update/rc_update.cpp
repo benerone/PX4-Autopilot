@@ -154,6 +154,7 @@ RCUpdate::parameters_updated()
 	moyCorItems_thrust=_param_rc_pi_moy_cor_thrust.get();
 	_pi_min_yaw_th=_param_rc_pi_min_yaw_th.get();
 	_pi_min_yaw_cr=_param_rc_pi_min_yaw_cr.get();
+	sys_id=_param_mav_sys_id.get();
 	update_rc_functions();
 }
 
@@ -828,7 +829,11 @@ float RCUpdate::processMedianOnVector(zapata::StdVector<float> &values) {
 	zapata::quicksort(values,0,values.size()-1); //Lowest first
 	//Case 2
 	if (values.size()==2) {
-		return MINABS(values[0],values[1]);
+		if (sys_id==1) {
+			return values[0];
+		} else {
+			return values[1];
+		}
 	}
 
 	//if 4 values , remove farthest
