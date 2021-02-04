@@ -266,6 +266,14 @@ int MultirotorMixer::parse_rotor_scaler(const char *buf, unsigned &buflen, Rotor
 
 	return 0;
 }
+void MultirotorMixer::print(PrinterFunction pF) {
+	(*pF)("Multirotor Mixer with %d rotors",_rotor_count);
+	(*pF)("-> Rs:%f Ps:%f Ys:%f idleSpeed:%f",(double)_roll_scale,(double)_pitch_scale,(double)_yaw_scale,(double)_idle_speed);
+	for(int i=0;i<(int)_rotor_count;i++) {
+		(*pF)("->Rotor %d: Rs:%f Ps:%f Ts:%f Ys:%f",i,
+			(double)_rotors[i].roll_scale,(double)_rotors[i].pitch_scale,(double)_rotors[i].thrust_scale,(double)(double)_rotors[i].yaw_scale);
+	}
+}
 float
 MultirotorMixer::compute_desaturation_gain(const float *desaturation_vector, const float *outputs,
 		saturation_status &sat_status, float min_output, float max_output) const

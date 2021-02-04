@@ -189,6 +189,7 @@ public:
 		uint16_t value;
 	};
 
+	void                            print(PrinterFunction pF);
 private:
 	/**
 	 * Computes the gain k by which desaturation_vector has to be multiplied
