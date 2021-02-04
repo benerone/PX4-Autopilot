@@ -129,6 +129,8 @@
 #include <containers/List.hpp>
 #include <mathlib/mathlib.h>
 
+typedef void (*PrinterFunction)(const char* fmt, ...);
+
 /**
  * Abstract class defining a mixer mixing zero or more inputs to
  * one or more outputs.
@@ -229,6 +231,7 @@ public:
 
 	virtual unsigned		get_multirotor_count()  { return 0; }
 
+	virtual void print(PrinterFunction pF)  {}
 protected:
 
 	/** client-supplied callback used when fetching control values */

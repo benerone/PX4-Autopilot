@@ -95,17 +95,34 @@ MultirotorMixer::MultirotorMixer(ControlCallback control_cb, uintptr_t cb_handle
 	_rotor_count(rotor_count),
 	_rotors(rotors),
 	_outputs_prev(new float[_rotor_count]),
-	_tmp_array(new float[_rotor_count])
+	_tmp_array(new float[_rotor_count]),
+	freeRotors(false)
 {
 	for (unsigned i = 0; i < _rotor_count; ++i) {
 		_outputs_prev[i] = _idle_speed;
 	}
 }
-
+MultirotorMixer::MultirotorMixer(ControlCallback control_cb, uintptr_t cb_handle, const Rotor *rotors, unsigned rotor_count,
+			float roll_scale, float pitch_scale, float yaw_scale, float idle_speed):
+	Mixer(control_cb, cb_handle),
+	_rotor_count(rotor_count),
+	_rotors(rotors),
+	_outputs_prev(new float[_rotor_count]),
+	_tmp_array(new float[_rotor_count]),
+	freeRotors(true)
+{
+	_roll_scale = roll_scale;
+	_pitch_scale = pitch_scale;
+	_yaw_scale = yaw_scale;
+	_idle_speed = -1.0f + idle_speed * 2.0f;
+}
 MultirotorMixer::~MultirotorMixer()
 {
 	delete[] _outputs_prev;
 	delete[] _tmp_array;
+	if (freeRotors) {
+		free((void *)_rotors);
+	}
 }
 
 MultirotorMixer *
@@ -114,6 +131,7 @@ MultirotorMixer::from_text(Mixer::ControlCallback control_cb, uintptr_t cb_handl
 	MultirotorGeometry geometry = MultirotorGeometry::MAX_GEOMETRY;
 	char geomname[16];
 	int s[4];
+	unsigned int nbRotors;
 	int used;
 
 	/* enforce that the mixer ends with a new line */
@@ -121,50 +139,133 @@ MultirotorMixer::from_text(Mixer::ControlCallback control_cb, uintptr_t cb_handl
 		return nullptr;
 	}
 
-	if (sscanf(buf, "R: %15s %d %d %d %d%n", geomname, &s[0], &s[1], &s[2], &s[3], &used) != 5) {
-		debug("multirotor parse failed on '%s'", buf);
-		return nullptr;
+	if (buf[0]=='R') {
+
+		if (sscanf(buf, "R: %15s %d %d %d %d%n", geomname, &s[0], &s[1], &s[2], &s[3], &used) != 5) {
+			debug("multirotor parse failed on '%s'", buf);
+			return nullptr;
+		}
+
+		if (used > (int)buflen) {
+			debug("OVERFLOW: multirotor spec used %d of %u", used, buflen);
+			return nullptr;
+		}
+
+		buf = skipline(buf, buflen);
+
+		if (buf == nullptr) {
+			debug("no line ending, line is incomplete");
+			return nullptr;
+		}
+
+		debug("remaining in buf: %d, first char: %c", buflen, buf[0]);
+
+		for (MultirotorGeometryUnderlyingType i = 0; i < (MultirotorGeometryUnderlyingType)MultirotorGeometry::MAX_GEOMETRY;
+		i++) {
+			if (!strcmp(geomname, _config_key[i])) {
+				geometry = (MultirotorGeometry)i;
+				break;
+			}
+		}
+
+		if (geometry == MultirotorGeometry::MAX_GEOMETRY) {
+			debug("unrecognised geometry '%s'", geomname);
+			return nullptr;
+		}
+
+		debug("adding multirotor mixer '%s'", geomname);
+
+		return new MultirotorMixer(
+			control_cb,
+			cb_handle,
+			geometry,
+			s[0] / 10000.0f,
+			s[1] / 10000.0f,
+			s[2] / 10000.0f,
+			s[3] / 10000.0f);
+
+	}
+	if (buf[0]=='C') {
+		const char *end = buf + buflen;
+		if (sscanf(buf, "C: %u %d %d %d %d%n", &nbRotors, &s[0], &s[1], &s[2], &s[3], &used) != 5) {
+			debug("custom multirotor parse failed on '%s'", buf);
+			return nullptr;
+		}
+
+		if (used > (int)buflen) {
+			debug("OVERFLOW: nullptr multirotor spec used %d of %u", used, buflen);
+			return nullptr;
+		}
+		buf = skipline(buf, buflen);
+
+		if (buf == nullptr) {
+			debug("no line ending, line is incomplete");
+			return nullptr;
+		}
+		if (nbRotors>MAX_ROTORS) {
+			debug("OVERFLOW: Too many rotor %d, max rotor is %d", nbRotors, MAX_ROTORS);
+			return nullptr;
+		}
+		Rotor * customRotors=(Rotor *)malloc(sizeof(Rotor)*nbRotors);
+		//Parse rotor geometry
+		bool errorRotorDesc=false;
+		for (unsigned int i = 0; i < nbRotors; i++) {
+			if (parse_rotor_scaler(end - buflen, buflen,customRotors[i])) {
+				debug("custom multirotor mixer parser failed parsing rotor scaler tag, ret: '%s'", buf);
+				errorRotorDesc=true;
+				break;
+			}
+		}
+		if (errorRotorDesc) {
+			free((void *)customRotors);
+			return nullptr;
+		}
+		debug("adding multirotor mixer '%s'", geomname);
+
+		return new MultirotorMixer(
+			control_cb,
+			cb_handle,
+			customRotors,
+			nbRotors,
+			s[0] / 10000.0f,
+			s[1] / 10000.0f,
+			s[2] / 10000.0f,
+			s[3] / 10000.0f);
+
+
+	}
+	return nullptr;
+}
+int MultirotorMixer::parse_rotor_scaler(const char *buf, unsigned &buflen, Rotor & rotor) {
+	int s[4];
+
+	buf = findtag(buf, buflen, 'N');
+
+	if ((buf == nullptr)) {
+		debug("rotor parser failed finding tag, ret: '%s'", buf);
+		return -1;
 	}
 
-	if (used > (int)buflen) {
-		debug("OVERFLOW: multirotor spec used %d of %u", used, buflen);
-		return nullptr;
+	if (sscanf(buf, "N: %d %d %d %d",
+		   &s[0], &s[1], &s[2], &s[3]) != 4) {
+		debug("rotor parse failed on '%s'", buf);
+		return -1;
 	}
 
 	buf = skipline(buf, buflen);
 
 	if (buf == nullptr) {
 		debug("no line ending, line is incomplete");
-		return nullptr;
+		return -1;
 	}
 
-	debug("remaining in buf: %d, first char: %c", buflen, buf[0]);
+	rotor.pitch_scale = s[0] / 10000.0f;
+	rotor.roll_scale = s[1] / 10000.0f;
+	rotor.thrust_scale = s[2] / 10000.0f;
+	rotor.yaw_scale = s[3] / 10000.0f;
 
-	for (MultirotorGeometryUnderlyingType i = 0; i < (MultirotorGeometryUnderlyingType)MultirotorGeometry::MAX_GEOMETRY;
-	     i++) {
-		if (!strcmp(geomname, _config_key[i])) {
-			geometry = (MultirotorGeometry)i;
-			break;
-		}
-	}
-
-	if (geometry == MultirotorGeometry::MAX_GEOMETRY) {
-		debug("unrecognised geometry '%s'", geomname);
-		return nullptr;
-	}
-
-	debug("adding multirotor mixer '%s'", geomname);
-
-	return new MultirotorMixer(
-		       control_cb,
-		       cb_handle,
-		       geometry,
-		       s[0] / 10000.0f,
-		       s[1] / 10000.0f,
-		       s[2] / 10000.0f,
-		       s[3] / 10000.0f);
+	return 0;
 }
-
 float
 MultirotorMixer::compute_desaturation_gain(const float *desaturation_vector, const float *outputs,
 		saturation_status &sat_status, float min_output, float max_output) const

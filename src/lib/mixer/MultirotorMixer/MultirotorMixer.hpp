@@ -35,6 +35,8 @@
 
 #include <mixer/MixerBase/Mixer.hpp>
 
+#define MAX_ROTORS 8
+
 /**
  * Supported multirotor geometries.
  *
@@ -91,6 +93,26 @@ public:
 	 * @param rotor_count		length of rotors array (= number of motors)
 	 */
 	MultirotorMixer(ControlCallback control_cb, uintptr_t cb_handle, const Rotor *rotors, unsigned rotor_count);
+	/**
+	 * Constructor.
+	 *
+	 * @param control_cb		Callback invoked to read inputs.
+	 * @param cb_handle		Passed to control_cb.
+         * @param rotors		control allocation matrix (free on destroy)
+	 * @param rotor_count		length of rotors array (= number of motors)
+	 * @param roll_scale		Scaling factor applied to roll inputs
+	 *				compared to thrust.
+	 * @param pitch_scale		Scaling factor applied to pitch inputs
+	 *				compared to thrust.
+	 * @param yaw_wcale		Scaling factor applied to yaw inputs compared
+	 *				to thrust.
+	 * @param idle_speed		Minimum rotor control output value; usually
+	 *				tuned to ensure that rotors never stall at the
+	 * 				low end of their control range.
+	 */
+
+	MultirotorMixer(ControlCallback control_cb, uintptr_t cb_handle, const Rotor *rotors, unsigned rotor_count,
+			float roll_scale, float pitch_scale, float yaw_scale, float idle_speed);
 	virtual ~MultirotorMixer();
 
 	// no copy, assignment, move, move assignment
@@ -241,6 +263,8 @@ private:
 
 	void update_saturation_status(unsigned index, bool clipping_high, bool clipping_low_roll_pitch, bool clipping_low_yaw);
 
+	static int parse_rotor_scaler(const char *buf, unsigned &buflen, Rotor & rotor);
+
 	float				_roll_scale{1.0f};
 	float				_pitch_scale{1.0f};
 	float				_yaw_scale{1.0f};
@@ -257,4 +281,6 @@ private:
 
 	float 				*_outputs_prev{nullptr};
 	float 				*_tmp_array{nullptr};
+
+	bool freeRotors;
 };

@@ -119,7 +119,7 @@ public:
 
 	unsigned			set_trim(float trim) override;
 	unsigned			get_trim(float *trim) override;
-
+	void                            print(PrinterFunction pF);
 private:
 
 	/**

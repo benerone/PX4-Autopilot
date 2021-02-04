@@ -83,12 +83,34 @@ MixingOutput::~MixingOutput()
 	delete _mixers;
 	px4_sem_destroy(&_lock);
 }
+void printerFunction(const char* fmt, ...) {
+
+    va_list args;
+    char mess[128];
+
+    //decode
+    va_start(args,fmt);
+    vsprintf(mess,fmt,args);
+    va_end(args);
+
+    PX4_INFO("%s",mess);
+}
 
 void MixingOutput::printStatus() const
 {
 	perf_print_counter(_control_latency_perf);
 	PX4_INFO("Switched to rate_ctrl work queue: %i", (int)_wq_switched);
-	PX4_INFO("Mixer loaded: %s", _mixers ? "yes" : "no");
+	PX4_INFO("Mixer loaded : %s", _mixers ? "yes" : "no");
+	if (_mixers!=nullptr) {
+		List<Mixer *> * allMixers=_mixers->getMixers();
+		PX4_INFO("Mixers found %d",_mixers->count());
+		Mixer * m=allMixers->getHead();
+		while (m!=nullptr) {
+			m->print(printerFunction);
+			m=m->getSibling();
+		}
+	}
+
 	PX4_INFO("Driver instance: %i", _driver_instance);
 
 	PX4_INFO("Channel Configuration:");

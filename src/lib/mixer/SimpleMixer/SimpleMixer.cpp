@@ -353,3 +353,14 @@ SimpleMixer::scale_check(mixer_scaler_s &scaler)
 
 	return 0;
 }
+void  SimpleMixer::print(PrinterFunction pF) {
+	(*pF)("Summing Mixer with %d controls",_pinfo->control_count);
+
+	for(int i=0;i<(int)_pinfo->control_count;i++) {
+		(*pF)("->Ctrl %d[%d:%d]: PS:%f NS:%f O:%f Min:%f Max:%f",i,_pinfo->controls[i].control_group,_pinfo->controls[i].control_index,
+			(double)_pinfo->controls[i].scaler.positive_scale,(double)_pinfo->controls[i].scaler.negative_scale,(double)_pinfo->controls[i].scaler.offset,
+			(double)_pinfo->controls[i].scaler.min_output,(double)_pinfo->controls[i].scaler.max_output);
+	}
+
+
+}
