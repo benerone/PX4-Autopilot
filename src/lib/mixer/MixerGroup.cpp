@@ -43,6 +43,7 @@
 #include "MultirotorMixer/MultirotorMixer.hpp"
 #include "NullMixer/NullMixer.hpp"
 #include "SimpleMixer/SimpleMixer.hpp"
+#include "KMixer/KMixer.hpp"
 
 #define debug(fmt, args...)	do { } while(0)
 //#define debug(fmt, args...)	do { printf("[mixer] " fmt "\n", ##args); } while(0)
@@ -203,6 +204,9 @@ MixerGroup::load_from_buf(Mixer::ControlCallback control_cb, uintptr_t cb_handle
 
 		case 'H':
 			m = HelicopterMixer::from_text(control_cb, cb_handle, p, resid);
+			break;
+		case 'K':
+			m = KMixer::from_text(control_cb, cb_handle, p, resid);
 			break;
 
 		default:
