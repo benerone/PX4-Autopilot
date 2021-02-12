@@ -499,7 +499,7 @@ RCUpdate::Run()
 		_pipe_correction_pub.publish(pipe_correction);
 		//Override correction on yaw in altitude mode if not median
 		if (control_mode.flag_control_altitude_enabled &&
-		    control_mode.flag_control_climb_rate_enabled && fabs(finalCorrection(2))>0.0) {
+		    control_mode.flag_control_climb_rate_enabled && fabs((double)finalCorrection(2))>0.0) {
 			int8_t yaw_ch=_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_YAW];
 			int32_t diffyaw=abs(rc_input.values[yaw_ch]-_parameters.trim[yaw_ch]);
 			if (diffyaw>=_pi_min_yaw_th && diffyaw<_pi_min_yaw_cr) {
