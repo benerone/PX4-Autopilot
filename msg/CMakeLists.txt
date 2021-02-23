@@ -72,6 +72,7 @@ set(msg_files
 	input_rc.msg
 	input_rc_changed.msg
 	integrale.msg
+	integralepos.msg
 	iridiumsbd_status.msg
 	irlock_report.msg
 	landing_gear.msg
