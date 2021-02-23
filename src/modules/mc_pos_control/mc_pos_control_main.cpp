@@ -67,6 +67,7 @@
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/vehicle_trajectory_waypoint.h>
 #include <uORB/topics/hover_thrust_estimate.h>
+#include <uORB/topics/integralepos.h>
 
 #include "PositionControl/PositionControl.hpp"
 #include "Takeoff/Takeoff.hpp"
@@ -114,6 +115,7 @@ private:
 	uORB::Publication<landing_gear_s>			_landing_gear_pub{ORB_ID(landing_gear)};
 	uORB::Publication<vehicle_local_position_setpoint_s>	_local_pos_sp_pub{ORB_ID(vehicle_local_position_setpoint)};	/**< vehicle local position setpoint publication */
 	uORB::Publication<vehicle_local_position_setpoint_s>	_traj_sp_pub{ORB_ID(trajectory_setpoint)};			/**< trajectory setpoints publication */
+	uORB::Publication<integralepos_s>			_integralepos_pub{ORB_ID(integralepos)};
 
 	uORB::SubscriptionCallbackWorkItem _local_pos_sub{this, ORB_ID(vehicle_local_position)};	/**< vehicle local position */
 
@@ -645,6 +647,10 @@ MulticopterPositionControl::Run()
 			_control.setConstraints(constraints);
 			_control.setInputSetpoint(setpoint);
 
+			integralepos_s integralepos_data{};
+			integralepos_data.timestamp=time_stamp_now;
+			integralepos_data.thrust_vel_integral=_control.getVelocityIntegralThrust();
+			_integralepos_pub.publish(integralepos_data);
 			if (!_control.update(dt)) {
 				if ((time_stamp_now - _last_warn) > 1_s) {
 					PX4_WARN("invalid setpoints");
@@ -656,6 +662,7 @@ MulticopterPositionControl::Run()
 				constraints = FlightTask::empty_constraints;
 				_control.update(dt);
 			}
+
 
 			// Fill local position, velocity and thrust setpoint.
 			// This message contains setpoints where each type of setpoint is either the input to the PositionController

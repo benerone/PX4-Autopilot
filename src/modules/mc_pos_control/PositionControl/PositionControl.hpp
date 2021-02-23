@@ -179,6 +179,8 @@ public:
 	 */
 	void getAttitudeSetpoint(vehicle_attitude_setpoint_s &attitude_setpoint) const;
 
+	float getVelocityIntegralThrust();
+
 private:
 	bool _updateSuccessful();
 

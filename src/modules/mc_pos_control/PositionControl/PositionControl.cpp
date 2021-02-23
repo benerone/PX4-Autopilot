@@ -188,7 +188,9 @@ void PositionControl::_velocityControl(const float dt)
 	// limit thrust integral
 	_vel_int(2) = math::min(fabsf(_vel_int(2)), CONSTANTS_ONE_G) * sign(_vel_int(2));
 }
-
+float PositionControl::getVelocityIntegralThrust() {
+	return _vel_int(2);
+}
 void PositionControl::_accelerationControl()
 {
 	// Assume standard acceleration due to gravity in vertical direction for attitude generation
