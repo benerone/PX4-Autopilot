@@ -290,6 +290,7 @@ void ModuleCanIntegrale::run()
 				processReceivedFrame(iFace2,canFrame);
 			}
 		}
+
 		//Check unrefresh
 		uint64_t currentTime=hrt_absolute_time();
 		if (currentTime-r1_integrale.timestamp>MAX_DELAY_REFRESH) {
