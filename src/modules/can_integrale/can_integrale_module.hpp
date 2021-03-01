@@ -8,6 +8,7 @@
 #include <uORB/topics/parameter_update.h>
 #include <uORB/topics/integrale.h>
 #include <uORB/topics/pipe_correction.h>
+#include <uORB/topics/can_status.h>
 
 # include <uavcan_stm32/uavcan_stm32.hpp>
 
@@ -48,7 +49,8 @@ private:
 		(ParamInt<px4::params::MAV_SYS_ID>) _param_mav_sys_id
 	)
 
-	bool sendFrame(uavcan::ICanIface * iFace,uint32_t can_id, const uint8_t* can_data, uint8_t data_len);
+	bool sendFrame(uavcan::ICanIface * iFacePart,uint32_t can_id, const uint8_t* can_data, uint8_t data_len);
+	void processReceivedFrame(uavcan::ICanIface * iFacePart,uavcan::CanFrame &canFrame);
 
 	// Subscriptions=
 	uORB::Subscription 	_integrale_sub{ORB_ID(integrale)};
@@ -56,6 +58,8 @@ private:
 	uORB::Publication<integrale_s>			_r1integrale_pub{ORB_ID(r1integrale)};
 	uORB::Publication<integrale_s>			_r2integrale_pub{ORB_ID(r2integrale)};
 	uORB::Publication<integrale_s>			_r3integrale_pub{ORB_ID(r3integrale)};
+	uORB::Publication<can_status_s>			_can_status_pub{ORB_ID(can_status)};
+	can_status_s can_status;
 	integrale_s r1_integrale;
 	integrale_s r2_integrale;
 	integrale_s r3_integrale;
@@ -63,10 +67,12 @@ private:
 	int32_t nbReceivedR1;
 	int32_t nbReceivedR2;
 	int32_t nbReceivedR3;
-	int32_t nbReceived;
-	int32_t nbEmitted;
-	int32_t nbReceivedError;
-	int32_t nbEmittedError;
+	int32_t nbReceived[2];
+	int32_t nbEmitted[2];
+	int32_t nbReceivedError[2];
+	int32_t nbEmittedError[2];
+	uavcan::ICanIface * iFace;
+	uavcan::ICanIface * iFace2;
 	bool postYow;
 	bool postCorrection;
 	bool postNbMedian;
@@ -75,6 +81,7 @@ private:
 	float yowPipeCorrectionValue;
 	float thrustPipeCorrectionValue;
 	float nbMedianValue;
+	int32_t sys_id;
 
 };
 

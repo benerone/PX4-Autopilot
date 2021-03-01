@@ -36,11 +36,13 @@ int ModuleCanIntegrale::print_status()
 {
 	PX4_INFO("Running");
 	// TODO: print additional runtime information about the state of the module
-	PX4_INFO("RxNb:%d TxNb:%d",nbReceived,nbEmitted);
+	PX4_INFO("Can0 RxNb:%d TxNb:%d",nbReceived[0],nbEmitted[0]);
+	PX4_INFO("Can1 RxNb:%d TxNb:%d",nbReceived[1],nbEmitted[1]);
 	PX4_INFO("R1 Nb:%d ri=%lf pi=%lf yi=%lf status=%d",nbReceivedR1,(double)r1_integrale.pitch_rate_integral,(double)r1_integrale.roll_rate_integral,(double)r1_integrale.yaw_rate_integral,(int)r1_integrale.status);
 	PX4_INFO("R2 Nb:%d ri=%lf pi=%lf yi=%lf status=%d",nbReceivedR2,(double)r2_integrale.pitch_rate_integral,(double)r2_integrale.roll_rate_integral,(double)r2_integrale.yaw_rate_integral,(int)r2_integrale.status);
 	PX4_INFO("R3 Nb:%d ri=%lf pi=%lf yi=%lf status=%d",nbReceivedR3,(double)r3_integrale.pitch_rate_integral,(double)r3_integrale.roll_rate_integral,(double)r3_integrale.yaw_rate_integral,(int)r3_integrale.status);
-	PX4_INFO("RxNbE:%d TxNbE:%d",nbReceivedError,nbEmittedError);
+	PX4_INFO("Can0 RxNbE:%d TxNbE:%d",nbReceivedError[0],nbEmittedError[0]);
+	PX4_INFO("Can1 RxNbE:%d TxNbE:%d",nbReceivedError[1],nbEmittedError[1]);
 	return 0;
 }
 
@@ -99,19 +101,24 @@ ModuleCanIntegrale::ModuleCanIntegrale()
 void ModuleCanIntegrale::run()
 {
 	//Mavlink id serve as id
-	int32_t sys_id=_param_mav_sys_id.get();
+	sys_id=_param_mav_sys_id.get();
 	PX4_INFO("canid %d",sys_id);
-	nbReceived=0;
+	nbReceived[0]=0;
+	nbReceived[1]=0;
 	nbReceivedR1=0;
 	nbReceivedR2=0;
 	nbReceivedR3=0;
-	nbEmitted=0;
-	nbReceivedError=0;
-	nbEmittedError=0;
+	nbEmitted[0]=0;
+	nbEmitted[1]=0;
+	nbReceivedError[0]=0;
+	nbReceivedError[1]=0;
+	nbEmittedError[0]=0;
+	nbEmittedError[1]=0;
 	int32_t cycle=0;
 	postYow=false;
 	postCorrection=false;
 	postNbMedian=false;
+	int32_t countIt=0;
 
 	r1_integrale={0L,0.0,0.0,0.0,0.0,integrale_s::INTEGRALE_STATUS_NONE};
 	r2_integrale={0L,0.0,0.0,0.0,0.0,integrale_s::INTEGRALE_STATUS_NONE};
@@ -140,10 +147,13 @@ void ModuleCanIntegrale::run()
 		if (can_init_res < 0) {
 			PX4_ERR("CAN driver init failed %i", can_init_res);
 			return;
+		} else {
+
 		}
 	}
 
-	uavcan::ICanIface * iFace=can->driver.getIface(0);
+	iFace=can->driver.getIface(0);
+	iFace2=can->driver.getIface(1);
 
 	usleep(sys_id*TIME_CYCLE*5); //id*packet_transfert_delay*nbpacket (2I and 2C)
 
@@ -152,6 +162,7 @@ void ModuleCanIntegrale::run()
 		integrale_s integrale;
 		pipe_correction_s pipe_correction;
 		IntegralCanData tmp;
+		bool resultSend,resultSend2;
 
 		auto startTime=hrt_absolute_time();
 		//Transmit
@@ -163,7 +174,9 @@ void ModuleCanIntegrale::run()
 				tmp.v2=integrale.roll_rate_integral;
 				yowIntegraleValue=integrale.yaw_rate_integral;
 				thrustValue=integrale.thrust;
-				if (sendFrame(iFace,sys_id | OFFSET_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8)) {
+				resultSend=sendFrame(iFace,sys_id | OFFSET_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8);
+				resultSend2=sendFrame(iFace2,sys_id | OFFSET_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend || resultSend2) {
 					cycle++;
 					postYow=true;
 				}
@@ -175,7 +188,9 @@ void ModuleCanIntegrale::run()
 			if (postYow) {
 				tmp.v1=yowIntegraleValue;
 				tmp.v2=thrustValue;
-				if (sendFrame(iFace,sys_id | OFFSET_YOW,(const uavcan::uint8_t *)&tmp,8)) {
+				resultSend=sendFrame(iFace,sys_id | OFFSET_YOW,(const uavcan::uint8_t *)&tmp,8);
+				resultSend2=sendFrame(iFace2,sys_id | OFFSET_YOW,(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend || resultSend2) {
 					cycle++;
 					postYow=false;
 				}
@@ -191,7 +206,9 @@ void ModuleCanIntegrale::run()
 				yowPipeCorrectionValue=pipe_correction.yaw_correction;
 				thrustPipeCorrectionValue=pipe_correction.thrust_correction;
 				nbMedianValue=pipe_correction.nb_median;
-				if (sendFrame(iFace,sys_id | OFFSET_CORR_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8)) {
+				resultSend=sendFrame(iFace,sys_id | OFFSET_CORR_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8);
+				resultSend2=sendFrame(iFace2,sys_id | OFFSET_CORR_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend || resultSend2) {
 					cycle++;
 					postCorrection=true;
 				}
@@ -203,7 +220,9 @@ void ModuleCanIntegrale::run()
 			if (postCorrection) {
 				tmp.v1=yowPipeCorrectionValue;
 				tmp.v2=thrustPipeCorrectionValue;
-				if (sendFrame(iFace,sys_id | OFFSET_CORR_YOW,(const uavcan::uint8_t *)&tmp,8)) {
+				resultSend=sendFrame(iFace,sys_id | OFFSET_CORR_YOW,(const uavcan::uint8_t *)&tmp,8);
+				resultSend2=sendFrame(iFace2,sys_id | OFFSET_CORR_YOW,(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend || resultSend2) {
 					cycle++;
 					postCorrection=false;
 					postNbMedian=true;
@@ -216,7 +235,9 @@ void ModuleCanIntegrale::run()
 			if (postNbMedian) {
 				tmp.v1=nbMedianValue;
 				tmp.v2=0.0f;
-				if (sendFrame(iFace,sys_id | OFFSET_STAT,(const uavcan::uint8_t *)&tmp,8)) {
+				resultSend=sendFrame(iFace,sys_id | OFFSET_STAT,(const uavcan::uint8_t *)&tmp,8);
+				resultSend2=sendFrame(iFace2,sys_id | OFFSET_STAT,(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend || resultSend2) {
 					cycle++;
 					postNbMedian=false;
 				}
@@ -235,11 +256,12 @@ void ModuleCanIntegrale::run()
 		//Receive
 		//Check for new incoming can msg
 		uavcan::int16_t receiveResult=1;
+		uavcan::MonotonicTime mtime;
+		uavcan::UtcTime out_ts_utc;
+		uavcan::CanIOFlags out_flags;
+		uavcan::CanFrame canFrame;
 		while (receiveResult>0)  {
-			uavcan::MonotonicTime mtime;
-			uavcan::UtcTime out_ts_utc;
-			uavcan::CanIOFlags out_flags;
-			uavcan::CanFrame canFrame;
+
 			receiveResult=iFace->receive(canFrame,mtime,out_ts_utc,out_flags);
 			if (receiveResult==0) {
 				//PX4_ERR("CAN driver RX empty");
@@ -247,68 +269,25 @@ void ModuleCanIntegrale::run()
 			}
 			if (receiveResult<0) {
 				PX4_ERR("CAN driver RX error");
-				nbReceivedError++;
+				nbReceivedError[0]++;
 			}
 			if (receiveResult==1) {
-				//Process received
-				IntegralCanData *tmpp=(IntegralCanData *)canFrame.data;
-				int32_t id=(int32_t)(canFrame.id & MASK_ID);
-				if (id<5) {
-					bool isValid=true;
-					auto offset=id;
-					if (id<sys_id) {
-						offset=id-1;
-					} else {
-						if (id>sys_id)  {
-							offset=id-2;
-						} else {
-							PX4_ERR("Duplicate id in use for can");
-							isValid=false;
-						}
-					}
-					if (isValid) {
-						//PX4_INFO(" can id %x",canFrame.id);
-						if ((canFrame.id & OFFSET_YOW) == OFFSET_YOW) {
-							//PX4_INFO(" offset yow id %x status:%d",canFrame.id,(int)rx_integrales[offset]->status);
-							rx_integrales[offset]->yaw_rate_integral=tmpp->v1;
-							rx_integrales[offset]->thrust=tmpp->v2;
-							if (rx_integrales[offset]->status==integrale_s::INTEGRALE_STATUS_PARTIAL) {
-								rx_integrales[offset]->status=	integrale_s::INTEGRALE_STATUS_COMPLETE;
-								if (offset==0) {
-									r1_integrale.timestamp=hrt_absolute_time();
-									_r1integrale_pub.publish(r1_integrale);
-									nbReceivedR1++;
-								}
-								if (offset==1) {
-									r2_integrale.timestamp=hrt_absolute_time();
-									_r2integrale_pub.publish(r2_integrale);
-									nbReceivedR2++;
-								}
-								if (offset==2) {
-									r3_integrale.timestamp=hrt_absolute_time();
-									_r3integrale_pub.publish(r3_integrale);
-									nbReceivedR3++;
-								}
-							}
-							rx_integrales[offset]->status=	integrale_s::INTEGRALE_STATUS_NONE;
-						} else {
-							if (((canFrame.id & OFFSET_CORR_PITCH_ROLL) == 0) && ((canFrame.id & OFFSET_CORR_YOW) == 0)) {
-								//PX4_INFO(" offset pitch-roll id %x status:%d",canFrame.id,(int)rx_integrales[offset]->status);
-								rx_integrales[offset]->pitch_rate_integral=tmpp->v1;
-								rx_integrales[offset]->roll_rate_integral=tmpp->v2;
-								rx_integrales[offset]->status=integrale_s::INTEGRALE_STATUS_PARTIAL;
-							}
-
-						}
-					}
-
-				} else {
-					PX4_ERR("Invalid can id %x",canFrame.id);
-					PX4_ERR("Invalid id %x",id);
-				}
-
-
-				nbReceived++;
+				processReceivedFrame(iFace,canFrame);
+			}
+		}
+		receiveResult=1;
+		while (receiveResult>0)  {
+			receiveResult=iFace2->receive(canFrame,mtime,out_ts_utc,out_flags);
+			if (receiveResult==0) {
+				//PX4_ERR("CAN driver RX empty");
+				//nbReceivedError++;
+			}
+			if (receiveResult<0) {
+				PX4_ERR("CAN driver RX error");
+				nbReceivedError[1]++;
+			}
+			if (receiveResult==1) {
+				processReceivedFrame(iFace2,canFrame);
 			}
 		}
 		//Check unrefresh
@@ -326,6 +305,25 @@ void ModuleCanIntegrale::run()
 			_r3integrale_pub.publish(r3_integrale);
 		}
 
+		if (countIt==0) {
+			can_status.timestamp=currentTime;
+			can_status.nbr_1=nbReceivedR1;
+			can_status.nbr_2=nbReceivedR2;
+			can_status.nbr_3=nbReceivedR3;
+			can_status.nb_emitted_1=nbEmitted[0];
+			can_status.nb_emitted_2=nbEmitted[1];
+			can_status.nb_received_1=nbReceived[0];
+			can_status.nb_received_2=nbReceived[1];
+			can_status.nb_emitted_error_1=nbEmittedError[0];
+			can_status.nb_emitted_error_2=nbEmittedError[1];
+			can_status.nb_received_error_1=nbReceivedError[0];
+			can_status.nb_received_error_2=nbReceivedError[1];
+			_can_status_pub.publish(can_status);
+		}
+		countIt++;
+		if (countIt>100) {
+			countIt=0;
+		}
 		int64_t deltaTime=((int64_t)TIME_CYCLE)-((int64_t)(currentTime-startTime));
 		if (deltaTime<0) {
 			deltaTime=0;
@@ -340,22 +338,103 @@ void ModuleCanIntegrale::run()
 
 
 }
-bool ModuleCanIntegrale::sendFrame(uavcan::ICanIface * iFace,uint32_t can_id, const uint8_t* can_data, uint8_t data_len) {
+void ModuleCanIntegrale::processReceivedFrame(uavcan::ICanIface * iFacePart,uavcan::CanFrame &canFrame) {
+//Process received
+	IntegralCanData *tmpp=(IntegralCanData *)canFrame.data;
+	int32_t id=(int32_t)(canFrame.id & MASK_ID);
+	if (id<5) {
+		bool isValid=true;
+		auto offset=id;
+		if (id<sys_id) {
+			offset=id-1;
+		} else {
+			if (id>sys_id)  {
+				offset=id-2;
+			} else {
+				PX4_ERR("Duplicate id in use for can");
+				isValid=false;
+			}
+		}
+		if (isValid) {
+			//PX4_INFO(" can id %x",canFrame.id);
+			if ((canFrame.id & OFFSET_YOW) == OFFSET_YOW) {
+				//PX4_INFO(" offset yow id %x status:%d",canFrame.id,(int)rx_integrales[offset]->status);
+				rx_integrales[offset]->yaw_rate_integral=tmpp->v1;
+				rx_integrales[offset]->thrust=tmpp->v2;
+				if (rx_integrales[offset]->status==integrale_s::INTEGRALE_STATUS_PARTIAL) {
+					rx_integrales[offset]->status=	integrale_s::INTEGRALE_STATUS_COMPLETE;
+					if (offset==0) {
+						r1_integrale.timestamp=hrt_absolute_time();
+						_r1integrale_pub.publish(r1_integrale);
+						nbReceivedR1++;
+					}
+					if (offset==1) {
+						r2_integrale.timestamp=hrt_absolute_time();
+						_r2integrale_pub.publish(r2_integrale);
+						nbReceivedR2++;
+					}
+					if (offset==2) {
+						r3_integrale.timestamp=hrt_absolute_time();
+						_r3integrale_pub.publish(r3_integrale);
+						nbReceivedR3++;
+					}
+				}
+				rx_integrales[offset]->status=	integrale_s::INTEGRALE_STATUS_NONE;
+			} else {
+				if (((canFrame.id & OFFSET_CORR_PITCH_ROLL) == 0) && ((canFrame.id & OFFSET_CORR_YOW) == 0)) {
+					//PX4_INFO(" offset pitch-roll id %x status:%d",canFrame.id,(int)rx_integrales[offset]->status);
+					rx_integrales[offset]->pitch_rate_integral=tmpp->v1;
+					rx_integrales[offset]->roll_rate_integral=tmpp->v2;
+					rx_integrales[offset]->status=integrale_s::INTEGRALE_STATUS_PARTIAL;
+				}
+
+			}
+		}
+
+	} else {
+		PX4_ERR("Invalid can id %x",canFrame.id);
+		PX4_ERR("Invalid id %x",id);
+	}
+
+	if (iFacePart==iFace) {
+		nbReceived[0]++;
+	}
+	if (iFacePart==iFace2) {
+		nbReceived[1]++;
+	}
+
+}
+bool ModuleCanIntegrale::sendFrame(uavcan::ICanIface * iFacePart,uint32_t can_id, const uint8_t* can_data, uint8_t data_len) {
 	uavcan::CanFrame canFrame=uavcan::CanFrame(can_id,can_data,data_len);
 	//PX4_INFO("send pr can id %x",canFrame.id);
-	auto sendResult=iFace->send(canFrame,uavcan::MonotonicTime::fromUSec(20000),0);
+	auto sendResult=iFacePart->send(canFrame,uavcan::MonotonicTime::fromUSec(20000),0);
 	if (sendResult==0) {
 		//PX4_ERR("CAN driver TX full");
-		nbEmittedError++;
+		if (iFacePart==iFace) {
+			nbEmittedError[0]++;
+		}
+		if (iFacePart==iFace2) {
+			nbEmittedError[1]++;
+		}
 		return false;
 	}
 	if (sendResult<0) {
 		PX4_ERR("CAN driver TX error");
-		nbEmittedError++;
+		if (iFacePart==iFace) {
+			nbEmittedError[0]++;
+		}
+		if (iFacePart==iFace2) {
+			nbEmittedError[1]++;
+		}
 		return false;
 	}
 	if (sendResult==1) {
-		nbEmitted++;
+		if (iFacePart==iFace) {
+			nbEmitted[0]++;
+		}
+		if (iFacePart==iFace) {
+			nbEmitted[1]++;
+		}
 	}
 	return true;
 }
