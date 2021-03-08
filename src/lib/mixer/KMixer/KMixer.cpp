@@ -177,8 +177,8 @@ KMixer::groups_required(uint32_t &groups)
 	}
 }
 void  KMixer::print(PrinterFunction pF) {
-	(*pF)("K Mixer with %d controls and min:%f max:%f thIndex:%d",_pinfo->control_count,
-	(double)_pinfo->min,(double)_pinfo->max,_pinfo->throttle_index);
+	(*pF)("K Mixer with %d controls and min:%f max:%f thIndex:%d trim:%f",_pinfo->control_count,
+	(double)_pinfo->min,(double)_pinfo->max,_pinfo->throttle_index,(double)_trim);
 
 	for(int i=0;i<(int)_pinfo->control_count;i++) {
 		(*pF)("->Ctrl %d (%c)[%d:%d]: %f ",i,i==_pinfo->throttle_index?'T':' ',_pinfo->controls[i].control_group,_pinfo->controls[i].control_index,
@@ -268,6 +268,7 @@ KMixer::mix(float *outputs, unsigned space)
 	} else {
 		*outputs=((1.0f+_trim)*(_pinfo->min-sum)/_pinfo->min)-1.0f;
 	}
+	//*outputs=-1.0f+2.0f*(sum-_pinfo->min)/(_pinfo->max-_pinfo->min);
 	return 1;
 }
 /**
