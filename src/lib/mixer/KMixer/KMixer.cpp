@@ -263,8 +263,29 @@ KMixer::mix(float *outputs, unsigned space)
 	if (sum>_pinfo->max) {
 		sum=_pinfo->max;
 	}
-	//Rescale to -1 1
-	*outputs=-1.0f+2.0f*(sum-_pinfo->min)/(_pinfo->max-_pinfo->min);
-	//*outputs=sum;
+	if (sum>=0) {
+		*outputs=((1.0f-_trim)*sum/_pinfo->max)+_trim;
+	} else {
+		*outputs=((1.0f+_trim)*(_pinfo->min-sum)/_pinfo->min)-1.0f;
+	}
+	return 1;
+}
+/**
+ * @brief Set trim offset for this mixer
+ *
+ * @return the number of outputs this mixer feeds to
+ */
+unsigned KMixer::set_trim(float trim) {
+	_trim=trim;
+	return 1;
+}
+
+/**
+ * @brief Get trim offset for this mixer
+ *
+ * @return the number of outputs this mixer feeds to
+ */
+unsigned KMixer::get_trim(float *trim) {
+	(*trim)=_trim;
 	return 1;
 }

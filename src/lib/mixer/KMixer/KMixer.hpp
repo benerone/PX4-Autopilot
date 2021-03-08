@@ -101,11 +101,25 @@ public:
 	void				groups_required(uint32_t &groups) override;
 
 	void                            print(PrinterFunction pF);
+
+	/**
+	 * @brief Set trim offset for this mixer
+	 *
+	 * @return the number of outputs this mixer feeds to
+	 */
+	unsigned set_trim(float trim);
+
+	/**
+	 * @brief Get trim offset for this mixer
+	 *
+	 * @return the number of outputs this mixer feeds to
+	 */
+	unsigned get_trim(float *trim);
 private:
 	static int parse_control_scaler(const char *buf, unsigned &buflen, float &scaler, uint8_t &control_group,
 					uint8_t &control_index);
 
 
 	kmixer_s			*_pinfo;
-
+	float _trim;
 };
