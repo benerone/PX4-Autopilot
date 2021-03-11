@@ -191,6 +191,9 @@ void PositionControl::_velocityControl(const float dt)
 float PositionControl::getVelocityIntegralThrust() {
 	return _vel_int(2);
 }
+void PositionControl::setVelocityIntegralThrust(float value) {
+	_vel_int(2)=value;
+}
 void PositionControl::_accelerationControl()
 {
 	// Assume standard acceleration due to gravity in vertical direction for attitude generation

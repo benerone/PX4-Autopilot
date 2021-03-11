@@ -128,32 +128,6 @@ private:
 	 */
 	void		set_params_from_rc();
 
-	/**
-	 * @brief process pipe correction
-	 *
-	 * @return matrix::Vector4f
-	 */
-	matrix::Vector4f pipeIntegrale(int * nbMedian);
-	/**
-	 * @brief Process median
-	 *
-	 * @param local local integrale
-	 * @param r1 r1 integrale
-	 * @param r2 r2 integrale
-	 * @param r3 r3 integrale
-	 * @return matrix::Vector4f
-	 */
-	matrix::Vector4f processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,bool * isvalid,int * nbMedian);
-
-	/**
-	 * @brief Process median on array of float values
-	 *
-	 * @param values
-	 * @return float
-	 */
-	float processMedianOnVector(zapata::StdVector<float> &values);
-
-
 	static constexpr unsigned RC_MAX_CHAN_COUNT{input_rc_s::RC_INPUT_MAX_CHANNELS}; /**< maximum number of r/c channels we handle */
 
 	struct Parameters {
@@ -192,25 +166,6 @@ private:
 
 	uORB::PublicationMulti<manual_control_setpoint_s>	_manual_control_setpoint_pub{ORB_ID(manual_control_setpoint), ORB_PRIO_HIGH};	/**< manual control signal topic */
 
-	uORB::Publication<pipe_correction_s>	_pipe_correction_pub{ORB_ID(pipe_correction)};
-
-	uORB::Subscription _r1integrale_sub{ORB_ID(r1integrale)};
-	uORB::Subscription _r2integrale_sub{ORB_ID(r2integrale)};
-	uORB::Subscription _r3integrale_sub{ORB_ID(r3integrale)};
-	uORB::Subscription _integrale_sub{ORB_ID(integrale)};
-
-	integrale_s lastR1;
-	int cntR1;
-	integrale_s lastR2;
-	int cntR2;
-	integrale_s lastR3;
-	int cntR3;
-	zapata::StdVector<matrix::Vector4f> accuCorrection;
-	zapata::StdVector<float> accuCorrectionPitch;
-	zapata::StdVector<float> accuCorrectionRoll;
-	zapata::StdVector<float> accuCorrectionYaw;
-	zapata::StdVector<float> accuCorrectionThrust;
-	int32_t sys_id;
 
 	rc_channels_s _rc {};			/**< r/c channel data */
 
@@ -223,16 +178,6 @@ private:
 
 	perf_counter_t		_loop_perf;			/**< loop performance counter */
 
-	matrix::Vector4f _pi_coef;
-	matrix::Vector4f _pi_limit;
-	matrix::Vector4f _pi_mult;
-	int32_t moyCorItems;
-	int32_t moyCorItems_pitch;
-	int32_t moyCorItems_roll;
-	int32_t moyCorItems_yaw;
-	int32_t moyCorItems_thrust;
-	int32_t _pi_min_yaw_th;
-	int32_t _pi_min_yaw_cr;
 
 	DEFINE_PARAMETERS(
 
@@ -284,28 +229,7 @@ private:
 		(ParamFloat<px4::params::RC_MAN_TH>) _param_rc_man_th,
 		(ParamFloat<px4::params::RC_RETURN_TH>) _param_rc_return_th,
 
-		(ParamInt<px4::params::RC_CHAN_CNT>) _param_rc_chan_cnt,
-
-		(ParamFloat<px4::params::RC_PI_COE_PITCH>) _param_rc_pi_coef_pitch,
-		(ParamFloat<px4::params::RC_PI_COE_ROLL>) _param_rc_pi_coef_roll,
-		(ParamFloat<px4::params::RC_PI_COE_YOW>) _param_rc_pi_coef_yow,
-		(ParamFloat<px4::params::RC_PI_COE_THRUST>) _param_rc_pi_coef_thrust,
-		(ParamFloat<px4::params::RC_PI_LIM_PITCH>) _param_rc_pi_limit_pitch,
-		(ParamFloat<px4::params::RC_PI_LIM_ROLL>) _param_rc_pi_limit_roll,
-		(ParamFloat<px4::params::RC_PI_LIM_YOW>) _param_rc_pi_limit_yow,
-		(ParamFloat<px4::params::RC_PI_LIM_THRUST>) _param_rc_pi_limit_thrust,
-		(ParamFloat<px4::params::RC_PI_MUL_PITCH>) _param_rc_pi_mul_pitch,
-		(ParamFloat<px4::params::RC_PI_MUL_ROLL>) _param_rc_pi_mul_roll,
-		(ParamFloat<px4::params::RC_PI_MUL_YOW>) _param_rc_pi_mul_yow,
-		(ParamFloat<px4::params::RC_PI_MUL_THRUST>) _param_rc_pi_mul_thrust,
-		(ParamInt<px4::params::RC_PI_MOY_COR>) _param_rc_pi_moy_cor,
-		(ParamInt<px4::params::RC_PI_MOY_COR_PI>) _param_rc_pi_moy_cor_pitch,
-		(ParamInt<px4::params::RC_PI_MOY_COR_RO>) _param_rc_pi_moy_cor_roll,
-		(ParamInt<px4::params::RC_PI_MOY_COR_YO>) _param_rc_pi_moy_cor_yaw,
-		(ParamInt<px4::params::RC_PI_MOY_COR_TH>) _param_rc_pi_moy_cor_thrust,
-		(ParamInt<px4::params::RC_PI_MIN_YAW_TH>) _param_rc_pi_min_yaw_th,
-		(ParamInt<px4::params::RC_PI_MIN_YAW_CR>) _param_rc_pi_min_yaw_cr,
-		(ParamInt<px4::params::MAV_SYS_ID>) _param_mav_sys_id
+		(ParamInt<px4::params::RC_CHAN_CNT>) _param_rc_chan_cnt
 	)
 
 };

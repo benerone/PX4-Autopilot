@@ -94,6 +94,20 @@ MulticopterRateControl::parameters_updated()
 				  radians(_param_mc_acro_y_max.get()));
 
 	_actuators_0_circuit_breaker_enabled = circuit_breaker_enabled_by_val(_param_cbrk_rate_ctrl.get(), CBRK_RATE_CTRL_KEY);
+
+	_pi_limit[0]=_param_mc_pi_limit_roll.get();
+	_pi_limit[1]=_param_mc_pi_limit_pitch.get();
+	_pi_limit[2]=_param_mc_pi_limit_yow.get();
+	_pi_limit[3]=_param_mc_pi_limit_thrust.get();
+	_pi_mult[0]=_param_mc_pi_mul_roll.get();
+	_pi_mult[1]=_param_mc_pi_mul_pitch.get();
+	_pi_mult[2]=_param_mc_pi_mul_yow.get();
+	_pi_mult[3]=_param_mc_pi_mul_thrust.get();
+	moyCorItems_pitch=_param_mc_pi_moy_cor_pitch.get();
+	moyCorItems_roll=_param_mc_pi_moy_cor_roll.get();
+	moyCorItems_yaw=_param_mc_pi_moy_cor_yaw.get();
+	moyCorItems_thrust=_param_mc_pi_moy_cor_thrust.get();
+	sys_id=_param_mav_sys_id.get();
 }
 
 float
@@ -289,10 +303,140 @@ MulticopterRateControl::Run()
 			//TEST
 			//integrale_data.thrust=_thrust_sp;
 
-
-
 			integrale_data.status=integrale_s::INTEGRALE_STATUS_COMPLETE;
 			_integrales_pub.publish(integrale_data);
+
+			//---------------------------------------------------
+			// PIPE: ESTIMATE ERROR
+			//---------------------------------------------------
+			integrale_s _r1integrale;
+			integrale_s _r2integrale;
+			integrale_s _r3integrale;
+			int nbRemoteValid=0;
+			//Get remote integrale
+			if (!_r1integrale_sub.copy(&_r1integrale)) {
+				_r1integrale.status=integrale_s::INTEGRALE_STATUS_NONE;
+			} else {
+				if(PipeTools::isIntegraleValid(_r1integrale)) {
+					nbRemoteValid++;
+				}
+			}
+			if (!_r2integrale_sub.copy(&_r2integrale)) {
+				_r2integrale.status=integrale_s::INTEGRALE_STATUS_NONE;
+			}else {
+				if(PipeTools::isIntegraleValid(_r2integrale)) {
+					nbRemoteValid++;
+				}
+			}
+			if (!_r3integrale_sub.copy(&_r3integrale)) {
+				_r3integrale.status=integrale_s::INTEGRALE_STATUS_NONE;
+			}else {
+				if(PipeTools::isIntegraleValid(_r2integrale)) {
+					nbRemoteValid++;
+				}
+			}
+			float rollError,pitchError,yawError,trustError;
+			int nbMedian=0;
+			rollError=0.0f;
+			pitchError=0.0f;
+			yawError=0.0f;
+			trustError=0.0f;
+			if (nbRemoteValid!=1) {
+				//Case 1,3 or 4
+				rollError=integrale_data.roll_rate_integral-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
+					return r.roll_rate_integral;
+				});
+				pitchError=integrale_data.pitch_rate_integral-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
+					return r.pitch_rate_integral;
+				});
+				yawError=integrale_data.yaw_rate_integral-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
+					return r.yaw_rate_integral;
+				});
+				trustError=integrale_data.thrust-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
+					return r.thrust;
+				});
+			} else {
+				//Case 2
+				if (sys_id==1 ||
+					(sys_id==2 && !PipeTools::isIntegraleValid(_r1integrale)) ||
+					(sys_id==3 && !PipeTools::isIntegraleValid(_r1integrale) && !PipeTools::isIntegraleValid(_r2integrale)) ||
+					(sys_id==4 && !PipeTools::isIntegraleValid(_r1integrale) && !PipeTools::isIntegraleValid(_r2integrale) && !PipeTools::isIntegraleValid(_r3integrale))) {
+					rollError=0.0f;
+					pitchError=0.0f;
+					yawError=0.0f;
+					trustError=0.0f;
+				} else {
+					if (sys_id==2) {
+						rollError=integrale_data.roll_rate_integral-_r1integrale.roll_rate_integral;
+						pitchError=integrale_data.pitch_rate_integral-_r1integrale.pitch_rate_integral;
+						yawError=integrale_data.yaw_rate_integral-_r1integrale.yaw_rate_integral;
+						trustError=integrale_data.thrust-_r1integrale.thrust;
+					}
+					if (sys_id==3) {
+						integrale_s _vintegrale={0L,0.0f,0.0f,0.0f,0.0f,integrale_s::INTEGRALE_STATUS_NONE};
+						if (PipeTools::isIntegraleValid(_r1integrale)) {
+							_vintegrale=_r1integrale;
+						} else {
+							if (PipeTools::isIntegraleValid(_r2integrale)) {
+								_vintegrale=_r2integrale;
+							}
+						}
+
+						rollError=integrale_data.roll_rate_integral-_vintegrale.roll_rate_integral;
+						pitchError=integrale_data.pitch_rate_integral-_vintegrale.pitch_rate_integral;
+						yawError=integrale_data.yaw_rate_integral-_vintegrale.yaw_rate_integral;
+						trustError=integrale_data.thrust-_vintegrale.thrust;
+					}
+					if (sys_id==4) {
+						integrale_s _vintegrale={0L,0.0f,0.0f,0.0f,0.0f,integrale_s::INTEGRALE_STATUS_NONE};
+						if (PipeTools::isIntegraleValid(_r1integrale)) {
+							_vintegrale=_r1integrale;
+						} else {
+							if (PipeTools::isIntegraleValid(_r2integrale)) {
+								_vintegrale=_r2integrale;
+							} else {
+								if (PipeTools::isIntegraleValid(_r3integrale)) {
+									_vintegrale=_r3integrale;
+								}
+							}
+						}
+						rollError=integrale_data.roll_rate_integral-_vintegrale.roll_rate_integral;
+						pitchError=integrale_data.pitch_rate_integral-_vintegrale.pitch_rate_integral;
+						yawError=integrale_data.yaw_rate_integral-_vintegrale.yaw_rate_integral;
+						trustError=integrale_data.thrust-_vintegrale.thrust;
+					}
+				}
+			}
+
+			//---------------------------------------------------
+			// PIPE: APPLY CORRECTION
+			//---------------------------------------------------
+			float rollCorrection=PipeTools::processMultAndClamp(rollError,_pi_mult[0],_pi_limit[0]);
+			float pitchCorrection=PipeTools::processMultAndClamp(pitchError,_pi_mult[1],_pi_limit[1]);
+			float yawCorrection=PipeTools::processMultAndClamp(yawError,_pi_mult[2],_pi_limit[2]);
+			float thrustCorrection=PipeTools::processMultAndClamp(trustError,_pi_mult[3],_pi_limit[3]);
+			rollCorrection=PipeTools::processAverage(accuCorrectionRoll,rollCorrection,moyCorItems_roll);
+			pitchCorrection=PipeTools::processAverage(accuCorrectionPitch,pitchCorrection,moyCorItems_pitch);
+			yawCorrection=PipeTools::processAverage(accuCorrectionYaw,yawCorrection,moyCorItems_yaw);
+			thrustCorrection=PipeTools::processAverage(accuCorrectionThrust,thrustCorrection,moyCorItems_thrust);
+			matrix::Vector3f rateIntegrale;
+			rateIntegrale(0)=integrale_values(0)-rollCorrection;
+			rateIntegrale(1)=integrale_values(1)-pitchCorrection;
+			rateIntegrale(2)=integrale_values(2)-yawCorrection;
+			_rate_control.setRateIntegral(rateIntegrale);
+
+			pipe_correction_s pipe_correction{};
+			pipe_correction.timestamp=hrt_absolute_time();
+			pipe_correction.roll_correction=rollCorrection;
+			pipe_correction.pitch_correction=pitchCorrection;
+			pipe_correction.yaw_correction=yawCorrection;
+			pipe_correction.thrust_correction=thrustCorrection;
+			pipe_correction.nb_median=(float)nbMedian;
+			pipe_correction.param_mr=_pi_mult[0];
+			pipe_correction.param_mp=_pi_mult[1];
+			pipe_correction.param_my=_pi_mult[2];
+			pipe_correction.param_mt=_pi_mult[3];
+			_pipe_correction_pub.publish(pipe_correction);
 
 			// publish actuator controls
 			actuator_controls_s actuators{};

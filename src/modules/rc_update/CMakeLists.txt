@@ -44,4 +44,4 @@ px4_add_module(
 		px4_work_queue
 	)
 
-px4_add_functional_gtest(SRC IntegralePipeTest.cpp LINKLIBS utilitieslib)
+#px4_add_functional_gtest(SRC IntegralePipeTest.cpp LINKLIBS utilitieslib)

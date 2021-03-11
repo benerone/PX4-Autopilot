@@ -115,3 +115,7 @@ void RateControl::getRateControlStatus(rate_ctrl_status_s &rate_ctrl_status)
 matrix::Vector3f RateControl::getRateIntegral() {
 	return _rate_int;
 }
+
+void RateControl::setRateIntegral(matrix::Vector3f & ri) {
+	_rate_int=ri;
+}

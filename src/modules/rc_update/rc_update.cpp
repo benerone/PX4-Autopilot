@@ -93,9 +93,7 @@ RCUpdate::RCUpdate() :
 	rc_parameter_map_poll(true /* forced */);
 
 	parameters_updated();
-	cntR1=-1;
-	cntR2=-1;
-	cntR3=-1;
+
 }
 
 RCUpdate::~RCUpdate()
@@ -145,18 +143,6 @@ RCUpdate::parameters_updated()
 		param_get(_parameter_handles.rc_map_param[i], &(_parameters.rc_map_param[i]));
 	}
 
-	//update coef integrale
-	_pi_coef=matrix::Vector4f(_param_rc_pi_coef_roll.get(),_param_rc_pi_coef_pitch.get(),_param_rc_pi_coef_yow.get(),_param_rc_pi_coef_thrust.get());
-	_pi_limit=matrix::Vector4f(_param_rc_pi_limit_roll.get(),_param_rc_pi_limit_pitch.get(),_param_rc_pi_limit_yow.get(),_param_rc_pi_limit_thrust.get());
-	_pi_mult=matrix::Vector4f(_param_rc_pi_mul_roll.get(),_param_rc_pi_mul_pitch.get(),_param_rc_pi_mul_yow.get(),_param_rc_pi_mul_thrust.get());
-	moyCorItems=_param_rc_pi_moy_cor.get();
-	moyCorItems_pitch=_param_rc_pi_moy_cor_pitch.get();
-	moyCorItems_roll=_param_rc_pi_moy_cor_roll.get();
-	moyCorItems_yaw=_param_rc_pi_moy_cor_yaw.get();
-	moyCorItems_thrust=_param_rc_pi_moy_cor_thrust.get();
-	_pi_min_yaw_th=_param_rc_pi_min_yaw_th.get();
-	_pi_min_yaw_cr=_param_rc_pi_min_yaw_cr.get();
-	sys_id=_param_mav_sys_id.get();
 	update_rc_functions();
 }
 
@@ -408,129 +394,12 @@ RCUpdate::Run()
 			channel_limit = RC_MAX_CHAN_COUNT;
 		}
 
-		//Rescale 85% => RESCALE_COEF_PC
-		/*for (int i = 0; i < (int)channel_limit; i++) {
-			if (i==_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_ROLL] ||
-			i==_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_PITCH] ||
-			i==_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_YAW] ||
-			i==_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_THROTTLE]) {
-				int tmp=RESCALE_COEF_PC*((int)rc_input.values[i]-(int)_parameters.trim[i]);
-				rc_input.values[i]=(uint16_t)((int)_parameters.trim[i]+tmp/100);
-			}
-		}*/
-
-		//Apply deadzone before pipe
+		//Apply deadzone
 		for (unsigned int i = 0; i < channel_limit; i++) {
 			if (rc_input.values[i]<(_parameters.trim[i] + _parameters.dz[i]) && rc_input.values[i]>(_parameters.trim[i] - _parameters.dz[i])){
 				rc_input.values[i]=_parameters.trim[i];
 			}
 		}
-
-
-		//Pipe depending on integrale
-
-		/*int nbMedian=0;
-		matrix::Vector4f correction=pipeIntegrale(&nbMedian);
-		accuCorrectionRoll.push_back(correction(0));
-		accuCorrectionPitch.push_back(correction(1));
-		accuCorrectionYaw.push_back(correction(2));
-		accuCorrectionThrust.push_back(correction(3));
-		if (accuCorrectionRoll.size()>(unsigned int)moyCorItems_roll) {
-			for(unsigned int i=0;i<accuCorrectionRoll.size()-1;i++) {
-				accuCorrectionRoll[i]=accuCorrectionRoll[i+1];
-			}
-			accuCorrectionRoll.pop_back();
-		}
-		if (accuCorrectionPitch.size()>(unsigned int)moyCorItems_pitch) {
-			for(unsigned int i=0;i<accuCorrectionPitch.size()-1;i++) {
-				accuCorrectionPitch[i]=accuCorrectionPitch[i+1];
-			}
-			accuCorrectionPitch.pop_back();
-		}
-		if (accuCorrectionYaw.size()>(unsigned int)moyCorItems_yaw) {
-			for(unsigned int i=0;i<accuCorrectionYaw.size()-1;i++) {
-				accuCorrectionYaw[i]=accuCorrectionYaw[i+1];
-			}
-			accuCorrectionYaw.pop_back();
-		}
-		if (accuCorrectionThrust.size()>(unsigned int)moyCorItems_thrust) {
-			for(unsigned int i=0;i<accuCorrectionThrust.size()-1;i++) {
-				accuCorrectionThrust[i]=accuCorrectionThrust[i+1];
-			}
-			accuCorrectionThrust.pop_back();
-		}*/
-
-
-		/*accuCorrection.push_back(correction);
-		if (accuCorrection.size()>(unsigned int)moyCorItems) {
-			for(unsigned int i=0;i<accuCorrection.size()-1;i++) {
-				accuCorrection[i]=accuCorrection[i+1];
-			}
-			accuCorrection.pop_back();
-		}*/
-		/*matrix::Vector4f finalCorrection=matrix::Vector4f(0.0f,0.0f,0.0f,0.0f);
-		for(unsigned int i=0;i<accuCorrectionRoll.size();i++) {
-			finalCorrection(0)+=accuCorrectionRoll[i];
-		}
-		finalCorrection(0)=finalCorrection(0)/accuCorrectionRoll.size();
-		for(unsigned int i=0;i<accuCorrectionPitch.size();i++) {
-			finalCorrection(1)+=accuCorrectionPitch[i];
-		}
-		finalCorrection(1)=finalCorrection(1)/accuCorrectionPitch.size();
-		for(unsigned int i=0;i<accuCorrectionYaw.size();i++) {
-			finalCorrection(2)+=accuCorrectionYaw[i];
-		}
-		finalCorrection(2)=finalCorrection(2)/accuCorrectionYaw.size();
-		for(unsigned int i=0;i<accuCorrectionThrust.size();i++) {
-			finalCorrection(3)+=accuCorrectionThrust[i];
-		}
-		finalCorrection(3)=finalCorrection(3)/accuCorrectionThrust.size();*/
-
-
-
-		/*for(unsigned int i=0;i<accuCorrection.size();i++) {
-			finalCorrection+=accuCorrection[i];
-		}
-		finalCorrection=finalCorrection/accuCorrection.size();*/
-
-
-
-		/*pipe_correction_s pipe_correction{};
-		pipe_correction.timestamp=hrt_absolute_time();
-		pipe_correction.roll_correction=-finalCorrection(0);
-		pipe_correction.pitch_correction=-finalCorrection(1);
-		pipe_correction.yaw_correction=-finalCorrection(2);
-		pipe_correction.thrust_correction=-finalCorrection(3);
-		pipe_correction.nb_median=(float)nbMedian;
-		pipe_correction.param_mr=_pi_coef(0);
-		pipe_correction.param_mp=_pi_coef(1);
-		pipe_correction.param_my=_pi_coef(2);
-		pipe_correction.param_mt=_pi_coef(3);
-		rc_input.values[_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_ROLL]]-=finalCorrection(0);
-		rc_input.values[_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_PITCH]]-=finalCorrection(1);
-		rc_input.values[_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_YAW]]-=finalCorrection(2);
-		rc_input.values[_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_THROTTLE]]-=finalCorrection(3);
-		_pipe_correction_pub.publish(pipe_correction);
-		//Override correction on yaw in altitude mode if not median
-		if (control_mode.flag_control_altitude_enabled &&
-		    control_mode.flag_control_climb_rate_enabled && fabs((double)finalCorrection(2))>0.0) {
-			int8_t yaw_ch=_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_YAW];
-			int32_t diffyaw=abs(rc_input.values[yaw_ch]-_parameters.trim[yaw_ch]);
-			if (diffyaw>=_pi_min_yaw_th && diffyaw<_pi_min_yaw_cr) {
-				if (finalCorrection(2)<0.0f) {
-					rc_input.values[yaw_ch]=_parameters.trim[yaw_ch]+_pi_min_yaw_cr;
-				} else {
-					rc_input.values[yaw_ch]=_parameters.trim[yaw_ch]-_pi_min_yaw_cr;
-				}
-			}
-		}
-
-		input_rc_changed_s changes;
-		changes.input_source=rc_input.input_source;
-		for(int i=0;i<18;i++) {
-			changes.values[i]=rc_input.values[i];
-		}
-		_input_rc_pub.publish(changes);*/
 
 		/* read out and scale values from raw message even if signal is invalid */
 		for (unsigned int i = 0; i < channel_limit; i++) {
@@ -699,170 +568,6 @@ RCUpdate::Run()
 	}
 
 	perf_end(_loop_perf);
-}
-matrix::Vector4f RCUpdate::pipeIntegrale(int * nbMedian) {
-	integrale_s _r1integrale;
-	integrale_s _r2integrale;
-	integrale_s _r3integrale;
-	integrale_s _lintegrale;
-
-	//Get local
-	if (!_integrale_sub.copy(&_lintegrale)) {
-		_lintegrale.status=integrale_s::INTEGRALE_STATUS_NONE;
-	}
-	//Get remote integrale
-	if (!_r1integrale_sub.copy(&_r1integrale)) {
-		_r1integrale.status=integrale_s::INTEGRALE_STATUS_NONE;
-	}
-	if (!_r2integrale_sub.copy(&_r2integrale)) {
-		_r2integrale.status=integrale_s::INTEGRALE_STATUS_NONE;
-	}
-	if (!_r3integrale_sub.copy(&_r3integrale)) {
-		_r3integrale.status=integrale_s::INTEGRALE_STATUS_NONE;
-	}
-
-	//Process Median
-	bool isValid=true;
-	matrix::Vector4f correction=matrix::Vector4f(0.0f,0.0f,0.0f,0.0f);
-	matrix::Vector4f imedian=processMedian(_lintegrale,_r1integrale,_r2integrale,_r3integrale,&isValid,nbMedian);
-	if (!isValid) {
-		return correction;
-	}
-	//Process in pwm
-	matrix::Vector4f ilocal=matrix::Vector4f(_lintegrale.roll_rate_integral,_lintegrale.pitch_rate_integral,_lintegrale.yaw_rate_integral,_lintegrale.thrust);
-
-	matrix::Vector4f imedian_pwm=(imedian.emult(_pi_coef)*500.0f)+1000.0f;
-	matrix::Vector4f ilocal_pwm=(ilocal.emult(_pi_coef)*500.0f)+1000.0f;
-	matrix::Vector4f ierror_pwm=ilocal_pwm-imedian_pwm;
-
-	for(int i=0;i<4;i++) {
-		correction(i)=ierror_pwm(i);
-
-		if (correction(i)<(-_pi_limit(i)) ||correction(i)>_pi_limit(i)) {
-			if (correction(i)<0) correction(i)=-_pi_limit(i);
-			if (correction(i)>0) correction(i)=_pi_limit(i);
-		}
-	}
-	return correction.emult(_pi_mult);
-
-}
-matrix::Vector4f RCUpdate::processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,bool * isvalid,int * nbMedian) {
-	matrix::Vector4f result;
-	zapata::StdVector<float> rolls;
-	zapata::StdVector<float> pitchs;
-	zapata::StdVector<float> yows;
-	zapata::StdVector<float> thrusts;
-	*isvalid=true;
-	(*nbMedian)=0;
-	//Local contrib
-	if (local.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
-		rolls.push_back(local.roll_rate_integral);
-		pitchs.push_back(local.pitch_rate_integral);
-		yows.push_back(local.yaw_rate_integral);
-		thrusts.push_back(local.thrust);
-		(*nbMedian)|=1;
-	}
-	//Remote contrib
-	if (r1.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
-		rolls.push_back(r1.roll_rate_integral);
-		pitchs.push_back(r1.pitch_rate_integral);
-		yows.push_back(r1.yaw_rate_integral);
-		thrusts.push_back(r1.thrust);
-		cntR1=0;
-		lastR1=r1;
-		(*nbMedian)|=2;
-	} /*else {
-		if (cntR1>=0) {
-			if (cntR1<MAX_CNT_R) {
-				rolls.push_back(lastR1.roll_rate_integral);
-				pitchs.push_back(lastR1.pitch_rate_integral);
-				yows.push_back(lastR1.yaw_rate_integral);
-				cntR1++;
-			} else {
-				cntR1=-1;
-			}
-		}
-	} */
-	if (r2.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
-		rolls.push_back(r2.roll_rate_integral);
-		pitchs.push_back(r2.pitch_rate_integral);
-		yows.push_back(r2.yaw_rate_integral);
-		thrusts.push_back(r2.thrust);
-		cntR2=0;
-		lastR2=r2;
-		(*nbMedian)|=4;
-	} /*else {
-		if (cntR2>=0) {
-			if (cntR2<MAX_CNT_R) {
-				rolls.push_back(lastR2.roll_rate_integral);
-				pitchs.push_back(lastR2.pitch_rate_integral);
-				yows.push_back(lastR2.yaw_rate_integral);
-				cntR2++;
-			} else {
-				cntR2=-1;
-			}
-		}
-	} */
-	if (r3.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
-		rolls.push_back(r3.roll_rate_integral);
-		pitchs.push_back(r3.pitch_rate_integral);
-		yows.push_back(r3.yaw_rate_integral);
-		thrusts.push_back(r3.thrust);
-		cntR3=0;
-		lastR3=r3;
-		(*nbMedian)|=8;
-	} /*else {
-		if (cntR3>=0) {
-			if (cntR3<MAX_CNT_R) {
-				rolls.push_back(lastR3.roll_rate_integral);
-				pitchs.push_back(lastR3.pitch_rate_integral);
-				yows.push_back(lastR3.yaw_rate_integral);
-				cntR3++;
-			} else {
-				cntR3=-1;
-			}
-		}
-	} */
-	//(*nbMedian)=rolls.size();
-	if (rolls.size()==0) {
-		//Case no valid value
-		*isvalid=false;
-		return matrix::Vector4f(0.0f,0.0f,0.0f,0.0f);
-	}
-	result(0)=processMedianOnVector(rolls);
-	result(1)=processMedianOnVector(pitchs);
-	result(2)=processMedianOnVector(yows);
-	result(3)=processMedianOnVector(thrusts);
-	return result;
-}
-float RCUpdate::processMedianOnVector(zapata::StdVector<float> &values) {
-	if (values.size()==1) {
-		return values[0];
-	}
-	//Sort
-	zapata::quicksort(values,0,values.size()-1); //Lowest first
-	//Case 2
-	if (values.size()==2) {
-		if (sys_id==1) {
-			return values[0];
-		} else {
-			return values[1];
-		}
-	}
-
-	//if 4 values , remove farthest
-	if (values.size()==4) {
-		float distLow=values[1]-values[0];
-		float distHigh=values[3]-values[2];
-		if (distHigh<distLow) {
-			values[0]=values[1];
-			values[1]=values[2];
-			values[2]=values[3];
-		}
-		values.pop_back();
-	}
-	//Case 3
-	return values[1];
 }
 int
 RCUpdate::task_spawn(int argc, char *argv[])

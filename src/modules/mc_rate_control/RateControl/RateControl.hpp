@@ -106,6 +106,12 @@ public:
 	 * @return matrix::Vector3f
 	 */
 	matrix::Vector3f getRateIntegral();
+	/**
+	 * @brief Set the Rate Integrale object
+	 *
+	 * @return matrix::Vector3f
+	 */
+	void setRateIntegral(matrix::Vector3f & ri);
 
 private:
 	void updateIntegral(matrix::Vector3f &rate_error, const float dt);

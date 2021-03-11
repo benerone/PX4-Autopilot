@@ -68,6 +68,7 @@
 #include <uORB/topics/vehicle_trajectory_waypoint.h>
 #include <uORB/topics/hover_thrust_estimate.h>
 #include <uORB/topics/integralepos.h>
+#include <uORB/topics/pipe_correction.h>
 
 #include "PositionControl/PositionControl.hpp"
 #include "Takeoff/Takeoff.hpp"
@@ -125,6 +126,7 @@ private:
 	uORB::Subscription _parameter_update_sub{ORB_ID(parameter_update)};		/**< notification of parameter updates */
 	uORB::Subscription _home_pos_sub{ORB_ID(home_position)}; 			/**< home position */
 	uORB::Subscription _hover_thrust_estimate_sub{ORB_ID(hover_thrust_estimate)};
+	uORB::Subscription _pipe_correction_sub{ORB_ID(pipe_correction)};
 
 	hrt_abstime	_time_stamp_last_loop{0};		/**< time stamp of last loop iteration */
 
@@ -661,8 +663,12 @@ MulticopterPositionControl::Run()
 				_control.setInputSetpoint(setpoint);
 				constraints = FlightTask::empty_constraints;
 				_control.update(dt);
+			} else {
+				pipe_correction_s pipe_correction{};
+				if (!_pipe_correction_sub.copy(&pipe_correction)) {
+					_control.setVelocityIntegralThrust(_control.getVelocityIntegralThrust()-pipe_correction.thrust_correction);
+				}
 			}
-
 
 			// Fill local position, velocity and thrust setpoint.
 			// This message contains setpoints where each type of setpoint is either the input to the PositionController

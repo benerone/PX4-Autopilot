@@ -61,6 +61,10 @@
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/integrale.h>
 #include <uORB/topics/integralepos.h>
+#include <uORB/topics/pipe_correction.h>
+
+#include "pipetools.h"
+using namespace zapata;
 
 class MulticopterRateControl : public ModuleBase<MulticopterRateControl>, public ModuleParams, public px4::WorkItem
 {
@@ -107,6 +111,12 @@ private:
 	uORB::Subscription _vehicle_status_sub{ORB_ID(vehicle_status)};
 	uORB::Subscription _integralepos_sub{ORB_ID(integralepos)};
 
+
+
+	uORB::Subscription _r1integrale_sub{ORB_ID(r1integrale)};
+	uORB::Subscription _r2integrale_sub{ORB_ID(r2integrale)};
+	uORB::Subscription _r3integrale_sub{ORB_ID(r3integrale)};
+
 	uORB::SubscriptionCallbackWorkItem _vehicle_angular_velocity_sub{this, ORB_ID(vehicle_angular_velocity)};
 
 	uORB::Publication<actuator_controls_s>		_actuators_0_pub;
@@ -114,6 +124,8 @@ private:
 	uORB::Publication<landing_gear_s>		_landing_gear_pub{ORB_ID(landing_gear)};
 	uORB::Publication<vehicle_rates_setpoint_s>	_v_rates_sp_pub{ORB_ID(vehicle_rates_setpoint)};			/**< rate setpoint publication */
 	uORB::Publication<integrale_s>			_integrales_pub{ORB_ID(integrale)};
+
+	uORB::Publication<pipe_correction_s>	_pipe_correction_pub{ORB_ID(pipe_correction)};
 
 	landing_gear_s 			_landing_gear{};
 	manual_control_setpoint_s	_manual_control_setpoint{};
@@ -135,6 +147,19 @@ private:
 	bool _gear_state_initialized{false};		/**< true if the gear state has been initialized */
 
 	hrt_abstime _last_run{0};
+
+	float _pi_limit[4];
+	float _pi_mult[4];
+	int32_t moyCorItems_pitch;
+	int32_t moyCorItems_roll;
+	int32_t moyCorItems_yaw;
+	int32_t moyCorItems_thrust;
+	int32_t sys_id;
+
+	zapata::StdVector<float> accuCorrectionPitch;
+	zapata::StdVector<float> accuCorrectionRoll;
+	zapata::StdVector<float> accuCorrectionYaw;
+	zapata::StdVector<float> accuCorrectionThrust;
 
 	DEFINE_PARAMETERS(
 		(ParamFloat<px4::params::MC_ROLLRATE_P>) _param_mc_rollrate_p,
@@ -172,7 +197,21 @@ private:
 
 		(ParamBool<px4::params::MC_BAT_SCALE_EN>) _param_mc_bat_scale_en,
 
-		(ParamInt<px4::params::CBRK_RATE_CTRL>) _param_cbrk_rate_ctrl
+		(ParamInt<px4::params::CBRK_RATE_CTRL>) _param_cbrk_rate_ctrl,
+
+		(ParamFloat<px4::params::MC_PI_LIM_PITCH>) _param_mc_pi_limit_pitch,
+		(ParamFloat<px4::params::MC_PI_LIM_ROLL>) _param_mc_pi_limit_roll,
+		(ParamFloat<px4::params::MC_PI_LIM_YOW>) _param_mc_pi_limit_yow,
+		(ParamFloat<px4::params::MC_PI_LIM_THRUST>) _param_mc_pi_limit_thrust,
+		(ParamFloat<px4::params::MC_PI_MUL_PITCH>) _param_mc_pi_mul_pitch,
+		(ParamFloat<px4::params::MC_PI_MUL_ROLL>) _param_mc_pi_mul_roll,
+		(ParamFloat<px4::params::MC_PI_MUL_YOW>) _param_mc_pi_mul_yow,
+		(ParamFloat<px4::params::MC_PI_MUL_THRUST>) _param_mc_pi_mul_thrust,
+		(ParamInt<px4::params::MC_PI_MOY_COR_PI>) _param_mc_pi_moy_cor_pitch,
+		(ParamInt<px4::params::MC_PI_MOY_COR_RO>) _param_mc_pi_moy_cor_roll,
+		(ParamInt<px4::params::MC_PI_MOY_COR_YO>) _param_mc_pi_moy_cor_yaw,
+		(ParamInt<px4::params::MC_PI_MOY_COR_TH>) _param_mc_pi_moy_cor_thrust,
+		(ParamInt<px4::params::MAV_SYS_ID>) _param_mav_sys_id
 	)
 
 	matrix::Vector3f _acro_rate_max;	/**< max attitude rates in acro mode */
