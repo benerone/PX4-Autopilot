@@ -51,6 +51,7 @@ MulticopterRateControl::MulticopterRateControl(bool vtol) :
 	_vehicle_status.vehicle_type = vehicle_status_s::VEHICLE_TYPE_ROTARY_WING;
 
 	parameters_updated();
+	cnt=0;
 }
 
 MulticopterRateControl::~MulticopterRateControl()
@@ -295,7 +296,7 @@ MulticopterRateControl::Run()
 			integrale_data.pitch_rate_integral=integrale_values(1);
 			integrale_data.yaw_rate_integral=integrale_values(2);
 			integralepos_s integralepos_data;
-			if (_integralepos_sub.update(&integralepos_data)) {
+			if (_integralepos_sub.copy(&integralepos_data)) {
 				integrale_data.thrust=integralepos_data.thrust_vel_integral;
 			} else {
 				integrale_data.thrust=0.0f;
@@ -331,7 +332,7 @@ MulticopterRateControl::Run()
 			if (!_r3integrale_sub.copy(&_r3integrale)) {
 				_r3integrale.status=integrale_s::INTEGRALE_STATUS_NONE;
 			}else {
-				if(PipeTools::isIntegraleValid(_r2integrale)) {
+				if(PipeTools::isIntegraleValid(_r3integrale)) {
 					nbRemoteValid++;
 				}
 			}
@@ -356,6 +357,7 @@ MulticopterRateControl::Run()
 					return r.thrust;
 				});
 			} else {
+				PX4_INFO("!!!!!Case 2");
 				//Case 2
 				if (sys_id==1 ||
 					(sys_id==2 && !PipeTools::isIntegraleValid(_r1integrale)) ||
@@ -419,6 +421,18 @@ MulticopterRateControl::Run()
 			pitchCorrection=PipeTools::processAverage(accuCorrectionPitch,pitchCorrection,moyCorItems_pitch);
 			yawCorrection=PipeTools::processAverage(accuCorrectionYaw,yawCorrection,moyCorItems_yaw);
 			thrustCorrection=PipeTools::processAverage(accuCorrectionThrust,thrustCorrection,moyCorItems_thrust);
+			/*cnt++;
+			if (cnt>1000) {
+				cnt=0;
+				PX4_INFO("RE:%f RC:%f",(double)rollError,(double)(rollCorrection*1000.0f));
+				PX4_INFO("PE:%f PC:%f",(double)pitchError,(double)(pitchCorrection*1000.0f));
+				PX4_INFO("YE:%f YC:%f",(double)yawError,(double)(yawCorrection*1000.0f));
+				PX4_INFO("TE:%f TC:%f",(double)trustError,(double)(thrustCorrection*1000.0f));
+				PX4_INFO("NbRemote:%d",nbRemoteValid);
+				PX4_INFO("R1:%d R2:%d R3:%d",(int)_r1integrale.status,(int)_r2integrale.status,(int)_r3integrale.status);
+				PX4_INFO("Median: R:%c P:%c Y:%c T:%c",abs(rollCorrection*1000.0f)<0.0001f?'M':'_',abs(pitchCorrection*1000.0f)<0.0001f?'M':'_',
+				abs(yawCorrection*1000.0f)<0.0001f?'M':'_',abs(thrustCorrection*1000.0f)<0.0001f?'M':'_');
+			}*/
 			matrix::Vector3f rateIntegrale;
 			rateIntegrale(0)=integrale_values(0)-rollCorrection;
 			rateIntegrale(1)=integrale_values(1)-pitchCorrection;

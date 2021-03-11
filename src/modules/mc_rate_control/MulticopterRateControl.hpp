@@ -155,6 +155,7 @@ private:
 	int32_t moyCorItems_yaw;
 	int32_t moyCorItems_thrust;
 	int32_t sys_id;
+	int cnt;
 
 	zapata::StdVector<float> accuCorrectionPitch;
 	zapata::StdVector<float> accuCorrectionRoll;

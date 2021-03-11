@@ -213,6 +213,7 @@ private:
 	Vector3f _wv_dcm_z_sp_prev{0, 0, 1};
 
 	perf_counter_t _cycle_perf;
+	int cnt=0;
 
 	/**
 	 * Update our local parameter cache.
@@ -653,6 +654,26 @@ MulticopterPositionControl::Run()
 			integralepos_data.timestamp=time_stamp_now;
 			integralepos_data.thrust_vel_integral=_control.getVelocityIntegralThrust();
 			_integralepos_pub.publish(integralepos_data);
+			pipe_correction_s pipe_correction{};
+			//cnt++;
+			if (_pipe_correction_sub.copy(&pipe_correction)) {
+				/*bool showafter=false;
+				if (cnt==500) {
+					cnt=0;
+					PX4_INFO("IThrust=> v:%f c:%f dif:%f",(double)_control.getVelocityIntegralThrust(),
+					(double)pipe_correction.thrust_correction,(double)(_control.getVelocityIntegralThrust()-pipe_correction.thrust_correction));
+					showafter=true;
+				}*/
+				_control.setVelocityIntegralThrust(_control.getVelocityIntegralThrust()-pipe_correction.thrust_correction);
+				/*if (showafter) {
+					PX4_INFO("IThrust after=> v:%f",(double)_control.getVelocityIntegralThrust());
+				}*/
+			} else {
+				/*if (cnt==500) {
+					PX4_INFO("No IThrust");
+					cnt=0;
+				}*/
+			}
 			if (!_control.update(dt)) {
 				if ((time_stamp_now - _last_warn) > 1_s) {
 					PX4_WARN("invalid setpoints");
@@ -663,11 +684,6 @@ MulticopterPositionControl::Run()
 				_control.setInputSetpoint(setpoint);
 				constraints = FlightTask::empty_constraints;
 				_control.update(dt);
-			} else {
-				pipe_correction_s pipe_correction{};
-				if (!_pipe_correction_sub.copy(&pipe_correction)) {
-					_control.setVelocityIntegralThrust(_control.getVelocityIntegralThrust()-pipe_correction.thrust_correction);
-				}
 			}
 
 			// Fill local position, velocity and thrust setpoint.
