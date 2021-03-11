@@ -47,6 +47,8 @@
 
 using namespace time_literals;
 
+#define RESCALE_COEF_PC 85
+
 namespace RCUpdate
 {
 
@@ -406,16 +408,28 @@ RCUpdate::Run()
 			channel_limit = RC_MAX_CHAN_COUNT;
 		}
 
+		//Rescale 85% => RESCALE_COEF_PC
+		/*for (int i = 0; i < (int)channel_limit; i++) {
+			if (i==_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_ROLL] ||
+			i==_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_PITCH] ||
+			i==_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_YAW] ||
+			i==_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_THROTTLE]) {
+				int tmp=RESCALE_COEF_PC*((int)rc_input.values[i]-(int)_parameters.trim[i]);
+				rc_input.values[i]=(uint16_t)((int)_parameters.trim[i]+tmp/100);
+			}
+		}*/
+
 		//Apply deadzone before pipe
 		for (unsigned int i = 0; i < channel_limit; i++) {
-			if (_rc.channels[i]<(_parameters.trim[i] + _parameters.dz[i]) || _rc.channels[i]>(_parameters.trim[i] - _parameters.dz[i])){
-				_rc.channels[i]=_parameters.trim[i];
+			if (rc_input.values[i]<(_parameters.trim[i] + _parameters.dz[i]) && rc_input.values[i]>(_parameters.trim[i] - _parameters.dz[i])){
+				rc_input.values[i]=_parameters.trim[i];
 			}
 		}
 
+
 		//Pipe depending on integrale
 
-		int nbMedian=0;
+		/*int nbMedian=0;
 		matrix::Vector4f correction=pipeIntegrale(&nbMedian);
 		accuCorrectionRoll.push_back(correction(0));
 		accuCorrectionPitch.push_back(correction(1));
@@ -444,7 +458,7 @@ RCUpdate::Run()
 				accuCorrectionThrust[i]=accuCorrectionThrust[i+1];
 			}
 			accuCorrectionThrust.pop_back();
-		}
+		}*/
 
 
 		/*accuCorrection.push_back(correction);
@@ -454,7 +468,7 @@ RCUpdate::Run()
 			}
 			accuCorrection.pop_back();
 		}*/
-		matrix::Vector4f finalCorrection=matrix::Vector4f(0.0f,0.0f,0.0f,0.0f);
+		/*matrix::Vector4f finalCorrection=matrix::Vector4f(0.0f,0.0f,0.0f,0.0f);
 		for(unsigned int i=0;i<accuCorrectionRoll.size();i++) {
 			finalCorrection(0)+=accuCorrectionRoll[i];
 		}
@@ -470,7 +484,7 @@ RCUpdate::Run()
 		for(unsigned int i=0;i<accuCorrectionThrust.size();i++) {
 			finalCorrection(3)+=accuCorrectionThrust[i];
 		}
-		finalCorrection(3)=finalCorrection(3)/accuCorrectionThrust.size();
+		finalCorrection(3)=finalCorrection(3)/accuCorrectionThrust.size();*/
 
 
 
@@ -481,7 +495,7 @@ RCUpdate::Run()
 
 
 
-		pipe_correction_s pipe_correction{};
+		/*pipe_correction_s pipe_correction{};
 		pipe_correction.timestamp=hrt_absolute_time();
 		pipe_correction.roll_correction=-finalCorrection(0);
 		pipe_correction.pitch_correction=-finalCorrection(1);
@@ -516,7 +530,7 @@ RCUpdate::Run()
 		for(int i=0;i<18;i++) {
 			changes.values[i]=rc_input.values[i];
 		}
-		_input_rc_pub.publish(changes);
+		_input_rc_pub.publish(changes);*/
 
 		/* read out and scale values from raw message even if signal is invalid */
 		for (unsigned int i = 0; i < channel_limit; i++) {

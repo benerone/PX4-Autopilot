@@ -100,6 +100,8 @@ ModuleCanIntegrale::ModuleCanIntegrale()
 
 void ModuleCanIntegrale::run()
 {
+
+
 	//Mavlink id serve as id
 	sys_id=_param_mav_sys_id.get();
 	PX4_INFO("canid %d",sys_id);
@@ -162,7 +164,7 @@ void ModuleCanIntegrale::run()
 		integrale_s integrale;
 		pipe_correction_s pipe_correction;
 		IntegralCanData tmp;
-		bool resultSend,resultSend2;
+		bool resultSend;//,resultSend2;
 
 		auto startTime=hrt_absolute_time();
 		//Transmit
@@ -175,8 +177,8 @@ void ModuleCanIntegrale::run()
 				yowIntegraleValue=integrale.yaw_rate_integral;
 				thrustValue=integrale.thrust;
 				resultSend=sendFrame(iFace,sys_id | OFFSET_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8);
-				resultSend2=sendFrame(iFace2,sys_id | OFFSET_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8);
-				if (resultSend || resultSend2) {
+				//resultSend2=sendFrame(iFace2,sys_id | OFFSET_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend /*|| resultSend2*/) {
 					cycle++;
 					postYow=true;
 				}
@@ -189,8 +191,8 @@ void ModuleCanIntegrale::run()
 				tmp.v1=yowIntegraleValue;
 				tmp.v2=thrustValue;
 				resultSend=sendFrame(iFace,sys_id | OFFSET_YOW,(const uavcan::uint8_t *)&tmp,8);
-				resultSend2=sendFrame(iFace2,sys_id | OFFSET_YOW,(const uavcan::uint8_t *)&tmp,8);
-				if (resultSend || resultSend2) {
+				//resultSend2=sendFrame(iFace2,sys_id | OFFSET_YOW,(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend /*|| resultSend2*/) {
 					cycle++;
 					postYow=false;
 				}
@@ -207,8 +209,8 @@ void ModuleCanIntegrale::run()
 				thrustPipeCorrectionValue=pipe_correction.thrust_correction;
 				nbMedianValue=pipe_correction.nb_median;
 				resultSend=sendFrame(iFace,sys_id | OFFSET_CORR_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8);
-				resultSend2=sendFrame(iFace2,sys_id | OFFSET_CORR_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8);
-				if (resultSend || resultSend2) {
+				//resultSend2=sendFrame(iFace2,sys_id | OFFSET_CORR_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend /*|| resultSend2*/) {
 					cycle++;
 					postCorrection=true;
 				}
@@ -221,8 +223,8 @@ void ModuleCanIntegrale::run()
 				tmp.v1=yowPipeCorrectionValue;
 				tmp.v2=thrustPipeCorrectionValue;
 				resultSend=sendFrame(iFace,sys_id | OFFSET_CORR_YOW,(const uavcan::uint8_t *)&tmp,8);
-				resultSend2=sendFrame(iFace2,sys_id | OFFSET_CORR_YOW,(const uavcan::uint8_t *)&tmp,8);
-				if (resultSend || resultSend2) {
+				//resultSend2=sendFrame(iFace2,sys_id | OFFSET_CORR_YOW,(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend /*|| resultSend2*/) {
 					cycle++;
 					postCorrection=false;
 					postNbMedian=true;
@@ -236,8 +238,8 @@ void ModuleCanIntegrale::run()
 				tmp.v1=nbMedianValue;
 				tmp.v2=0.0f;
 				resultSend=sendFrame(iFace,sys_id | OFFSET_STAT,(const uavcan::uint8_t *)&tmp,8);
-				resultSend2=sendFrame(iFace2,sys_id | OFFSET_STAT,(const uavcan::uint8_t *)&tmp,8);
-				if (resultSend || resultSend2) {
+				//resultSend2=sendFrame(iFace2,sys_id | OFFSET_STAT,(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend /*|| resultSend2*/) {
 					cycle++;
 					postNbMedian=false;
 				}
@@ -276,7 +278,7 @@ void ModuleCanIntegrale::run()
 			}
 		}
 		receiveResult=1;
-		while (receiveResult>0)  {
+		/*while (receiveResult>0)  {
 			receiveResult=iFace2->receive(canFrame,mtime,out_ts_utc,out_flags);
 			if (receiveResult==0) {
 				//PX4_ERR("CAN driver RX empty");
@@ -289,7 +291,7 @@ void ModuleCanIntegrale::run()
 			if (receiveResult==1) {
 				processReceivedFrame(iFace2,canFrame);
 			}
-		}
+		}*/
 
 		//Check unrefresh
 		uint64_t currentTime=hrt_absolute_time();
