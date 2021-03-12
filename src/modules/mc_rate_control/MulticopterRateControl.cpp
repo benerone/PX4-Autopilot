@@ -99,14 +99,20 @@ MulticopterRateControl::parameters_updated()
 	_pi_limit[0]=_param_mc_pi_limit_roll.get();
 	_pi_limit[1]=_param_mc_pi_limit_pitch.get();
 	_pi_limit[2]=_param_mc_pi_limit_yow.get();
-	_pi_limit[3]=_param_mc_pi_limit_thrust.get();
+	_pi_limit[3]=_param_mc_pi_limit_vx.get();
+	_pi_limit[4]=_param_mc_pi_limit_vy.get();
+	_pi_limit[5]=_param_mc_pi_limit_thrust.get();
 	_pi_mult[0]=_param_mc_pi_mul_roll.get();
 	_pi_mult[1]=_param_mc_pi_mul_pitch.get();
 	_pi_mult[2]=_param_mc_pi_mul_yow.get();
-	_pi_mult[3]=_param_mc_pi_mul_thrust.get();
+	_pi_mult[3]=_param_mc_pi_mul_vx.get();
+	_pi_mult[4]=_param_mc_pi_mul_vy.get();
+	_pi_mult[5]=_param_mc_pi_mul_thrust.get();
 	moyCorItems_pitch=_param_mc_pi_moy_cor_pitch.get();
 	moyCorItems_roll=_param_mc_pi_moy_cor_roll.get();
 	moyCorItems_yaw=_param_mc_pi_moy_cor_yaw.get();
+	moyCorItems_vx=_param_mc_pi_moy_cor_vx.get();
+	moyCorItems_vy=_param_mc_pi_moy_cor_vy.get();
 	moyCorItems_thrust=_param_mc_pi_moy_cor_thrust.get();
 	sys_id=_param_mav_sys_id.get();
 }
@@ -337,16 +343,21 @@ MulticopterRateControl::Run()
 					nbRemoteValid++;
 				}
 			}
-			double rollError,pitchError,yawError,trustError;
+			double rollError,pitchError,yawError,trustError,vxError,vyError;
 			int nbMedian=0;
 			rollError=0.0f;
 			pitchError=0.0f;
 			yawError=0.0f;
+			vxError=0.0f;
+			vyError=0.0f;
 			trustError=0.0f;
-			int32_t medianRoll,medianPitch,medianYaw,medianThrust;
+
+			int32_t medianRoll,medianPitch,medianYaw,medianThrust,medianVx,medianVy;
 			medianRoll=0;
 			medianPitch=0;
 			medianYaw=0;
+			medianVx=0;
+			medianVy=0;
 			medianThrust=0;
 			if (nbRemoteValid!=1) {
 				//Case 1,3 or 4
@@ -360,6 +371,12 @@ MulticopterRateControl::Run()
 				yawError=(double)integrale_data.yaw_rate_integral-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
 					return r.yaw_rate_integral;
 				},&medianYaw);
+				vxError=(double)integrale_data.thrust-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
+					return r.vx;
+				},&medianThrust);
+				vyError=(double)integrale_data.thrust-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
+					return r.vy;
+				},&medianThrust);
 				trustError=(double)integrale_data.thrust-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
 					return r.thrust;
 				},&medianThrust);
@@ -374,19 +391,27 @@ MulticopterRateControl::Run()
 					pitchError=0.0f;
 					yawError=0.0f;
 					trustError=0.0f;
+					vxError=0.0f;
+					vyError=0.0f;
 					medianRoll=sys_id;
 					medianPitch=sys_id;
 					medianYaw=sys_id;
+					medianVx=sys_id;
+					medianVy=sys_id;
 					medianThrust=sys_id;
 				} else {
 					if (sys_id==2) {
 						rollError=(double)(integrale_data.roll_rate_integral-_r1integrale.roll_rate_integral);
 						pitchError=(double)(integrale_data.pitch_rate_integral-_r1integrale.pitch_rate_integral);
 						yawError=(double)(integrale_data.yaw_rate_integral-_r1integrale.yaw_rate_integral);
+						vxError=(double)(integrale_data.vx-_r1integrale.vx);
+						vyError=(double)(integrale_data.vy-_r1integrale.vy);
 						trustError=(double)(integrale_data.thrust-_r1integrale.thrust);
 						medianRoll=_r1integrale.index;
 						medianPitch=_r1integrale.index;
 						medianYaw=_r1integrale.index;
+						medianVx=_r1integrale.index;
+						medianVy=_r1integrale.index;
 						medianThrust=_r1integrale.index;
 					}
 					if (sys_id==3) {
@@ -402,10 +427,14 @@ MulticopterRateControl::Run()
 						rollError=(double)(integrale_data.roll_rate_integral-_vintegrale.roll_rate_integral);
 						pitchError=(double)(integrale_data.pitch_rate_integral-_vintegrale.pitch_rate_integral);
 						yawError=(double)(integrale_data.yaw_rate_integral-_vintegrale.yaw_rate_integral);
+						vxError=(double)(integrale_data.vx-_vintegrale.vx);
+						vyError=(double)(integrale_data.vy-_vintegrale.vy);
 						trustError=(double)(integrale_data.thrust-_vintegrale.thrust);
 						medianRoll=_vintegrale.index;
 						medianPitch=_vintegrale.index;
 						medianYaw=_vintegrale.index;
+						medianVx=_vintegrale.index;
+						medianVy=_vintegrale.index;
 						medianThrust=_vintegrale.index;
 					}
 					if (sys_id==4) {
@@ -424,10 +453,14 @@ MulticopterRateControl::Run()
 						rollError=(double)(integrale_data.roll_rate_integral-_vintegrale.roll_rate_integral);
 						pitchError=(double)(integrale_data.pitch_rate_integral-_vintegrale.pitch_rate_integral);
 						yawError=(double)(integrale_data.yaw_rate_integral-_vintegrale.yaw_rate_integral);
+						vxError=(double)(integrale_data.vx-_vintegrale.vx);
+						vyError=(double)(integrale_data.vy-_vintegrale.vy);
 						trustError=(double)(integrale_data.thrust-_vintegrale.thrust);
 						medianRoll=_vintegrale.index;
 						medianPitch=_vintegrale.index;
 						medianYaw=_vintegrale.index;
+						medianVx=_vintegrale.index;
+						medianVy=_vintegrale.index;
 						medianThrust=_vintegrale.index;
 					}
 				}
@@ -439,10 +472,14 @@ MulticopterRateControl::Run()
 			double rollCorrection=PipeTools::processMultAndClamp(rollError,_pi_mult[0],_pi_limit[0]);
 			double pitchCorrection=PipeTools::processMultAndClamp(pitchError,_pi_mult[1],_pi_limit[1]);
 			double yawCorrection=PipeTools::processMultAndClamp(yawError,_pi_mult[2],_pi_limit[2]);
-			double thrustCorrection=PipeTools::processMultAndClamp(trustError,_pi_mult[3],_pi_limit[3]);
+			double vxCorrection=PipeTools::processMultAndClamp(vxError,_pi_mult[3],_pi_limit[3]);
+			double vyCorrection=PipeTools::processMultAndClamp(vyError,_pi_mult[4],_pi_limit[4]);
+			double thrustCorrection=PipeTools::processMultAndClamp(trustError,_pi_mult[5],_pi_limit[5]);
 			rollCorrection=PipeTools::processAverage(accuCorrectionRoll,rollCorrection,moyCorItems_roll);
 			pitchCorrection=PipeTools::processAverage(accuCorrectionPitch,pitchCorrection,moyCorItems_pitch);
 			yawCorrection=PipeTools::processAverage(accuCorrectionYaw,yawCorrection,moyCorItems_yaw);
+			vxCorrection=PipeTools::processAverage(accuCorrectionVx,vxCorrection,moyCorItems_vx);
+			vyCorrection=PipeTools::processAverage(accuCorrectionVy,vyCorrection,moyCorItems_vy);
 			thrustCorrection=PipeTools::processAverage(accuCorrectionThrust,thrustCorrection,moyCorItems_thrust);
 			/*cnt++;
 			if (cnt>1000) {
@@ -471,6 +508,8 @@ MulticopterRateControl::Run()
 			pipe_correction.roll_correction=(float)rollCorrection;
 			pipe_correction.pitch_correction=(float)pitchCorrection;
 			pipe_correction.yaw_correction=(float)yawCorrection;
+			pipe_correction.vx_correction=(float)vxCorrection;
+			pipe_correction.vy_correction=(float)vyCorrection;
 			pipe_correction.thrust_correction=(float)thrustCorrection;
 			pipe_correction.nb_median=(float)nbMedian;
 			pipe_correction.param_mr=_pi_mult[0];
@@ -480,6 +519,8 @@ MulticopterRateControl::Run()
 			pipe_correction.median_roll=medianRoll;
 			pipe_correction.median_pitch=medianPitch;
 			pipe_correction.median_yaw=medianYaw;
+			pipe_correction.median_vx=medianVx;
+			pipe_correction.median_vy=medianVy;
 			pipe_correction.median_thrust=medianThrust;
 			_pipe_correction_pub.publish(pipe_correction);
 

@@ -36,11 +36,9 @@ protected:
 			msg.corrroll = pipe_correction.roll_correction;
 			msg.corrpitch = pipe_correction.pitch_correction;
 			msg.corryaw = pipe_correction.yaw_correction;
+			msg.corrvx = pipe_correction.vx_correction;
+			msg.corrvy = pipe_correction.vy_correction;
 			msg.corrthrust = pipe_correction.thrust_correction;
-			msg.coefroll= pipe_correction.param_mr;
-			msg.coefpitch= pipe_correction.param_mp;
-			msg.coefyaw= pipe_correction.param_my;
-			msg.coefthrust=pipe_correction.param_mt;
 			msg.medianroll=pipe_correction.median_roll;
 			msg.medianpitch=pipe_correction.median_pitch;
 			msg.medianyaw=pipe_correction.median_yaw;

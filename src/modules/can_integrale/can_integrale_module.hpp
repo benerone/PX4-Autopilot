@@ -74,13 +74,12 @@ private:
 	uavcan::ICanIface * iFace;
 	uavcan::ICanIface * iFace2;
 	bool postYow;
-	bool postCorrection;
-	bool postNbMedian;
+	bool postVxy;
 	float yowIntegraleValue;
+	float vxValue;
+	float vyValue;
 	float thrustValue;
-	float yowPipeCorrectionValue;
-	float thrustPipeCorrectionValue;
-	float nbMedianValue;
+
 	int32_t sys_id;
 
 };

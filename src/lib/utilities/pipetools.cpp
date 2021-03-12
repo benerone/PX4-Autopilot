@@ -89,6 +89,8 @@ bool PipeTools::isIntegraleValid(const integrale_s &ival) {
 	return PX4_ISFINITE(ival.roll_rate_integral) &&
 		PX4_ISFINITE(ival.pitch_rate_integral) &&
 		PX4_ISFINITE(ival.yaw_rate_integral)  &&
+		PX4_ISFINITE(ival.vx) &&
+		PX4_ISFINITE(ival.vy) &&
 		PX4_ISFINITE(ival.thrust) &&
 		ival.status==integrale_s::INTEGRALE_STATUS_COMPLETE;
 }

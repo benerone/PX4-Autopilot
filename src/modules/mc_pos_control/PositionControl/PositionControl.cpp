@@ -188,11 +188,11 @@ void PositionControl::_velocityControl(const float dt)
 	// limit thrust integral
 	_vel_int(2) = math::min(fabsf(_vel_int(2)), CONSTANTS_ONE_G) * sign(_vel_int(2));
 }
-float PositionControl::getVelocityIntegralThrust() {
-	return _vel_int(2);
+matrix::Vector3f PositionControl::getVelocityIntegralThrust() {
+	return _vel_int;
 }
-void PositionControl::setVelocityIntegralThrust(float value) {
-	_vel_int(2)=value;
+void PositionControl::setVelocityIntegralThrust(matrix::Vector3f value) {
+	_vel_int=value;
 }
 void PositionControl::_accelerationControl()
 {

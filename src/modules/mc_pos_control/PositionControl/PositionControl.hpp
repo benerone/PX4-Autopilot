@@ -179,8 +179,8 @@ public:
 	 */
 	void getAttitudeSetpoint(vehicle_attitude_setpoint_s &attitude_setpoint) const;
 
-	float getVelocityIntegralThrust();
-	void setVelocityIntegralThrust(float value);
+	matrix::Vector3f getVelocityIntegralThrust();
+	void setVelocityIntegralThrust(matrix::Vector3f value);
 
 private:
 	bool _updateSuccessful();

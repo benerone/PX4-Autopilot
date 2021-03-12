@@ -8,6 +8,8 @@ float32 roll_rate_integral	# roll rate integrale
 float32 pitch_rate_integral	# pitch rate integrale
 float32 yaw_rate_integral	# yaw rate integrale
 float32 thrust			# thrust
+float32 vx			# thrust
+float32 vy			# thrust
 uint8 status			# data status
 int32 index			# mavlink index
 

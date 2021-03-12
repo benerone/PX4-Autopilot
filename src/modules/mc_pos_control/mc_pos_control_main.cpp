@@ -652,7 +652,10 @@ MulticopterPositionControl::Run()
 
 			integralepos_s integralepos_data{};
 			integralepos_data.timestamp=time_stamp_now;
-			integralepos_data.thrust_vel_integral=_control.getVelocityIntegralThrust();
+			matrix::Vector3f it=_control.getVelocityIntegralThrust();
+			integralepos_data.x_vel_integral=it(0);
+			integralepos_data.y_vel_integral=it(1);
+			integralepos_data.thrust_vel_integral=it(2);
 			_integralepos_pub.publish(integralepos_data);
 			pipe_correction_s pipe_correction{};
 			//cnt++;
@@ -664,7 +667,11 @@ MulticopterPositionControl::Run()
 					(double)pipe_correction.thrust_correction,(double)(_control.getVelocityIntegralThrust()-pipe_correction.thrust_correction));
 					showafter=true;
 				}*/
-				_control.setVelocityIntegralThrust(_control.getVelocityIntegralThrust()-pipe_correction.thrust_correction);
+				matrix::Vector3f itc;
+				itc(0)=pipe_correction.vx_correction;
+				itc(1)=pipe_correction.vy_correction;
+				itc(2)=pipe_correction.thrust_correction;
+				_control.setVelocityIntegralThrust(_control.getVelocityIntegralThrust()-itc);
 				/*if (showafter) {
 					PX4_INFO("IThrust after=> v:%f",(double)_control.getVelocityIntegralThrust());
 				}*/
