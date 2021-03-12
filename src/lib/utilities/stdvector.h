@@ -216,6 +216,37 @@ namespace zapata {
 		}
 	}
 
+	template <class T> int partitionValues(StdVector<T> &values, int left, int right) {
+		int pivotIndex = left + (right - left) / 2;
+		float pivotValue = values[pivotIndex].value;
+		int i = left, j = right;
+		T temp;
+		while(i <= j) {
+			while(values[i].value < pivotValue) {
+				i++;
+			}
+			while(values[j].value > pivotValue) {
+				j--;
+			}
+			if(i <= j) {
+				temp = values[i];
+				values[i] = values[j];
+				values[j] = temp;
+				i++;
+				j--;
+			}
+		}
+		return i;
+	}
+	template <class T> void quicksortValues(StdVector<T> &values, int left, int right) {
+		if(left < right) {
+			int pivotIndex = partitionValues(values, left, right);
+			quicksortValues(values, left, pivotIndex - 1);
+			quicksortValues(values, pivotIndex, right);
+		}
+	}
+
+
 	int getStdVectorVersion();
 }
 

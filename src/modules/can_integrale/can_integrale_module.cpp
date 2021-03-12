@@ -368,16 +368,19 @@ void ModuleCanIntegrale::processReceivedFrame(uavcan::ICanIface * iFacePart,uavc
 					rx_integrales[offset]->status=	integrale_s::INTEGRALE_STATUS_COMPLETE;
 					if (offset==0) {
 						r1_integrale.timestamp=hrt_absolute_time();
+						r1_integrale.index=id;
 						_r1integrale_pub.publish(r1_integrale);
 						nbReceivedR1++;
 					}
 					if (offset==1) {
 						r2_integrale.timestamp=hrt_absolute_time();
+						r2_integrale.index=id;
 						_r2integrale_pub.publish(r2_integrale);
 						nbReceivedR2++;
 					}
 					if (offset==2) {
 						r3_integrale.timestamp=hrt_absolute_time();
+						r3_integrale.index=id;
 						_r3integrale_pub.publish(r3_integrale);
 						nbReceivedR3++;
 					}

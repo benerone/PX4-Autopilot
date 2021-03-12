@@ -8,6 +8,11 @@ namespace zapata {
 
 	typedef float (*FieldSelectorCallback) (const integrale_s &r) ;
 
+	typedef struct {
+		float value;
+		int index;
+	} ValIndex;
+
 	class PipeTools {
 	public:
 				/**
@@ -21,14 +26,14 @@ namespace zapata {
 		 * @param fcb Filed selector callback
 		 * @return float
 		 */
-		static float processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,int * nbMedian,FieldSelectorCallback fcb);
+		static float processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,int * nbMedian,FieldSelectorCallback fcb,int * medianIndex);
 		/**
 		 * @brief Process median on array of float values
 		 *
 		 * @param values
 		 * @return float
 		 */
-		static float processMedianOnVector(zapata::StdVector<float> &values);
+		static float processMedianOnVector(zapata::StdVector<ValIndex> &values,int * medianIndex);
 		/**
 		 * @brief Process average
 		 *

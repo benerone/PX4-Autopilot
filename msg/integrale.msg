@@ -9,5 +9,6 @@ float32 pitch_rate_integral	# pitch rate integrale
 float32 yaw_rate_integral	# yaw rate integrale
 float32 thrust			# thrust
 uint8 status			# data status
+int32 index			# mavlink index
 
 # TOPICS integrale r1integrale r2integrale r3integrale

@@ -3,40 +3,43 @@
 
 using namespace zapata;
 
-float PipeTools::processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,int * nbMedian,FieldSelectorCallback fcb) {
-	zapata::StdVector<float> allValues(4);
+
+
+float PipeTools::processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,int * nbMedian,FieldSelectorCallback fcb,int * medianIndex) {
+	zapata::StdVector<ValIndex> allValues(4);
 	(*nbMedian)=0;
 	//Local contrib
 	if (local.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
-		allValues.push_back((*fcb)(local));
+		allValues.push_back({(*fcb)(local),local.index});
 		(*nbMedian)|=1;
 	}
 	//Remote contrib
 	if (r1.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
-		allValues.push_back((*fcb)(r1));
+		allValues.push_back({(*fcb)(r1),r1.index});
 		(*nbMedian)|=1;
 	}
 	if (r2.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
-		allValues.push_back((*fcb)(r2));
+		allValues.push_back({(*fcb)(r2),r2.index});
 		(*nbMedian)|=4;
 	}
 	if (r3.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
-		allValues.push_back((*fcb)(r3));
+		allValues.push_back({(*fcb)(r3),r3.index});
 		(*nbMedian)|=8;
 	}
-	return processMedianOnVector(allValues);
+	return processMedianOnVector(allValues,medianIndex);
 }
 
-float PipeTools::processMedianOnVector(zapata::StdVector<float> &values) {
+float PipeTools::processMedianOnVector(zapata::StdVector<ValIndex> &values,int * medianIndex) {
 	if (values.size()==1) {
-		return values[0];
+		return values[0].value;
 	}
 	//Sort
-	zapata::quicksort(values,0,values.size()-1); //Lowest first
+	zapata::partitionValues(values,0,values.size()-1); //Lowest first
 	//Case 2
 	if (values.size()==2) {
 		//if (sys_id==1) {
-			return values[0];
+			(* medianIndex)=values[0].index;
+			return values[0].value;
 		/*} else {
 			return values[1];
 		}*/
@@ -44,8 +47,8 @@ float PipeTools::processMedianOnVector(zapata::StdVector<float> &values) {
 
 	//if 4 values , remove farthest
 	if (values.size()==4) {
-		float distLow=values[1]-values[0];
-		float distHigh=values[3]-values[2];
+		float distLow=values[1].value-values[0].value;
+		float distHigh=values[3].value-values[2].value;
 		if (distHigh<distLow) {
 			values[0]=values[1];
 			values[1]=values[2];
@@ -54,7 +57,8 @@ float PipeTools::processMedianOnVector(zapata::StdVector<float> &values) {
 		values.pop_back();
 	}
 	//Case 3
-	return values[1];
+	(* medianIndex)=values[1].index;
+	return values[1].value;
 }
 float PipeTools::processAverage(zapata::StdVector<float> & acc,float value,int32_t nbAverage) {
 	acc.push_back(value);
