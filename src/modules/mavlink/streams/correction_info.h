@@ -41,6 +41,10 @@ protected:
 			msg.coefpitch= pipe_correction.param_mp;
 			msg.coefyaw= pipe_correction.param_my;
 			msg.coefthrust=pipe_correction.param_mt;
+			msg.medianroll=pipe_correction.median_roll;
+			msg.medianpitch=pipe_correction.median_pitch;
+			msg.medianyaw=pipe_correction.median_yaw;
+			msg.medianthrust=pipe_correction.median_thrust;
 			mavlink_msg_correction_values_send_struct(_mavlink->get_channel(), &msg);
 			return true;
 		}
