@@ -343,7 +343,11 @@ MulticopterRateControl::Run()
 			pitchError=0.0f;
 			yawError=0.0f;
 			trustError=0.0f;
-			int medianRoll,medianPitch,medianYaw,medianThrust;
+			int32_t medianRoll,medianPitch,medianYaw,medianThrust;
+			medianRoll=0;
+			medianPitch=0;
+			medianYaw=0;
+			medianThrust=0;
 			if (nbRemoteValid!=1) {
 				//Case 1,3 or 4
 				rollError=integrale_data.roll_rate_integral-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
@@ -440,18 +444,22 @@ MulticopterRateControl::Run()
 			pitchCorrection=PipeTools::processAverage(accuCorrectionPitch,pitchCorrection,moyCorItems_pitch);
 			yawCorrection=PipeTools::processAverage(accuCorrectionYaw,yawCorrection,moyCorItems_yaw);
 			thrustCorrection=PipeTools::processAverage(accuCorrectionThrust,thrustCorrection,moyCorItems_thrust);
-			cnt++;
+			/*cnt++;
 			if (cnt>1000) {
 				cnt=0;
-				/*PX4_INFO("RE:%f RC:%f",(double)rollError,(double)(rollCorrection*1000.0f));
+				PX4_INFO("RE:%f RC:%f",(double)rollError,(double)(rollCorrection*1000.0f));
 				PX4_INFO("PE:%f PC:%f",(double)pitchError,(double)(pitchCorrection*1000.0f));
 				PX4_INFO("YE:%f YC:%f",(double)yawError,(double)(yawCorrection*1000.0f));
 				PX4_INFO("TE:%f TC:%f",(double)trustError,(double)(thrustCorrection*1000.0f));
 				PX4_INFO("NbRemote:%d",nbRemoteValid);
-				PX4_INFO("R1:%d R2:%d R3:%d",(int)_r1integrale.status,(int)_r2integrale.status,(int)_r3integrale.status);*/
+				PX4_INFO("R1:%d R2:%d R3:%d",(int)_r1integrale.status,(int)_r2integrale.status,(int)_r3integrale.status);
 				PX4_INFO("Median: R:%c P:%c Y:%c T:%c",medianRoll==sys_id?'M':'_',medianPitch==sys_id?'M':'_',
 				medianYaw==sys_id?'M':'_',medianThrust==sys_id?'M':'_');
-			}
+				PX4_INFO("MedianIndex: R:%d P:%d Y:%d T:%d",medianRoll,medianPitch,
+				medianYaw,medianThrust);
+				PX4_INFO("MedianIndex: L:%d R1:%d R2:%d R3:%d",integrale_data.index,_r1integrale.index,
+				_r2integrale.index,_r3integrale.index);
+			}*/
 			matrix::Vector3f rateIntegrale;
 			rateIntegrale(0)=integrale_values(0)-rollCorrection;
 			rateIntegrale(1)=integrale_values(1)-pitchCorrection;

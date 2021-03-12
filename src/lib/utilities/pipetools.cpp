@@ -5,8 +5,8 @@ using namespace zapata;
 
 
 
-float PipeTools::processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,int * nbMedian,FieldSelectorCallback fcb,int * medianIndex) {
-	zapata::StdVector<ValIndex> allValues(4);
+float PipeTools::processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,int * nbMedian,FieldSelectorCallback fcb,int32_t * medianIndex) {
+	zapata::StdVector<ValIndex> allValues;
 	(*nbMedian)=0;
 	//Local contrib
 	if (local.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
@@ -29,7 +29,7 @@ float PipeTools::processMedian(const integrale_s &local,const integrale_s &r1,co
 	return processMedianOnVector(allValues,medianIndex);
 }
 
-float PipeTools::processMedianOnVector(zapata::StdVector<ValIndex> &values,int * medianIndex) {
+float PipeTools::processMedianOnVector(zapata::StdVector<ValIndex> &values,int32_t * medianIndex) {
 	if (values.size()==1) {
 		return values[0].value;
 	}

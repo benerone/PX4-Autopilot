@@ -10,7 +10,7 @@ namespace zapata {
 
 	typedef struct {
 		float value;
-		int index;
+		int32_t index;
 	} ValIndex;
 
 	class PipeTools {
@@ -26,14 +26,14 @@ namespace zapata {
 		 * @param fcb Filed selector callback
 		 * @return float
 		 */
-		static float processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,int * nbMedian,FieldSelectorCallback fcb,int * medianIndex);
+		static float processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,int * nbMedian,FieldSelectorCallback fcb,int32_t * medianIndex);
 		/**
 		 * @brief Process median on array of float values
 		 *
 		 * @param values
 		 * @return float
 		 */
-		static float processMedianOnVector(zapata::StdVector<ValIndex> &values,int * medianIndex);
+		static float processMedianOnVector(zapata::StdVector<ValIndex> &values,int32_t * medianIndex);
 		/**
 		 * @brief Process average
 		 *
