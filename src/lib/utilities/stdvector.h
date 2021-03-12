@@ -218,7 +218,7 @@ namespace zapata {
 
 	template <class T> int partitionValues(StdVector<T> &values, int left, int right) {
 		int pivotIndex = left + (right - left) / 2;
-		float pivotValue = values[pivotIndex].value;
+		double pivotValue = values[pivotIndex].value;
 		int i = left, j = right;
 		T temp;
 		while(i <= j) {

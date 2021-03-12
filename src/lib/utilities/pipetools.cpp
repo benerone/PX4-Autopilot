@@ -5,36 +5,36 @@ using namespace zapata;
 
 
 
-float PipeTools::processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,int * nbMedian,FieldSelectorCallback fcb,int32_t * medianIndex) {
+double PipeTools::processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,int * nbMedian,FieldSelectorCallback fcb,int32_t * medianIndex) {
 	zapata::StdVector<ValIndex> allValues;
 	(*nbMedian)=0;
 	//Local contrib
 	if (local.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
-		allValues.push_back({(*fcb)(local),local.index});
+		allValues.push_back({(double)(*fcb)(local),local.index});
 		(*nbMedian)|=1;
 	}
 	//Remote contrib
 	if (r1.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
-		allValues.push_back({(*fcb)(r1),r1.index});
+		allValues.push_back({(double)(*fcb)(r1),r1.index});
 		(*nbMedian)|=1;
 	}
 	if (r2.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
-		allValues.push_back({(*fcb)(r2),r2.index});
+		allValues.push_back({(double)(*fcb)(r2),r2.index});
 		(*nbMedian)|=4;
 	}
 	if (r3.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
-		allValues.push_back({(*fcb)(r3),r3.index});
+		allValues.push_back({(double)(*fcb)(r3),r3.index});
 		(*nbMedian)|=8;
 	}
 	return processMedianOnVector(allValues,medianIndex);
 }
 
-float PipeTools::processMedianOnVector(zapata::StdVector<ValIndex> &values,int32_t * medianIndex) {
+double PipeTools::processMedianOnVector(zapata::StdVector<ValIndex> &values,int32_t * medianIndex) {
 	if (values.size()==1) {
 		return values[0].value;
 	}
 	//Sort
-	zapata::partitionValues(values,0,values.size()-1); //Lowest first
+	zapata::quicksortValues(values,0,values.size()-1); //Lowest first
 	//Case 2
 	if (values.size()==2) {
 		//if (sys_id==1) {
@@ -60,7 +60,7 @@ float PipeTools::processMedianOnVector(zapata::StdVector<ValIndex> &values,int32
 	(* medianIndex)=values[1].index;
 	return values[1].value;
 }
-float PipeTools::processAverage(zapata::StdVector<float> & acc,float value,int32_t nbAverage) {
+double PipeTools::processAverage(zapata::StdVector<double> & acc,double value,int32_t nbAverage) {
 	acc.push_back(value);
 	if (acc.size()>(unsigned int)nbAverage) {
 		for(unsigned int i=0;i<acc.size()-1;i++) {
@@ -68,13 +68,13 @@ float PipeTools::processAverage(zapata::StdVector<float> & acc,float value,int32
 		}
 		acc.pop_back();
 	}
-	float result=0.0f;
+	double result=0.0f;
 	for(unsigned int i=0;i<acc.size();i++) {
 		result+=acc[i];
 	}
-	return result/(float)acc.size();
+	return result/(double)acc.size();
 }
-float PipeTools::processMultAndClamp(float val,float mult,float clamp) {
+double PipeTools::processMultAndClamp(double val,double mult,double clamp) {
 	float result=val*mult;
 	float limit=abs(clamp);
 	if (result>limit) {

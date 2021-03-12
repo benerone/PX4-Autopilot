@@ -337,7 +337,7 @@ MulticopterRateControl::Run()
 					nbRemoteValid++;
 				}
 			}
-			float rollError,pitchError,yawError,trustError;
+			double rollError,pitchError,yawError,trustError;
 			int nbMedian=0;
 			rollError=0.0f;
 			pitchError=0.0f;
@@ -350,17 +350,17 @@ MulticopterRateControl::Run()
 			medianThrust=0;
 			if (nbRemoteValid!=1) {
 				//Case 1,3 or 4
-				rollError=integrale_data.roll_rate_integral-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
+				rollError=(double)integrale_data.roll_rate_integral-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
 					return r.roll_rate_integral;
 				},&medianRoll);
 
-				pitchError=integrale_data.pitch_rate_integral-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
+				pitchError=(double)integrale_data.pitch_rate_integral-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
 					return r.pitch_rate_integral;
 				},&medianPitch);
-				yawError=integrale_data.yaw_rate_integral-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
+				yawError=(double)integrale_data.yaw_rate_integral-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
 					return r.yaw_rate_integral;
 				},&medianYaw);
-				trustError=integrale_data.thrust-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
+				trustError=(double)integrale_data.thrust-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
 					return r.thrust;
 				},&medianThrust);
 			} else {
@@ -380,10 +380,10 @@ MulticopterRateControl::Run()
 					medianThrust=sys_id;
 				} else {
 					if (sys_id==2) {
-						rollError=integrale_data.roll_rate_integral-_r1integrale.roll_rate_integral;
-						pitchError=integrale_data.pitch_rate_integral-_r1integrale.pitch_rate_integral;
-						yawError=integrale_data.yaw_rate_integral-_r1integrale.yaw_rate_integral;
-						trustError=integrale_data.thrust-_r1integrale.thrust;
+						rollError=(double)(integrale_data.roll_rate_integral-_r1integrale.roll_rate_integral);
+						pitchError=(double)(integrale_data.pitch_rate_integral-_r1integrale.pitch_rate_integral);
+						yawError=(double)(integrale_data.yaw_rate_integral-_r1integrale.yaw_rate_integral);
+						trustError=(double)(integrale_data.thrust-_r1integrale.thrust);
 						medianRoll=_r1integrale.index;
 						medianPitch=_r1integrale.index;
 						medianYaw=_r1integrale.index;
@@ -399,10 +399,10 @@ MulticopterRateControl::Run()
 							}
 						}
 
-						rollError=integrale_data.roll_rate_integral-_vintegrale.roll_rate_integral;
-						pitchError=integrale_data.pitch_rate_integral-_vintegrale.pitch_rate_integral;
-						yawError=integrale_data.yaw_rate_integral-_vintegrale.yaw_rate_integral;
-						trustError=integrale_data.thrust-_vintegrale.thrust;
+						rollError=(double)(integrale_data.roll_rate_integral-_vintegrale.roll_rate_integral);
+						pitchError=(double)(integrale_data.pitch_rate_integral-_vintegrale.pitch_rate_integral);
+						yawError=(double)(integrale_data.yaw_rate_integral-_vintegrale.yaw_rate_integral);
+						trustError=(double)(integrale_data.thrust-_vintegrale.thrust);
 						medianRoll=_vintegrale.index;
 						medianPitch=_vintegrale.index;
 						medianYaw=_vintegrale.index;
@@ -421,10 +421,10 @@ MulticopterRateControl::Run()
 								}
 							}
 						}
-						rollError=integrale_data.roll_rate_integral-_vintegrale.roll_rate_integral;
-						pitchError=integrale_data.pitch_rate_integral-_vintegrale.pitch_rate_integral;
-						yawError=integrale_data.yaw_rate_integral-_vintegrale.yaw_rate_integral;
-						trustError=integrale_data.thrust-_vintegrale.thrust;
+						rollError=(double)(integrale_data.roll_rate_integral-_vintegrale.roll_rate_integral);
+						pitchError=(double)(integrale_data.pitch_rate_integral-_vintegrale.pitch_rate_integral);
+						yawError=(double)(integrale_data.yaw_rate_integral-_vintegrale.yaw_rate_integral);
+						trustError=(double)(integrale_data.thrust-_vintegrale.thrust);
 						medianRoll=_vintegrale.index;
 						medianPitch=_vintegrale.index;
 						medianYaw=_vintegrale.index;
@@ -436,10 +436,10 @@ MulticopterRateControl::Run()
 			//---------------------------------------------------
 			// PIPE: APPLY CORRECTION
 			//---------------------------------------------------
-			float rollCorrection=PipeTools::processMultAndClamp(rollError,_pi_mult[0],_pi_limit[0]);
-			float pitchCorrection=PipeTools::processMultAndClamp(pitchError,_pi_mult[1],_pi_limit[1]);
-			float yawCorrection=PipeTools::processMultAndClamp(yawError,_pi_mult[2],_pi_limit[2]);
-			float thrustCorrection=PipeTools::processMultAndClamp(trustError,_pi_mult[3],_pi_limit[3]);
+			double rollCorrection=PipeTools::processMultAndClamp(rollError,_pi_mult[0],_pi_limit[0]);
+			double pitchCorrection=PipeTools::processMultAndClamp(pitchError,_pi_mult[1],_pi_limit[1]);
+			double yawCorrection=PipeTools::processMultAndClamp(yawError,_pi_mult[2],_pi_limit[2]);
+			double thrustCorrection=PipeTools::processMultAndClamp(trustError,_pi_mult[3],_pi_limit[3]);
 			rollCorrection=PipeTools::processAverage(accuCorrectionRoll,rollCorrection,moyCorItems_roll);
 			pitchCorrection=PipeTools::processAverage(accuCorrectionPitch,pitchCorrection,moyCorItems_pitch);
 			yawCorrection=PipeTools::processAverage(accuCorrectionYaw,yawCorrection,moyCorItems_yaw);
@@ -461,17 +461,17 @@ MulticopterRateControl::Run()
 				_r2integrale.index,_r3integrale.index);
 			}*/
 			matrix::Vector3f rateIntegrale;
-			rateIntegrale(0)=integrale_values(0)-rollCorrection;
-			rateIntegrale(1)=integrale_values(1)-pitchCorrection;
-			rateIntegrale(2)=integrale_values(2)-yawCorrection;
+			rateIntegrale(0)=integrale_values(0)-(float)rollCorrection;
+			rateIntegrale(1)=integrale_values(1)-(float)pitchCorrection;
+			rateIntegrale(2)=integrale_values(2)-(float)yawCorrection;
 			_rate_control.setRateIntegral(rateIntegrale);
 
 			pipe_correction_s pipe_correction{};
 			pipe_correction.timestamp=hrt_absolute_time();
-			pipe_correction.roll_correction=rollCorrection;
-			pipe_correction.pitch_correction=pitchCorrection;
-			pipe_correction.yaw_correction=yawCorrection;
-			pipe_correction.thrust_correction=thrustCorrection;
+			pipe_correction.roll_correction=(float)rollCorrection;
+			pipe_correction.pitch_correction=(float)pitchCorrection;
+			pipe_correction.yaw_correction=(float)yawCorrection;
+			pipe_correction.thrust_correction=(float)thrustCorrection;
 			pipe_correction.nb_median=(float)nbMedian;
 			pipe_correction.param_mr=_pi_mult[0];
 			pipe_correction.param_mp=_pi_mult[1];

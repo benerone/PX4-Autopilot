@@ -157,10 +157,10 @@ private:
 	int32_t sys_id;
 	int cnt;
 
-	zapata::StdVector<float> accuCorrectionPitch;
-	zapata::StdVector<float> accuCorrectionRoll;
-	zapata::StdVector<float> accuCorrectionYaw;
-	zapata::StdVector<float> accuCorrectionThrust;
+	zapata::StdVector<double> accuCorrectionPitch;
+	zapata::StdVector<double> accuCorrectionRoll;
+	zapata::StdVector<double> accuCorrectionYaw;
+	zapata::StdVector<double> accuCorrectionThrust;
 
 	DEFINE_PARAMETERS(
 		(ParamFloat<px4::params::MC_ROLLRATE_P>) _param_mc_rollrate_p,

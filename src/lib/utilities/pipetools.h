@@ -9,7 +9,7 @@ namespace zapata {
 	typedef float (*FieldSelectorCallback) (const integrale_s &r) ;
 
 	typedef struct {
-		float value;
+		double value;
 		int32_t index;
 	} ValIndex;
 
@@ -26,24 +26,24 @@ namespace zapata {
 		 * @param fcb Filed selector callback
 		 * @return float
 		 */
-		static float processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,int * nbMedian,FieldSelectorCallback fcb,int32_t * medianIndex);
+		static double processMedian(const integrale_s &local,const integrale_s &r1,const integrale_s &r2,const integrale_s &r3,int * nbMedian,FieldSelectorCallback fcb,int32_t * medianIndex);
 		/**
 		 * @brief Process median on array of float values
 		 *
 		 * @param values
 		 * @return float
 		 */
-		static float processMedianOnVector(zapata::StdVector<ValIndex> &values,int32_t * medianIndex);
+		static double processMedianOnVector(zapata::StdVector<ValIndex> &values,int32_t * medianIndex);
 		/**
 		 * @brief Process average
 		 *
 		 */
-		static float processAverage(zapata::StdVector<float> & acc,float value,int32_t nbAverage);
+		static double processAverage(zapata::StdVector<double> & acc,double value,int32_t nbAverage);
 		/**
 		 * @brief Multiplie and clamp
 		 *
 		 */
-		static float processMultAndClamp(float val,float mult,float clamp);
+		static double processMultAndClamp(double val,double mult,double clamp);
 		/**
 		 * @brief test if integrale is valid
 		 *

@@ -162,7 +162,7 @@ void ModuleCanIntegrale::run()
 	while(!should_exit()) {
 
 		integrale_s integrale;
-		pipe_correction_s pipe_correction;
+		//pipe_correction_s pipe_correction;
 		IntegralCanData tmp;
 		bool resultSend;//,resultSend2;
 
@@ -200,7 +200,7 @@ void ModuleCanIntegrale::run()
 				cycle++;
 			}
 			break;
-			case 2: //C Pitch Roll
+			/*case 2: //C Pitch Roll
 			if (_pipe_correction_sub.updated()) {
 				_pipe_correction_sub.copy(&pipe_correction);
 				tmp.v1=pipe_correction.pitch_correction;
@@ -210,7 +210,7 @@ void ModuleCanIntegrale::run()
 				nbMedianValue=pipe_correction.nb_median;
 				resultSend=sendFrame(iFace,sys_id | OFFSET_CORR_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8);
 				//resultSend2=sendFrame(iFace2,sys_id | OFFSET_CORR_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8);
-				if (resultSend /*|| resultSend2*/) {
+				if (resultSend || resultSend2) {
 					cycle++;
 					postCorrection=true;
 				}
@@ -224,7 +224,7 @@ void ModuleCanIntegrale::run()
 				tmp.v2=thrustPipeCorrectionValue;
 				resultSend=sendFrame(iFace,sys_id | OFFSET_CORR_YOW,(const uavcan::uint8_t *)&tmp,8);
 				//resultSend2=sendFrame(iFace2,sys_id | OFFSET_CORR_YOW,(const uavcan::uint8_t *)&tmp,8);
-				if (resultSend /*|| resultSend2*/) {
+				if (resultSend || resultSend2) {
 					cycle++;
 					postCorrection=false;
 					postNbMedian=true;
@@ -239,14 +239,14 @@ void ModuleCanIntegrale::run()
 				tmp.v2=0.0f;
 				resultSend=sendFrame(iFace,sys_id | OFFSET_STAT,(const uavcan::uint8_t *)&tmp,8);
 				//resultSend2=sendFrame(iFace2,sys_id | OFFSET_STAT,(const uavcan::uint8_t *)&tmp,8);
-				if (resultSend /*|| resultSend2*/) {
+				if (resultSend || resultSend2) {
 					cycle++;
 					postNbMedian=false;
 				}
 			} else {
 				cycle++;
 			}
-			break;
+			break;*/
 			default:
 				cycle++;
 				if (cycle%20==0) {
@@ -327,6 +327,7 @@ void ModuleCanIntegrale::run()
 		if (countIt>100) {
 			countIt=0;
 		}
+		currentTime=hrt_absolute_time();
 		int64_t deltaTime=((int64_t)TIME_CYCLE)-((int64_t)(currentTime-startTime));
 		if (deltaTime<0) {
 			deltaTime=0;
@@ -387,7 +388,7 @@ void ModuleCanIntegrale::processReceivedFrame(uavcan::ICanIface * iFacePart,uavc
 				}
 				rx_integrales[offset]->status=	integrale_s::INTEGRALE_STATUS_NONE;
 			} else {
-				if (((canFrame.id & OFFSET_CORR_PITCH_ROLL) == 0) && ((canFrame.id & OFFSET_CORR_YOW) == 0)) {
+				if ((canFrame.id & OFFSET_PITCH_ROLL) == OFFSET_PITCH_ROLL) {
 					//PX4_INFO(" offset pitch-roll id %x status:%d",canFrame.id,(int)rx_integrales[offset]->status);
 					rx_integrales[offset]->pitch_rate_integral=tmpp->v1;
 					rx_integrales[offset]->roll_rate_integral=tmpp->v2;
