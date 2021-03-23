@@ -304,8 +304,12 @@ MulticopterRateControl::Run()
 			integralepos_s integralepos_data;
 			if (_integralepos_sub.copy(&integralepos_data)) {
 				integrale_data.thrust=integralepos_data.thrust_vel_integral;
+				integrale_data.vx=integralepos_data.x_vel_integral;
+				integrale_data.vy=integralepos_data.y_vel_integral;
 			} else {
 				integrale_data.thrust=0.0f;
+				integrale_data.vx=0.0f;
+				integrale_data.vy=0.0f;
 			}
 			//TEST
 			//integrale_data.thrust=_thrust_sp;
@@ -371,10 +375,10 @@ MulticopterRateControl::Run()
 				yawError=(double)integrale_data.yaw_rate_integral-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
 					return r.yaw_rate_integral;
 				},&medianYaw);
-				vxError=(double)integrale_data.thrust-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
+				vxError=(double)integrale_data.vx-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
 					return r.vx;
 				},&medianThrust);
-				vyError=(double)integrale_data.thrust-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
+				vyError=(double)integrale_data.vy-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
 					return r.vy;
 				},&medianThrust);
 				trustError=(double)integrale_data.thrust-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {

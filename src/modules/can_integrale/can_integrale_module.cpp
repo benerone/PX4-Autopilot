@@ -202,7 +202,7 @@ void ModuleCanIntegrale::run()
 			}
 			break;
 			case 2: //I Vxy
-			if (postYow) {
+			if (postVxy) {
 				tmp.v1=vxValue;
 				tmp.v2=vyValue;
 				resultSend=sendFrame(iFace,sys_id | OFFSET_VXY,(const uavcan::uint8_t *)&tmp,8);
