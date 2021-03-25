@@ -21,9 +21,9 @@ typedef struct {
 	float32 v2;
 } IntegralCanData;
 
-#define OFFSET_PITCH_ROLL 	0
-#define OFFSET_YOW 		16
-#define OFFSET_VXY 		32
+#define OFFSET_PITCH_ROLL 	16
+#define OFFSET_YOW 		32
+#define OFFSET_VXY 		64
 #define OFFSET_STAT	 	128
 #define MASK_ID 		0b111
 #define MAX_DELAY_REFRESH	500000
