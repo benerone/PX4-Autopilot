@@ -401,6 +401,20 @@ RCUpdate::Run()
 			}
 		}
 
+		if (control_mode.flag_control_altitude_enabled && control_mode.flag_control_climb_rate_enabled) {
+			pipe_correction_s pipe_correction{};
+
+			//Rescale
+			int tr_index=_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_THROTTLE];
+			int tmp=85*((int)rc_input.values[tr_index]-(int)_parameters.trim[tr_index]);
+			rc_input.values[tr_index]=(uint16_t)((int)_parameters.trim[tr_index]+tmp/100);
+
+			if (_pipe_correction_sub.copy(&pipe_correction)) {
+				rc_input.values[tr_index]-=pipe_correction.thrust_correction;
+			}
+		}
+
+
 		/* read out and scale values from raw message even if signal is invalid */
 		for (unsigned int i = 0; i < channel_limit; i++) {
 

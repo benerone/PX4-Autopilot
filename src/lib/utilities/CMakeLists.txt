@@ -35,3 +35,4 @@ project(utilitieslib)
 add_library (utilitieslib stdvector.cpp pipetools.cpp)
 target_include_directories (utilitieslib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
+px4_add_unit_gtest(SRC pipetest.cpp LINKLIBS utilitieslib)

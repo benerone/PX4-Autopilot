@@ -52,6 +52,7 @@ MulticopterRateControl::MulticopterRateControl(bool vtol) :
 
 	parameters_updated();
 	cnt=0;
+	oldNbRemoteValid=0;
 }
 
 MulticopterRateControl::~MulticopterRateControl()
@@ -301,8 +302,8 @@ MulticopterRateControl::Run()
 			integrale_data.roll_rate_integral=integrale_values(0);
 			integrale_data.pitch_rate_integral=integrale_values(1);
 			integrale_data.yaw_rate_integral=integrale_values(2);
-			integralepos_s integralepos_data;
-			if (_integralepos_sub.copy(&integralepos_data)) {
+			//integralepos_s integralepos_data;
+			/*if (_integralepos_sub.copy(&integralepos_data)) {
 				integrale_data.thrust=integralepos_data.thrust_vel_integral;
 				integrale_data.vx=integralepos_data.x_vel_integral;
 				integrale_data.vy=integralepos_data.y_vel_integral;
@@ -310,7 +311,10 @@ MulticopterRateControl::Run()
 				integrale_data.thrust=0.0f;
 				integrale_data.vx=0.0f;
 				integrale_data.vy=0.0f;
-			}
+			} */
+			integrale_data.thrust=_thrust_sp;
+			integrale_data.vx=0.0f;
+			integrale_data.vy=0.0f;
 			//TEST
 			//integrale_data.thrust=_thrust_sp;
 
@@ -347,7 +351,8 @@ MulticopterRateControl::Run()
 					nbRemoteValid++;
 				}
 			}
-			double rollError,pitchError,yawError,trustError,vxError,vyError;
+			double rollError,pitchError,yawError;
+			double trustError,vxError,vyError;
 			int nbMedian=0;
 			rollError=0.0f;
 			pitchError=0.0f;
@@ -355,6 +360,7 @@ MulticopterRateControl::Run()
 			vxError=0.0f;
 			vyError=0.0f;
 			trustError=0.0f;
+
 
 			int32_t medianRoll,medianPitch,medianYaw,medianThrust,medianVx,medianVy;
 			medianRoll=0;
@@ -364,6 +370,36 @@ MulticopterRateControl::Run()
 			medianVy=0;
 			medianThrust=0;
 			if (nbRemoteValid!=1) {
+				if (PipeTools::isIntegraleValid(_r3integrale)) {
+					PX4_INFO("_r3integrale valid!!!!");
+				}
+				if (nbRemoteValid==0) {
+					if (oldNbRemoteValid!=nbRemoteValid) PX4_INFO("!!!!!Case 1 %d %d",oldNbRemoteValid,nbRemoteValid);
+				}
+				if (nbRemoteValid==2) {
+					if (oldNbRemoteValid!=nbRemoteValid) PX4_INFO("!!!!!Case 3 %d %d",oldNbRemoteValid,nbRemoteValid);
+					if (integrale_data.index<=0 || integrale_data.index>3) {
+						PX4_INFO("error local index");
+					}
+					if (_r1integrale.index<=0 || _r1integrale.index>3) {
+						PX4_INFO("error _r1integrale index");
+					}
+					if (_r2integrale.index<=0 || _r2integrale.index>3) {
+						PX4_INFO("error _r2integrale index");
+					}
+					if (integrale_data.index==_r1integrale.index) {
+						PX4_INFO("local=r1");
+					}
+					if (integrale_data.index==_r2integrale.index) {
+						PX4_INFO("local=r2");
+					}
+					if (_r1integrale.index==_r2integrale.index) {
+						PX4_INFO("r1=r2");
+					}
+				}
+				if (nbRemoteValid==3) {
+					PX4_INFO("nbRemoteValid==3");
+				}
 				//Case 1,3 or 4
 				rollError=(double)integrale_data.roll_rate_integral-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
 					return r.roll_rate_integral;
@@ -385,7 +421,7 @@ MulticopterRateControl::Run()
 					return r.thrust;
 				},&medianThrust);
 			} else {
-				PX4_INFO("!!!!!Case 2");
+				if (oldNbRemoteValid!=nbRemoteValid) PX4_INFO("!!!!!Case 2 %d %d",oldNbRemoteValid,nbRemoteValid);
 				//Case 2
 				if (sys_id==1 ||
 					(sys_id==2 && !PipeTools::isIntegraleValid(_r1integrale)) ||
@@ -528,6 +564,7 @@ MulticopterRateControl::Run()
 			pipe_correction.median_thrust=medianThrust;
 			_pipe_correction_pub.publish(pipe_correction);
 
+			oldNbRemoteValid=nbRemoteValid;
 			// publish actuator controls
 			actuator_controls_s actuators{};
 			actuators.control[actuator_controls_s::INDEX_ROLL] = PX4_ISFINITE(att_control(0)) ? att_control(0) : 0.0f;

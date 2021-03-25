@@ -126,7 +126,7 @@ private:
 	uORB::Subscription _parameter_update_sub{ORB_ID(parameter_update)};		/**< notification of parameter updates */
 	uORB::Subscription _home_pos_sub{ORB_ID(home_position)}; 			/**< home position */
 	uORB::Subscription _hover_thrust_estimate_sub{ORB_ID(hover_thrust_estimate)};
-	uORB::Subscription _pipe_correction_sub{ORB_ID(pipe_correction)};
+	//uORB::Subscription _pipe_correction_sub{ORB_ID(pipe_correction)};
 
 	hrt_abstime	_time_stamp_last_loop{0};		/**< time stamp of last loop iteration */
 
@@ -657,30 +657,30 @@ MulticopterPositionControl::Run()
 			integralepos_data.y_vel_integral=it(1);
 			integralepos_data.thrust_vel_integral=it(2);
 			_integralepos_pub.publish(integralepos_data);
-			pipe_correction_s pipe_correction{};
-			//cnt++;
+			/*pipe_correction_s pipe_correction{};
+			cnt++;
 			if (_pipe_correction_sub.copy(&pipe_correction)) {
-				/*bool showafter=false;
+				bool showafter=false;
 				if (cnt==500) {
 					cnt=0;
-					PX4_INFO("IThrust=> v:%f c:%f dif:%f",(double)_control.getVelocityIntegralThrust(),
-					(double)pipe_correction.thrust_correction,(double)(_control.getVelocityIntegralThrust()-pipe_correction.thrust_correction));
+					PX4_INFO("IThrust=> v:%f c:%f dif:%f",(double)_control.getVelocityIntegralThrust()(2),
+					(double)pipe_correction.thrust_correction,(double)(_control.getVelocityIntegralThrust()(2)-pipe_correction.thrust_correction));
 					showafter=true;
-				}*/
+				}
 				matrix::Vector3f itc;
-				itc(0)=pipe_correction.vx_correction;
-				itc(1)=pipe_correction.vy_correction;
+				itc(0)=0.0f;//pipe_correction.vx_correction;
+				itc(1)=0.0f;//pipe_correction.vy_correction;
 				itc(2)=pipe_correction.thrust_correction;
 				_control.setVelocityIntegralThrust(_control.getVelocityIntegralThrust()-itc);
-				/*if (showafter) {
-					PX4_INFO("IThrust after=> v:%f",(double)_control.getVelocityIntegralThrust());
-				}*/
+				if (showafter) {
+					PX4_INFO("IThrust after=> v:%f",(double)_control.getVelocityIntegralThrust()(2));
+				}
 			} else {
-				/*if (cnt==500) {
+				if (cnt==500) {
 					PX4_INFO("No IThrust");
 					cnt=0;
-				}*/
-			}
+				}
+			}*/
 			if (!_control.update(dt)) {
 				if ((time_stamp_now - _last_warn) > 1_s) {
 					PX4_WARN("invalid setpoints");

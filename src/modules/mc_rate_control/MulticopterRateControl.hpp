@@ -157,6 +157,7 @@ private:
 	int32_t moyCorItems_vy;
 	int32_t moyCorItems_thrust;
 	int32_t sys_id;
+	int oldNbRemoteValid=0;
 	int cnt;
 
 	zapata::StdVector<double> accuCorrectionPitch;

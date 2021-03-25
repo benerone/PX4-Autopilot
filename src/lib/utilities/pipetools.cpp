@@ -16,7 +16,7 @@ double PipeTools::processMedian(const integrale_s &local,const integrale_s &r1,c
 	//Remote contrib
 	if (r1.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
 		allValues.push_back({(double)(*fcb)(r1),r1.index});
-		(*nbMedian)|=1;
+		(*nbMedian)|=2;
 	}
 	if (r2.status==integrale_s::INTEGRALE_STATUS_COMPLETE) {
 		allValues.push_back({(double)(*fcb)(r2),r2.index});

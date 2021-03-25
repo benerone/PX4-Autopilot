@@ -64,6 +64,7 @@
 #include <uORB/topics/pipe_correction.h>
 #include <uORB/topics/input_rc_changed.h>
 #include <uORB/topics/vehicle_control_mode.h>
+#include <uORB/topics/pipe_correction.h>
 
 namespace RCUpdate
 {
@@ -159,7 +160,7 @@ private:
 	uORB::Subscription	_parameter_update_sub{ORB_ID(parameter_update)};	/**< notification of parameter updates */
 	uORB::Subscription	_rc_parameter_map_sub{ORB_ID(rc_parameter_map)};	/**< rc parameter map subscription */
 	uORB::Subscription      _v_control_mode_sub{ORB_ID(vehicle_control_mode)};
-
+	uORB::Subscription _pipe_correction_sub{ORB_ID(pipe_correction)};
 	uORB::Publication<rc_channels_s>	_rc_pub{ORB_ID(rc_channels)};
 	uORB::Publication<input_rc_changed_s>	_input_rc_pub{ORB_ID(input_rc_changed)};				/**< raw r/c control topic */
 	uORB::Publication<actuator_controls_s>	_actuator_group_3_pub{ORB_ID(actuator_controls_3)};	/**< manual control as actuator topic */
