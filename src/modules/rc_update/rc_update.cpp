@@ -401,7 +401,7 @@ RCUpdate::Run()
 			}
 		}
 
-		if (control_mode.flag_control_altitude_enabled && control_mode.flag_control_climb_rate_enabled) {
+		/*if (control_mode.flag_control_altitude_enabled && control_mode.flag_control_climb_rate_enabled) {
 			pipe_correction_s pipe_correction{};
 
 			//Rescale
@@ -412,7 +412,7 @@ RCUpdate::Run()
 			if (_pipe_correction_sub.copy(&pipe_correction)) {
 				rc_input.values[tr_index]-=pipe_correction.thrust_correction;
 			}
-		}
+		}*/
 
 
 		/* read out and scale values from raw message even if signal is invalid */

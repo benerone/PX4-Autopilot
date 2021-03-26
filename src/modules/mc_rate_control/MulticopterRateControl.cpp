@@ -302,8 +302,8 @@ MulticopterRateControl::Run()
 			integrale_data.roll_rate_integral=integrale_values(0);
 			integrale_data.pitch_rate_integral=integrale_values(1);
 			integrale_data.yaw_rate_integral=integrale_values(2);
-			//integralepos_s integralepos_data;
-			/*if (_integralepos_sub.copy(&integralepos_data)) {
+			integralepos_s integralepos_data;
+			if (_integralepos_sub.copy(&integralepos_data)) {
 				integrale_data.thrust=integralepos_data.thrust_vel_integral;
 				integrale_data.vx=integralepos_data.x_vel_integral;
 				integrale_data.vy=integralepos_data.y_vel_integral;
@@ -311,10 +311,10 @@ MulticopterRateControl::Run()
 				integrale_data.thrust=0.0f;
 				integrale_data.vx=0.0f;
 				integrale_data.vy=0.0f;
-			} */
-			integrale_data.thrust=_thrust_sp;
+			}
+			/*integrale_data.thrust=_thrust_sp;
 			integrale_data.vx=0.0f;
-			integrale_data.vy=0.0f;
+			integrale_data.vy=0.0f;*/
 			//TEST
 			//integrale_data.thrust=_thrust_sp;
 
