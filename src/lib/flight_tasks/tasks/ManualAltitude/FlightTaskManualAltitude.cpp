@@ -206,6 +206,9 @@ void FlightTaskManualAltitude::_updateAltitudeLock()
 			// ensure that maximum altitude is respected
 			_respectMaxAltitude();
 		}
+		/*_position_setpoint(2) = NAN;
+		// ensure that maximum altitude is respected
+		_respectMaxAltitude();*/
 	}
 }
 
