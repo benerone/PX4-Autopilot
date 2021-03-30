@@ -112,7 +112,7 @@ private:
 	uORB::Subscription _integralepos_sub{ORB_ID(integralepos)};
 
 
-
+	uORB::Subscription _act_ctrl_sub{ORB_ID(actuator_controls_0)};
 	uORB::Subscription _r1integrale_sub{ORB_ID(r1integrale)};
 	uORB::Subscription _r2integrale_sub{ORB_ID(r2integrale)};
 	uORB::Subscription _r3integrale_sub{ORB_ID(r3integrale)};

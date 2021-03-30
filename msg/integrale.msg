@@ -10,6 +10,7 @@ float32 yaw_rate_integral	# yaw rate integrale
 float32 thrust			# thrust
 float32 vx			# thrust
 float32 vy			# thrust
+float32 throttle_act		# throttle_act
 uint8 status			# data status
 int32 index			# mavlink index
 

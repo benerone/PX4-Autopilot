@@ -43,6 +43,7 @@ protected:
 			msg.medianpitch=pipe_correction.median_pitch;
 			msg.medianyaw=pipe_correction.median_yaw;
 			msg.medianthrust=pipe_correction.median_thrust;
+			msg.medianthract=pipe_correction.median_thr_act;
 			mavlink_msg_correction_values_send_struct(_mavlink->get_channel(), &msg);
 			return true;
 		}

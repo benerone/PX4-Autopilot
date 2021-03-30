@@ -186,6 +186,9 @@ public:
 		_velocity_setpoint_feedback = vel_sp;
 		_acceleration_setpoint_feedback = acc_sp;
 	}
+	void updatePositionControllerIO(const matrix::Vector3f &pos_sp)  {
+		_position_setpoint=pos_sp;
+	}
 
 protected:
 	uORB::SubscriptionData<vehicle_local_position_s> _sub_vehicle_local_position{ORB_ID(vehicle_local_position)};

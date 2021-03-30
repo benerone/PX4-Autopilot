@@ -40,6 +40,7 @@ protected:
 			msg.vx = integrale.vx;
 			msg.vy = integrale.vy;
 			msg.thrust = integrale.thrust;
+			msg.throttleact =integrale.throttle_act;
 			mavlink_msg_integrale_values_send_struct(_mavlink->get_channel(), &msg);
 			return true;
 		}

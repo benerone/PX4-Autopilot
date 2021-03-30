@@ -766,3 +766,16 @@ PARAM_DEFINE_FLOAT(MPC_SPOOLUP_TIME, 1.0f);
  * @group Mission
  */
 PARAM_DEFINE_INT32(MPC_YAW_MODE, 0);
+
+/**
+ * Throttle act min delta
+ *
+ * @group Multicopter Position Control
+ */
+PARAM_DEFINE_FLOAT(MPC_THR_DIV_AMP, 0.1);
+/**
+ * Throttle act min delta duration in ms
+ *
+ * @group Multicopter Position Control
+ */
+PARAM_DEFINE_INT32(MPC_THR_DIV_DEL, 5000);

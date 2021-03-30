@@ -179,8 +179,16 @@ private:
 		(ParamInt<px4::params::MPC_ALT_MODE>) _param_mpc_alt_mode,
 		(ParamFloat<px4::params::MPC_TILTMAX_LND>) _param_mpc_tiltmax_lnd, /**< maximum tilt for landing and smooth takeoff */
 		(ParamFloat<px4::params::MPC_THR_MIN>) _param_mpc_thr_min,
-		(ParamFloat<px4::params::MPC_THR_MAX>) _param_mpc_thr_max
+		(ParamFloat<px4::params::MPC_THR_MAX>) _param_mpc_thr_max,
+		(ParamFloat<px4::params::MPC_THR_DIV_AMP>) _param_mpc_thr_act_div_amp,
+		(ParamInt<px4::params::MPC_THR_DIV_DEL>) _param_mpc_thr_act_div_delay,
+		(ParamInt<px4::params::MAV_SYS_ID>) _param_mav_sys_id
 	);
+
+	int32_t sys_id;
+	float32 thr_act_div_amp;
+	int32_t thr_act_div_delay;
+	uint64_t timestampThrAct;
 
 	control::BlockDerivative _vel_x_deriv; /**< velocity derivative in x */
 	control::BlockDerivative _vel_y_deriv; /**< velocity derivative in y */
@@ -287,12 +295,14 @@ MulticopterPositionControl::MulticopterPositionControl(bool vtol) :
 	_vel_y_deriv(this, "VELD"),
 	_vel_z_deriv(this, "VELD"),
 	_cycle_perf(perf_alloc(PC_ELAPSED, MODULE_NAME": cycle time"))
+
 {
 	if (vtol) {
 		// if vehicle is a VTOL we want to enable weathervane capabilities
 		_wv_controller = new WeatherVane();
 	}
 
+	timestampThrAct=0L;
 	// fetch initial parameter values
 	parameters_update(true);
 
@@ -393,6 +403,10 @@ MulticopterPositionControl::parameters_update(bool force)
 		_takeoff.setSpoolupTime(_param_mpc_spoolup_time.get());
 		_takeoff.setTakeoffRampTime(_param_mpc_tko_ramp_t.get());
 		_takeoff.generateInitialRampValue(_param_mpc_z_vel_p_acc.get());
+
+		sys_id=_param_mav_sys_id.get();
+		thr_act_div_amp=_param_mpc_thr_act_div_amp.get();
+		thr_act_div_delay=_param_mpc_thr_act_div_delay.get();
 
 		if (_wv_controller != nullptr) {
 			_wv_controller->update_parameters();
@@ -658,27 +672,28 @@ MulticopterPositionControl::Run()
 			integralepos_data.thrust_vel_integral=it(2);
 			_integralepos_pub.publish(integralepos_data);
 			pipe_correction_s pipe_correction{};
-			cnt++;
 			if (_pipe_correction_sub.copy(&pipe_correction)) {
-				bool showafter=false;
-				if (cnt==500) {
-					cnt=0;
-					PX4_INFO("IThrust=> v:%f c:%f dif:%f",(double)_control.getVelocityIntegralThrust()(2),
-					(double)pipe_correction.thrust_correction,(double)(_control.getVelocityIntegralThrust()(2)-pipe_correction.thrust_correction));
-					showafter=true;
-				}
+
 				matrix::Vector3f itc;
 				itc(0)=pipe_correction.vx_correction;
 				itc(1)=pipe_correction.vy_correction;
 				itc(2)=pipe_correction.thrust_correction;
 				_control.setVelocityIntegralThrust(_control.getVelocityIntegralThrust()-itc);
-				if (showafter) {
-					PX4_INFO("IThrust after=> v:%f",(double)_control.getVelocityIntegralThrust()(2));
-				}
-			} else {
-				if (cnt==500) {
-					PX4_INFO("No IThrust");
-					cnt=0;
+				if (sys_id!=pipe_correction.median_thr_act) {
+					//Check for reset
+					if (fabs(pipe_correction.thrust_correction)>thr_act_div_amp) {
+						if (timestampThrAct==0L) {
+							timestampThrAct=time_stamp_now;
+						} else {
+							if ((time_stamp_now-timestampThrAct)>(1000L*(uint64_t)thr_act_div_delay)) {
+								setpoint.z=NAN;
+								PX4_INFO("reset setPoint pos z");
+								_flight_tasks.updatePositionControllerIO(Vector3f(setpoint.x, setpoint.y, setpoint.z));
+							}
+						}
+					} else {
+						timestampThrAct=0L;
+					}
 				}
 			}
 			if (!_control.update(dt)) {

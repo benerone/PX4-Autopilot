@@ -5,6 +5,7 @@ float32 yaw_correction	        # yaw correction
 float32 vx_correction	# vx correction
 float32 vy_correction	# vy correction
 float32 thrust_correction	# thrust correction
+float32 throttle_act_correction # throttle act correction
 float32 nb_median		# number of median
 float32 param_mr		# multiplier roll
 float32 param_mp		# multiplier pitch
@@ -16,5 +17,6 @@ int32 median_yaw			# median Yaw
 int32 median_vx		# median vx
 int32 median_vy		# median vy
 int32 median_thrust		# median Thrust
+int32 median_thr_act		# median Thrust
 
 # TOPICS pipe_correction

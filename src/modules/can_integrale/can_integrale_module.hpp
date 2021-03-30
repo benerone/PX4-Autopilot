@@ -75,10 +75,12 @@ private:
 	uavcan::ICanIface * iFace2;
 	bool postYow;
 	bool postVxy;
+	bool postThrAct;
 	float yowIntegraleValue;
 	float vxValue;
 	float vyValue;
 	float thrustValue;
+	float thrAct;
 
 	int32_t sys_id;
 
