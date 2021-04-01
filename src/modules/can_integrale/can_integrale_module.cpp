@@ -21,11 +21,15 @@ typedef struct {
 	float32 v2;
 } IntegralCanData;
 
-#define OFFSET_PITCH_ROLL 	16
-#define OFFSET_YOW 		32
-#define OFFSET_VXY 		64
-#define OFFSET_THR_ACT	 	128
+#define OFFSET_PITCH_ROLL 	1
+#define OFFSET_YOW 		2
+#define OFFSET_VXY 		3
+#define OFFSET_THR_ACT	 	4
+#define OFFSET_POSXY	 	5
+#define OFFSET_POSZ_VELZ	6
+#define OFFSET_VELXY	 	7
 #define MASK_ID 		0b111
+#define TYPE_SHIFT		3
 #define MAX_DELAY_REFRESH	500000
 //Time Cycle in us
 //#define TIME_CYCLE 		1160
@@ -155,7 +159,7 @@ void ModuleCanIntegrale::run()
 	iFace=can->driver.getIface(0);
 	iFace2=can->driver.getIface(1);
 
-	usleep(sys_id*TIME_CYCLE*5); //id*packet_transfert_delay*nbpacket (2I and 2C)
+	usleep(sys_id*TIME_CYCLE*7); //id*packet_transfert_delay*nbpacket (2I and 2C)
 
 	while(!should_exit()) {
 
@@ -177,7 +181,7 @@ void ModuleCanIntegrale::run()
 				vxValue=integrale.vx;
 				vyValue=integrale.vy;
 				thrAct=integrale.throttle_act;
-				resultSend=sendFrame(iFace,sys_id | OFFSET_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8);
+				resultSend=sendFrame(iFace,sys_id | (OFFSET_PITCH_ROLL<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
 				//resultSend2=sendFrame(iFace2,sys_id | OFFSET_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8);
 				if (resultSend /*|| resultSend2*/) {
 					cycle++;
@@ -191,7 +195,7 @@ void ModuleCanIntegrale::run()
 			if (postYow) {
 				tmp.v1=yowIntegraleValue;
 				tmp.v2=thrustValue;
-				resultSend=sendFrame(iFace,sys_id | OFFSET_YOW,(const uavcan::uint8_t *)&tmp,8);
+				resultSend=sendFrame(iFace,sys_id | (OFFSET_YOW<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
 				//resultSend2=sendFrame(iFace2,sys_id | OFFSET_YOW,(const uavcan::uint8_t *)&tmp,8);
 				if (resultSend /*|| resultSend2*/) {
 					cycle++;
@@ -206,7 +210,7 @@ void ModuleCanIntegrale::run()
 			if (postVxy) {
 				tmp.v1=vxValue;
 				tmp.v2=vyValue;
-				resultSend=sendFrame(iFace,sys_id | OFFSET_VXY,(const uavcan::uint8_t *)&tmp,8);
+				resultSend=sendFrame(iFace,sys_id | (OFFSET_VXY<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
 				//resultSend2=sendFrame(iFace2,sys_id | OFFSET_VXY,(const uavcan::uint8_t *)&tmp,8);
 				if (resultSend /*|| resultSend2*/) {
 					cycle++;
@@ -221,7 +225,7 @@ void ModuleCanIntegrale::run()
 			if (postThrAct) {
 				tmp.v1=thrAct;
 				tmp.v2=0.0f;
-				resultSend=sendFrame(iFace,sys_id | OFFSET_THR_ACT,(const uavcan::uint8_t *)&tmp,8);
+				resultSend=sendFrame(iFace,sys_id | (OFFSET_THR_ACT<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
 				//resultSend2=sendFrame(iFace2,sys_id | OFFSET_THR_ACT,(const uavcan::uint8_t *)&tmp,8);
 				if (resultSend /*|| resultSend2*/) {
 					cycle++;
@@ -233,7 +237,7 @@ void ModuleCanIntegrale::run()
 			break;
 			default:
 				cycle++;
-				if (cycle%20==0) {
+				if (cycle%21==0) {
 					cycle=0;
 				}
 			break;
@@ -330,6 +334,7 @@ void ModuleCanIntegrale::processReceivedFrame(uavcan::ICanIface * iFacePart,uavc
 //Process received
 	IntegralCanData *tmpp=(IntegralCanData *)canFrame.data;
 	int32_t id=(int32_t)(canFrame.id & MASK_ID);
+	int32_t typecmd=(int32_t)(canFrame.id >> TYPE_SHIFT);
 	if (id<5) {
 		bool isValid=true;
 		auto offset=id;
@@ -345,7 +350,7 @@ void ModuleCanIntegrale::processReceivedFrame(uavcan::ICanIface * iFacePart,uavc
 		}
 		if (isValid) {
 			//PX4_INFO(" can id %x",canFrame.id);
-			if ((canFrame.id & OFFSET_THR_ACT) == OFFSET_THR_ACT) {
+			if (typecmd == OFFSET_THR_ACT) {
 				rx_integrales[offset]->throttle_act=tmpp->v1;
 				if (rx_integrales[offset]->status==integrale_s::INTEGRALE_STATUS_PARTIAL) {
 					rx_integrales[offset]->status=	integrale_s::INTEGRALE_STATUS_COMPLETE;
@@ -370,19 +375,19 @@ void ModuleCanIntegrale::processReceivedFrame(uavcan::ICanIface * iFacePart,uavc
 				}
 				rx_integrales[offset]->status=	integrale_s::INTEGRALE_STATUS_NONE;
 			} else {
-				if ((canFrame.id & OFFSET_PITCH_ROLL) == OFFSET_PITCH_ROLL) {
+				if (typecmd == OFFSET_PITCH_ROLL) {
 					//PX4_INFO(" offset pitch-roll id %x status:%d",canFrame.id,(int)rx_integrales[offset]->status);
 					rx_integrales[offset]->pitch_rate_integral=tmpp->v1;
 					rx_integrales[offset]->roll_rate_integral=tmpp->v2;
 					rx_integrales[offset]->status=integrale_s::INTEGRALE_STATUS_PARTIAL;
 				}
-				if ((canFrame.id & OFFSET_YOW) == OFFSET_YOW) {
+				if (typecmd == OFFSET_YOW) {
 					//PX4_INFO(" offset pitch-roll id %x status:%d",canFrame.id,(int)rx_integrales[offset]->status);
 					rx_integrales[offset]->yaw_rate_integral=tmpp->v1;
 					rx_integrales[offset]->thrust=tmpp->v2;
 					rx_integrales[offset]->status=integrale_s::INTEGRALE_STATUS_PARTIAL;
 				}
-				if ((canFrame.id & OFFSET_VXY) == OFFSET_VXY) {
+				if (typecmd == OFFSET_VXY) {
 					//PX4_INFO(" offset pitch-roll id %x status:%d",canFrame.id,(int)rx_integrales[offset]->status);
 					rx_integrales[offset]->vx=tmpp->v1;
 					rx_integrales[offset]->vy=tmpp->v2;
