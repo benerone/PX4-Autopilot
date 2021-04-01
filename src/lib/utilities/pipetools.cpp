@@ -28,6 +28,29 @@ double PipeTools::processMedian(const integrale_s &local,const integrale_s &r1,c
 	}
 	return processMedianOnVector(allValues,medianIndex);
 }
+double PipeTools::processMedianVSP(const vehicle_share_position_s &local,const vehicle_share_position_s &r1,const vehicle_share_position_s &r2,const vehicle_share_position_s &r3,int * nbMedian,FieldSelectorCallbackVSP fcb,int32_t * medianIndex) {
+	zapata::StdVector<ValIndex> allValues;
+	(*nbMedian)=0;
+	//Local contrib
+	if (local.status==vehicle_share_position_s::VSP_STATUS_COMPLETE) {
+		allValues.push_back({(double)(*fcb)(local),local.index});
+		(*nbMedian)|=1;
+	}
+	//Remote contrib
+	if (r1.status==vehicle_share_position_s::VSP_STATUS_COMPLETE) {
+		allValues.push_back({(double)(*fcb)(r1),r1.index});
+		(*nbMedian)|=2;
+	}
+	if (r2.status==vehicle_share_position_s::VSP_STATUS_COMPLETE) {
+		allValues.push_back({(double)(*fcb)(r2),r2.index});
+		(*nbMedian)|=4;
+	}
+	if (r3.status==vehicle_share_position_s::VSP_STATUS_COMPLETE) {
+		allValues.push_back({(double)(*fcb)(r3),r3.index});
+		(*nbMedian)|=8;
+	}
+	return processMedianOnVector(allValues,medianIndex);
+}
 
 double PipeTools::processMedianOnVector(zapata::StdVector<ValIndex> &values,int32_t * medianIndex) {
 	if (values.size()==1) {
@@ -93,4 +116,13 @@ bool PipeTools::isIntegraleValid(const integrale_s &ival) {
 		PX4_ISFINITE(ival.vy) &&
 		PX4_ISFINITE(ival.thrust) &&
 		ival.status==integrale_s::INTEGRALE_STATUS_COMPLETE;
+}
+bool PipeTools::isVSPValid(const vehicle_share_position_s &val) {
+	return PX4_ISFINITE(val.x) &&
+		PX4_ISFINITE(val.y) &&
+		PX4_ISFINITE(val.z)  &&
+		PX4_ISFINITE(val.vx) &&
+		PX4_ISFINITE(val.vy) &&
+		PX4_ISFINITE(val.vz) &&
+		val.status==vehicle_share_position_s::VSP_STATUS_COMPLETE;
 }

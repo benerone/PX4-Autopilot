@@ -136,6 +136,7 @@ private:
 	void publish_wind_estimate(const hrt_abstime &timestamp);
 	void publish_yaw_estimator_status(const hrt_abstime &timestamp);
 
+	void pipeFuseData(vehicle_local_position_s &lpos,vehicle_share_position_s &spos);
 	/*
 	 * Update the internal state estimate for a blended GPS solution that is a weighted average of the phsyical
 	 * receiver solutions. This internal state cannot be used directly by estimators because if physical receivers
@@ -1292,6 +1293,8 @@ void Ekf2::Run()
 
 				// publish vehicle share position data
 				_vehicle_share_position_pub.update();
+
+				pipeFuseData(lpos,spos);
 
 				// Vehicle odometry position
 				odom.x = lpos.x;
@@ -2491,6 +2494,10 @@ int Ekf2::task_spawn(int argc, char *argv[])
 	_task_id = -1;
 
 	return PX4_ERROR;
+}
+
+void Ekf2::pipeFuseData(vehicle_local_position_s &lpos,vehicle_share_position_s &spos) {
+
 }
 
 int Ekf2::print_usage(const char *reason)
