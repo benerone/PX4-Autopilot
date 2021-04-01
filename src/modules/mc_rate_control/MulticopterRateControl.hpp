@@ -148,14 +148,15 @@ private:
 
 	hrt_abstime _last_run{0};
 
-	float _pi_limit[6];
-	float _pi_mult[6];
+	float _pi_limit[7];
+	float _pi_mult[7];
 	int32_t moyCorItems_pitch;
 	int32_t moyCorItems_roll;
 	int32_t moyCorItems_yaw;
 	int32_t moyCorItems_vx;
 	int32_t moyCorItems_vy;
 	int32_t moyCorItems_thrust;
+	int32_t moyCorItems_thr_act;
 	int32_t sys_id;
 	int oldNbRemoteValid=0;
 	int cnt;
@@ -166,6 +167,7 @@ private:
 	zapata::StdVector<double> accuCorrectionVx;
 	zapata::StdVector<double> accuCorrectionVy;
 	zapata::StdVector<double> accuCorrectionThrust;
+	zapata::StdVector<double> accuCorrectionThrAct;
 
 	DEFINE_PARAMETERS(
 		(ParamFloat<px4::params::MC_ROLLRATE_P>) _param_mc_rollrate_p,
@@ -209,6 +211,7 @@ private:
 		(ParamFloat<px4::params::MC_PI_LIM_ROLL>) _param_mc_pi_limit_roll,
 		(ParamFloat<px4::params::MC_PI_LIM_YOW>) _param_mc_pi_limit_yow,
 		(ParamFloat<px4::params::MC_PI_LIM_THRUST>) _param_mc_pi_limit_thrust,
+		(ParamFloat<px4::params::MC_PI_LIM_THRACT>) _param_mc_pi_limit_thr_act,
 		(ParamFloat<px4::params::MC_PI_LIM_VX>) _param_mc_pi_limit_vx,
 		(ParamFloat<px4::params::MC_PI_LIM_VY>) _param_mc_pi_limit_vy,
 		(ParamFloat<px4::params::MC_PI_MUL_PITCH>) _param_mc_pi_mul_pitch,
@@ -217,12 +220,14 @@ private:
 		(ParamFloat<px4::params::MC_PI_MUL_VX>) _param_mc_pi_mul_vx,
 		(ParamFloat<px4::params::MC_PI_MUL_VY>) _param_mc_pi_mul_vy,
 		(ParamFloat<px4::params::MC_PI_MUL_THRUST>) _param_mc_pi_mul_thrust,
+		(ParamFloat<px4::params::MC_PI_MUL_THRACT>) _param_mc_pi_mul_thr_act,
 		(ParamInt<px4::params::MC_PI_MOY_COR_PI>) _param_mc_pi_moy_cor_pitch,
 		(ParamInt<px4::params::MC_PI_MOY_COR_RO>) _param_mc_pi_moy_cor_roll,
 		(ParamInt<px4::params::MC_PI_MOY_COR_YO>) _param_mc_pi_moy_cor_yaw,
 		(ParamInt<px4::params::MC_PI_MOY_COR_VX>) _param_mc_pi_moy_cor_vx,
 		(ParamInt<px4::params::MC_PI_MOY_COR_VY>) _param_mc_pi_moy_cor_vy,
 		(ParamInt<px4::params::MC_PI_MOY_COR_TH>) _param_mc_pi_moy_cor_thrust,
+		(ParamInt<px4::params::MC_PI_MOY_COR_TA>) _param_mc_pi_moy_cor_thr_act,
 		(ParamInt<px4::params::MAV_SYS_ID>) _param_mav_sys_id
 	)
 

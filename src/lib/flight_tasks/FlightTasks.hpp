@@ -159,6 +159,7 @@ public:
 
 	void updateVelocityControllerIO(const matrix::Vector3f &vel_sp, const matrix::Vector3f &thrust_sp) {_current_task.task->updateVelocityControllerIO(vel_sp, thrust_sp); }
 	void updatePositionControllerIO(const matrix::Vector3f &pos_sp)  {_current_task.task->updatePositionControllerIO(pos_sp);}
+	void enableLock(bool enable) {_current_task.task->enableLock(enable);}
 private:
 
 	/**

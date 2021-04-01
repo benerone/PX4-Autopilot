@@ -410,7 +410,7 @@ RCUpdate::Run()
 			rc_input.values[tr_index]=(uint16_t)((int)_parameters.trim[tr_index]+tmp/100);
 
 			if (_pipe_correction_sub.copy(&pipe_correction)) {
-				rc_input.values[tr_index]-=pipe_correction.thrust_correction;
+				rc_input.values[tr_index]-=pipe_correction.throttle_act_correction;
 			}
 		}*/
 

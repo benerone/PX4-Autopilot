@@ -103,18 +103,21 @@ MulticopterRateControl::parameters_updated()
 	_pi_limit[3]=_param_mc_pi_limit_vx.get();
 	_pi_limit[4]=_param_mc_pi_limit_vy.get();
 	_pi_limit[5]=_param_mc_pi_limit_thrust.get();
+	_pi_limit[6]=_param_mc_pi_limit_thr_act.get();
 	_pi_mult[0]=_param_mc_pi_mul_roll.get();
 	_pi_mult[1]=_param_mc_pi_mul_pitch.get();
 	_pi_mult[2]=_param_mc_pi_mul_yow.get();
 	_pi_mult[3]=_param_mc_pi_mul_vx.get();
 	_pi_mult[4]=_param_mc_pi_mul_vy.get();
 	_pi_mult[5]=_param_mc_pi_mul_thrust.get();
+	_pi_mult[6]=_param_mc_pi_mul_thr_act.get();
 	moyCorItems_pitch=_param_mc_pi_moy_cor_pitch.get();
 	moyCorItems_roll=_param_mc_pi_moy_cor_roll.get();
 	moyCorItems_yaw=_param_mc_pi_moy_cor_yaw.get();
 	moyCorItems_vx=_param_mc_pi_moy_cor_vx.get();
 	moyCorItems_vy=_param_mc_pi_moy_cor_vy.get();
 	moyCorItems_thrust=_param_mc_pi_moy_cor_thrust.get();
+	moyCorItems_thr_act=_param_mc_pi_moy_cor_thr_act.get();
 	sys_id=_param_mav_sys_id.get();
 }
 
@@ -534,28 +537,20 @@ MulticopterRateControl::Run()
 			double vxCorrection=PipeTools::processMultAndClamp(vxError,_pi_mult[3],_pi_limit[3]);
 			double vyCorrection=PipeTools::processMultAndClamp(vyError,_pi_mult[4],_pi_limit[4]);
 			double thrustCorrection=PipeTools::processMultAndClamp(trustError,_pi_mult[5],_pi_limit[5]);
-			double throttleActCorrection=thrActError;
+			double throttleActCorrection=PipeTools::processMultAndClamp(thrActError,_pi_mult[6],_pi_limit[6]);
 			rollCorrection=PipeTools::processAverage(accuCorrectionRoll,rollCorrection,moyCorItems_roll);
 			pitchCorrection=PipeTools::processAverage(accuCorrectionPitch,pitchCorrection,moyCorItems_pitch);
 			yawCorrection=PipeTools::processAverage(accuCorrectionYaw,yawCorrection,moyCorItems_yaw);
 			vxCorrection=PipeTools::processAverage(accuCorrectionVx,vxCorrection,moyCorItems_vx);
 			vyCorrection=PipeTools::processAverage(accuCorrectionVy,vyCorrection,moyCorItems_vy);
 			thrustCorrection=PipeTools::processAverage(accuCorrectionThrust,thrustCorrection,moyCorItems_thrust);
+			throttleActCorrection=PipeTools::processAverage(accuCorrectionThrAct,throttleActCorrection,moyCorItems_thr_act);
 			/*cnt++;
 			if (cnt>1000) {
 				cnt=0;
-				PX4_INFO("RE:%f RC:%f",(double)rollError,(double)(rollCorrection*1000.0f));
-				PX4_INFO("PE:%f PC:%f",(double)pitchError,(double)(pitchCorrection*1000.0f));
-				PX4_INFO("YE:%f YC:%f",(double)yawError,(double)(yawCorrection*1000.0f));
-				PX4_INFO("TE:%f TC:%f",(double)trustError,(double)(thrustCorrection*1000.0f));
-				PX4_INFO("NbRemote:%d",nbRemoteValid);
-				PX4_INFO("R1:%d R2:%d R3:%d",(int)_r1integrale.status,(int)_r2integrale.status,(int)_r3integrale.status);
-				PX4_INFO("Median: R:%c P:%c Y:%c T:%c",medianRoll==sys_id?'M':'_',medianPitch==sys_id?'M':'_',
-				medianYaw==sys_id?'M':'_',medianThrust==sys_id?'M':'_');
-				PX4_INFO("MedianIndex: R:%d P:%d Y:%d T:%d",medianRoll,medianPitch,
-				medianYaw,medianThrust);
-				PX4_INFO("MedianIndex: L:%d R1:%d R2:%d R3:%d",integrale_data.index,_r1integrale.index,
-				_r2integrale.index,_r3integrale.index);
+				PX4_INFO("throttleActCorrection:%f",(double)throttleActCorrection);
+				PX4_INFO("L:%f R1:%f R2:%f R3:%f",(double)integrale_data.throttle_act,(double)_r1integrale.throttle_act,(double)_r2integrale.throttle_act,(double)_r3integrale.throttle_act);
+
 			}*/
 			matrix::Vector3f rateIntegrale;
 			rateIntegrale(0)=integrale_values(0)-(float)rollCorrection;

@@ -71,6 +71,7 @@ public:
 	{
 		_resetSetpoints();
 		_constraints = empty_constraints;
+		_enableLock=true;
 	}
 
 	virtual ~FlightTask() = default;
@@ -189,11 +190,13 @@ public:
 	void updatePositionControllerIO(const matrix::Vector3f &pos_sp)  {
 		_position_setpoint=pos_sp;
 	}
-
+	void enableLock(bool enable) {
+		_enableLock=enable;
+	}
 protected:
 	uORB::SubscriptionData<vehicle_local_position_s> _sub_vehicle_local_position{ORB_ID(vehicle_local_position)};
 	uORB::SubscriptionData<home_position_s> _sub_home_position{ORB_ID(home_position)};
-
+	bool _enableLock;
 	/** Reset all setpoints to NAN */
 	void _resetSetpoints();
 

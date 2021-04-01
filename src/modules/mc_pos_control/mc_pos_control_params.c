@@ -772,10 +772,10 @@ PARAM_DEFINE_INT32(MPC_YAW_MODE, 0);
  *
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_FLOAT(MPC_THR_DIV_AMP, 0.1);
+PARAM_DEFINE_FLOAT(MPC_THR_DIV_AMP, 0.01);
 /**
  * Throttle act min delta duration in ms
  *
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_INT32(MPC_THR_DIV_DEL, 5000);
+PARAM_DEFINE_INT32(MPC_THR_DIV_DEL, 3000);

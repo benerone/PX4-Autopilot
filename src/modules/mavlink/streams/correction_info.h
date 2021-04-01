@@ -39,6 +39,7 @@ protected:
 			msg.corrvx = pipe_correction.vx_correction;
 			msg.corrvy = pipe_correction.vy_correction;
 			msg.corrthrust = pipe_correction.thrust_correction;
+			msg.corrthract = pipe_correction.throttle_act_correction;
 			msg.medianroll=pipe_correction.median_roll;
 			msg.medianpitch=pipe_correction.median_pitch;
 			msg.medianyaw=pipe_correction.median_yaw;
