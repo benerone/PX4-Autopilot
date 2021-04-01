@@ -76,6 +76,7 @@
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_magnetometer.h>
 #include <uORB/topics/vehicle_odometry.h>
+#include <uORB/topics/vehicle_share_position.h>
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/wind_estimate.h>
 #include <uORB/topics/yaw_estimator_status.h>
@@ -282,6 +283,7 @@ private:
 	uORB::PublicationData<vehicle_local_position_s>		_vehicle_local_position_pub{ORB_ID(vehicle_local_position)};
 	uORB::PublicationData<vehicle_odometry_s>		_vehicle_visual_odometry_aligned_pub{ORB_ID(vehicle_visual_odometry_aligned)};
 	uORB::PublicationMulti<wind_estimate_s>			_wind_pub{ORB_ID(wind_estimate)};
+	uORB::PublicationData<vehicle_share_position_s>		_vehicle_share_position_pub{ORB_ID(vehicle_share_position)};
 
 	Ekf _ekf;
 
@@ -1236,12 +1238,13 @@ void Ekf2::Run()
 			if (control_status.flags.tilt_align) {
 				// generate vehicle local position data
 				vehicle_local_position_s &lpos = _vehicle_local_position_pub.get();
+				vehicle_share_position_s &spos = _vehicle_share_position_pub.get();
 
 				// generate vehicle odometry data
 				vehicle_odometry_s odom{};
 
 				lpos.timestamp = now;
-
+				spos.timestamp = now;
 				odom.timestamp = hrt_absolute_time();
 				odom.timestamp_sample = now;
 
@@ -1254,23 +1257,18 @@ void Ekf2::Run()
 				lpos.x = (_ekf.local_position_is_valid()) ? position(0) : 0.0f;
 				lpos.y = (_ekf.local_position_is_valid()) ? position(1) : 0.0f;
 				lpos.z = position(2);
-
-				// Vehicle odometry position
-				odom.x = lpos.x;
-				odom.y = lpos.y;
-				odom.z = lpos.z;
+				spos.x = lpos.x;
+				spos.y = lpos.y;
+				spos.z = lpos.z;
 
 				// Velocity of body origin in local NED frame (m/s)
 				const Vector3f velocity = _ekf.getVelocity();
 				lpos.vx = velocity(0);
 				lpos.vy = velocity(1);
 				lpos.vz = velocity(2);
-
-				// Vehicle odometry linear velocity
-				odom.velocity_frame = vehicle_odometry_s::LOCAL_FRAME_FRD;
-				odom.vx = lpos.vx;
-				odom.vy = lpos.vy;
-				odom.vz = lpos.vz;
+				spos.vx = lpos.vx;
+				spos.vy = lpos.vy;
+				spos.vz = lpos.vz;
 
 				// vertical position time derivative (m/s)
 				lpos.z_deriv = _ekf.getVerticalPositionDerivative();
@@ -1286,6 +1284,25 @@ void Ekf2::Run()
 				lpos.z_valid = !_preflt_checker.hasVertFailed();
 				lpos.v_xy_valid = _ekf.local_position_is_valid() && !_preflt_checker.hasHorizFailed();
 				lpos.v_z_valid = !_preflt_checker.hasVertFailed();
+
+				spos.xy_valid = lpos.xy_valid;
+				spos.z_valid = lpos.z_valid;
+				spos.v_xy_valid = lpos.v_xy_valid;
+				spos.v_z_valid = lpos.v_z_valid;
+
+				// publish vehicle share position data
+				_vehicle_share_position_pub.update();
+
+				// Vehicle odometry position
+				odom.x = lpos.x;
+				odom.y = lpos.y;
+				odom.z = lpos.z;
+
+				// Vehicle odometry linear velocity
+				odom.velocity_frame = vehicle_odometry_s::LOCAL_FRAME_FRD;
+				odom.vx = lpos.vx;
+				odom.vy = lpos.vy;
+				odom.vz = lpos.vz;
 
 				// Position of local NED origin in GPS / WGS84 frame
 				map_projection_reference_s ekf_origin;

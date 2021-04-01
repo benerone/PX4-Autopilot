@@ -9,6 +9,7 @@
 #include <uORB/topics/integrale.h>
 #include <uORB/topics/pipe_correction.h>
 #include <uORB/topics/can_status.h>
+#include <uORB/topics/vehicle_share_position.h>
 
 # include <uavcan_stm32/uavcan_stm32.hpp>
 
@@ -55,15 +56,23 @@ private:
 	// Subscriptions=
 	uORB::Subscription 	_integrale_sub{ORB_ID(integrale)};
 	uORB::Subscription	_pipe_correction_sub{ORB_ID(pipe_correction)};
+	uORB::Subscription      _vehicle_share_position_sub{ORB_ID(vehicle_share_position)};
 	uORB::Publication<integrale_s>			_r1integrale_pub{ORB_ID(r1integrale)};
 	uORB::Publication<integrale_s>			_r2integrale_pub{ORB_ID(r2integrale)};
 	uORB::Publication<integrale_s>			_r3integrale_pub{ORB_ID(r3integrale)};
+	uORB::Publication<vehicle_share_position_s>	_r1vehicle_share_position_pub{ORB_ID(r1vehicle_share_position)};
+	uORB::Publication<vehicle_share_position_s>	_r2vehicle_share_position_pub{ORB_ID(r2vehicle_share_position)};
+	uORB::Publication<vehicle_share_position_s>	_r3vehicle_share_position_pub{ORB_ID(r3vehicle_share_position)};
 	uORB::Publication<can_status_s>			_can_status_pub{ORB_ID(can_status)};
 	can_status_s can_status;
 	integrale_s r1_integrale;
 	integrale_s r2_integrale;
 	integrale_s r3_integrale;
 	integrale_s * rx_integrales[MAX_REMOTE_INTEGRALE];
+	vehicle_share_position_s r1_shpos;
+	vehicle_share_position_s r2_shpos;
+	vehicle_share_position_s r3_shpos;
+	vehicle_share_position_s * rx_shpos[MAX_REMOTE_INTEGRALE];
 	int32_t nbReceivedR1;
 	int32_t nbReceivedR2;
 	int32_t nbReceivedR3;
@@ -76,11 +85,25 @@ private:
 	bool postYow;
 	bool postVxy;
 	bool postThrAct;
+	bool postV_Zinfo;
+	bool postV_VXY;
+	bool postV_status;
+
+
 	float yowIntegraleValue;
 	float vxValue;
 	float vyValue;
 	float thrustValue;
 	float thrAct;
+
+	float V_ZPos;
+	float V_ZVel;
+	float V_XVel;
+	float V_YVel;
+	bool valid_xy;
+	bool valid_z;
+	bool valid_vxy;
+	bool valid_vz;
 
 	int32_t sys_id;
 

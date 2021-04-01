@@ -1,5 +1,9 @@
 uint64 timestamp			# time since system start (microseconds)
 
+uint8 VSP_STATUS_NONE = 0			# switch is not mapped
+uint8 VSP_STATUS_PARTIAL = 1			# switch activated (value = 1)
+uint8 VSP_STATUS_COMPLETE = 2			# middle position (value = 0)
+
 bool xy_valid				# true if x and y are valid
 bool z_valid				# true if z is valid
 bool v_xy_valid				# true if vy and vy are valid
@@ -12,5 +16,7 @@ float32 z				# Down position (negative altitude) in NED earth-fixed frame, (metr
 float32 vx 				# North velocity in NED earth-fixed frame, (metres/sec)
 float32 vy				# East velocity in NED earth-fixed frame, (metres/sec)
 float32 vz
+int32 index				# mavlink index
+uint8 status				# data status
 
 # TOPICS vehicle_share_position r1vehicle_share_position r2vehicle_share_position r3vehicle_share_position

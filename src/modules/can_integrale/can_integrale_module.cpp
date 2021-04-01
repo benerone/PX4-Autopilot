@@ -20,6 +20,11 @@ typedef struct {
 	float32 v1;
 	float32 v2;
 } IntegralCanData;
+typedef struct {
+	int32_t v1;
+	int32_t v2;
+} IntegralCanDataInt;
+
 
 #define OFFSET_PITCH_ROLL 	1
 #define OFFSET_YOW 		2
@@ -28,9 +33,16 @@ typedef struct {
 #define OFFSET_POSXY	 	5
 #define OFFSET_POSZ_VELZ	6
 #define OFFSET_VELXY	 	7
+#define OFFSET_STATUS	 	8
 #define MASK_ID 		0b111
 #define TYPE_SHIFT		3
 #define MAX_DELAY_REFRESH	500000
+
+#define VALID_XY		1
+#define VALID_Z			2
+#define VALID_VXY		4
+#define VALID_VZ		8
+
 //Time Cycle in us
 //#define TIME_CYCLE 		1160
 #define TIME_CYCLE 		2000
@@ -122,6 +134,7 @@ void ModuleCanIntegrale::run()
 	int32_t cycle=0;
 	postYow=false;
 	postVxy=false;
+	postThrAct=false;
 	int32_t countIt=0;
 
 	r1_integrale={0L,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,integrale_s::INTEGRALE_STATUS_NONE};
@@ -133,7 +146,15 @@ void ModuleCanIntegrale::run()
 	rx_integrales[0]=&r1_integrale;
 	rx_integrales[1]=&r2_integrale;
 	rx_integrales[2]=&r3_integrale;
-
+	r1_shpos={0L,0.0,0.0,0.0,0.0,0.0,0.0,false,false,false,false,0,vehicle_share_position_s::VSP_STATUS_NONE};
+	r2_shpos={0L,0.0,0.0,0.0,0.0,0.0,0.0,false,false,false,false,0,vehicle_share_position_s::VSP_STATUS_NONE};
+	r3_shpos={0L,0.0,0.0,0.0,0.0,0.0,0.0,false,false,false,false,0,vehicle_share_position_s::VSP_STATUS_NONE};
+	_r1vehicle_share_position_pub.publish(r1_shpos);
+	_r2vehicle_share_position_pub.publish(r2_shpos);
+	_r3vehicle_share_position_pub.publish(r3_shpos);
+	rx_shpos[0]=&r1_shpos;
+	rx_shpos[1]=&r2_shpos;
+	rx_shpos[2]=&r3_shpos;
 
 	//Can start if necessary
 	static CanInitHelper *can = nullptr;
@@ -159,13 +180,15 @@ void ModuleCanIntegrale::run()
 	iFace=can->driver.getIface(0);
 	iFace2=can->driver.getIface(1);
 
-	usleep(sys_id*TIME_CYCLE*7); //id*packet_transfert_delay*nbpacket (2I and 2C)
+	usleep(sys_id*TIME_CYCLE*8); //id*packet_transfert_delay*nbpacket (2I and 2C)
 
 	while(!should_exit()) {
 
 		integrale_s integrale;
+		vehicle_share_position_s vehicle_share_position;
 		//pipe_correction_s pipe_correction;
 		IntegralCanData tmp;
+		IntegralCanDataInt tmpi;
 		bool resultSend;//,resultSend2;
 
 		auto startTime=hrt_absolute_time();
@@ -182,7 +205,7 @@ void ModuleCanIntegrale::run()
 				vyValue=integrale.vy;
 				thrAct=integrale.throttle_act;
 				resultSend=sendFrame(iFace,sys_id | (OFFSET_PITCH_ROLL<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
-				//resultSend2=sendFrame(iFace2,sys_id | OFFSET_PITCH_ROLL,(const uavcan::uint8_t *)&tmp,8);
+				//resultSend2=sendFrame(iFace2,sys_id | (OFFSET_PITCH_ROLL<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
 				if (resultSend /*|| resultSend2*/) {
 					cycle++;
 					postYow=true;
@@ -196,7 +219,7 @@ void ModuleCanIntegrale::run()
 				tmp.v1=yowIntegraleValue;
 				tmp.v2=thrustValue;
 				resultSend=sendFrame(iFace,sys_id | (OFFSET_YOW<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
-				//resultSend2=sendFrame(iFace2,sys_id | OFFSET_YOW,(const uavcan::uint8_t *)&tmp,8);
+				//resultSend2=sendFrame(iFace2,sys_id |  (OFFSET_YOW<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
 				if (resultSend /*|| resultSend2*/) {
 					cycle++;
 					postYow=false;
@@ -211,7 +234,7 @@ void ModuleCanIntegrale::run()
 				tmp.v1=vxValue;
 				tmp.v2=vyValue;
 				resultSend=sendFrame(iFace,sys_id | (OFFSET_VXY<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
-				//resultSend2=sendFrame(iFace2,sys_id | OFFSET_VXY,(const uavcan::uint8_t *)&tmp,8);
+				//resultSend2=sendFrame(iFace2,sys_id | (OFFSET_VXY<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
 				if (resultSend /*|| resultSend2*/) {
 					cycle++;
 					postVxy=false;
@@ -226,7 +249,7 @@ void ModuleCanIntegrale::run()
 				tmp.v1=thrAct;
 				tmp.v2=0.0f;
 				resultSend=sendFrame(iFace,sys_id | (OFFSET_THR_ACT<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
-				//resultSend2=sendFrame(iFace2,sys_id | OFFSET_THR_ACT,(const uavcan::uint8_t *)&tmp,8);
+				//resultSend2=sendFrame(iFace2,sys_id | (OFFSET_THR_ACT<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
 				if (resultSend /*|| resultSend2*/) {
 					cycle++;
 					postThrAct=false;
@@ -235,9 +258,76 @@ void ModuleCanIntegrale::run()
 				cycle++;
 			}
 			break;
+			case 4: //POS XY
+			if (_vehicle_share_position_sub.updated()) {
+				_vehicle_share_position_sub.copy(&vehicle_share_position);
+				tmp.v1=vehicle_share_position.x;
+				tmp.v2=vehicle_share_position.y;
+				V_ZPos=vehicle_share_position.z;
+				V_ZVel=vehicle_share_position.vz;
+				V_XVel=vehicle_share_position.vx;
+				V_YVel=vehicle_share_position.vy;
+				valid_xy=vehicle_share_position.xy_valid;
+				valid_z=vehicle_share_position.z_valid;
+				valid_vxy=vehicle_share_position.v_xy_valid;
+				valid_vz=vehicle_share_position.v_z_valid;
+				resultSend=sendFrame(iFace,sys_id | (OFFSET_POSXY<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
+				//resultSend2=sendFrame(iFace2,sys_id | (OFFSET_POSXY<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend /*|| resultSend2*/) {
+					cycle++;
+					postV_Zinfo=true;
+				}
+			} else {
+				cycle++;
+			}
+			break;
+			case 5: //POS Z and VEL Z
+			if (postV_Zinfo) {
+				tmp.v1=V_ZPos;
+				tmp.v2=V_ZVel;
+				resultSend=sendFrame(iFace,sys_id | (OFFSET_POSZ_VELZ<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
+				//resultSend2=sendFrame(iFace2,sys_id | (OFFSET_POSZ_VELZ<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend /*|| resultSend2*/) {
+					cycle++;
+					postV_Zinfo=false;
+					postV_VXY=true;
+				}
+			} else {
+				cycle++;
+			}
+			break;
+			case 6: //VEL XY
+			if (postV_VXY) {
+				tmp.v1=V_XVel;
+				tmp.v2=V_YVel;
+				resultSend=sendFrame(iFace,sys_id | (OFFSET_VELXY<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
+				//resultSend2=sendFrame(iFace2,sys_id | (OFFSET_VELXY<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend /*|| resultSend2*/) {
+					cycle++;
+					postV_VXY=false;
+					postV_status=true;
+				}
+			} else {
+				cycle++;
+			}
+			break;
+			case 7: //Valid
+			if (postV_status) {
+				tmpi.v1=(valid_xy?VALID_XY:0)|(valid_z?VALID_Z:0)|(valid_vxy?VALID_VXY:0)|(valid_vz?VALID_VZ:0);
+				tmpi.v2=0;
+				resultSend=sendFrame(iFace,sys_id | (OFFSET_STATUS<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmpi,8);
+				//resultSend2=sendFrame(iFace2,sys_id | (OFFSET_STATUS<<TYPE_SHIFT),(const uavcan::uint8_t *)&VALID_VZ,8);
+				if (resultSend /*|| resultSend2*/) {
+					cycle++;
+					postV_status=false;
+				}
+			} else {
+				cycle++;
+			}
+			break;
 			default:
 				cycle++;
-				if (cycle%21==0) {
+				if (cycle%24==0) {
 					cycle=0;
 				}
 			break;
@@ -295,7 +385,18 @@ void ModuleCanIntegrale::run()
 			r3_integrale.status=integrale_s::INTEGRALE_STATUS_NONE;
 			_r3integrale_pub.publish(r3_integrale);
 		}
-
+		if (currentTime-r1_shpos.timestamp>MAX_DELAY_REFRESH) {
+			r1_shpos.status=vehicle_share_position_s::VSP_STATUS_NONE;
+			_r1vehicle_share_position_pub.publish(r1_shpos);
+		}
+		if (currentTime-r2_shpos.timestamp>MAX_DELAY_REFRESH) {
+			r2_shpos.status=vehicle_share_position_s::VSP_STATUS_NONE;
+			_r2vehicle_share_position_pub.publish(r2_shpos);
+		}
+		if (currentTime-r3_shpos.timestamp>MAX_DELAY_REFRESH) {
+			r3_shpos.status=vehicle_share_position_s::VSP_STATUS_NONE;
+			_r3vehicle_share_position_pub.publish(r3_shpos);
+		}
 		if (countIt==0) {
 			can_status.timestamp=currentTime;
 			can_status.nbr_1=nbReceivedR1;
@@ -333,6 +434,7 @@ void ModuleCanIntegrale::run()
 void ModuleCanIntegrale::processReceivedFrame(uavcan::ICanIface * iFacePart,uavcan::CanFrame &canFrame) {
 //Process received
 	IntegralCanData *tmpp=(IntegralCanData *)canFrame.data;
+	IntegralCanDataInt *tmpip=(IntegralCanDataInt *)canFrame.data;
 	int32_t id=(int32_t)(canFrame.id & MASK_ID);
 	int32_t typecmd=(int32_t)(canFrame.id >> TYPE_SHIFT);
 	if (id<5) {
@@ -374,29 +476,69 @@ void ModuleCanIntegrale::processReceivedFrame(uavcan::ICanIface * iFacePart,uavc
 					}
 				}
 				rx_integrales[offset]->status=	integrale_s::INTEGRALE_STATUS_NONE;
-			} else {
-				if (typecmd == OFFSET_PITCH_ROLL) {
-					//PX4_INFO(" offset pitch-roll id %x status:%d",canFrame.id,(int)rx_integrales[offset]->status);
-					rx_integrales[offset]->pitch_rate_integral=tmpp->v1;
-					rx_integrales[offset]->roll_rate_integral=tmpp->v2;
-					rx_integrales[offset]->status=integrale_s::INTEGRALE_STATUS_PARTIAL;
+			}
+			if (typecmd == OFFSET_PITCH_ROLL) {
+				//PX4_INFO(" offset pitch-roll id %x status:%d",canFrame.id,(int)rx_integrales[offset]->status);
+				rx_integrales[offset]->pitch_rate_integral=tmpp->v1;
+				rx_integrales[offset]->roll_rate_integral=tmpp->v2;
+				rx_integrales[offset]->status=integrale_s::INTEGRALE_STATUS_PARTIAL;
+			}
+			if (typecmd == OFFSET_YOW) {
+				//PX4_INFO(" offset pitch-roll id %x status:%d",canFrame.id,(int)rx_integrales[offset]->status);
+				rx_integrales[offset]->yaw_rate_integral=tmpp->v1;
+				rx_integrales[offset]->thrust=tmpp->v2;
+				rx_integrales[offset]->status=integrale_s::INTEGRALE_STATUS_PARTIAL;
+			}
+			if (typecmd == OFFSET_VXY) {
+				//PX4_INFO(" offset pitch-roll id %x status:%d",canFrame.id,(int)rx_integrales[offset]->status);
+				rx_integrales[offset]->vx=tmpp->v1;
+				rx_integrales[offset]->vy=tmpp->v2;
+				rx_integrales[offset]->status=integrale_s::INTEGRALE_STATUS_PARTIAL;
+			}
+			if (typecmd == OFFSET_POSXY) {
+				rx_shpos[offset]->x=tmpp->v1;
+				rx_shpos[offset]->y=tmpp->v2;
+				rx_shpos[offset]->status=vehicle_share_position_s::VSP_STATUS_PARTIAL;
+			}
+			if (typecmd == OFFSET_POSZ_VELZ) {
+				rx_shpos[offset]->z=tmpp->v1;
+				rx_shpos[offset]->vz=tmpp->v2;
+				rx_shpos[offset]->status=vehicle_share_position_s::VSP_STATUS_PARTIAL;
+			}
+			if (typecmd == OFFSET_VELXY) {
+				rx_shpos[offset]->vx=tmpp->v1;
+				rx_shpos[offset]->vy=tmpp->v2;
+				rx_shpos[offset]->status=vehicle_share_position_s::VSP_STATUS_PARTIAL;
+			}
+			if (typecmd == OFFSET_STATUS) {
+				rx_shpos[offset]->xy_valid=(tmpip->v1 & VALID_XY)==VALID_XY;
+				rx_shpos[offset]->z_valid=(tmpip->v1 & VALID_Z)==VALID_Z;
+				rx_shpos[offset]->v_xy_valid=(tmpip->v1 & VALID_VXY)==VALID_VXY;
+				rx_shpos[offset]->v_z_valid=(tmpip->v1 & VALID_VZ)==VALID_VZ;
+				if (rx_shpos[offset]->status==vehicle_share_position_s::VSP_STATUS_PARTIAL) {
+					rx_shpos[offset]->status=vehicle_share_position_s::VSP_STATUS_COMPLETE;
+					if (offset==0) {
+						r1_shpos.timestamp=hrt_absolute_time();
+						r1_shpos.index=id;
+						_r1vehicle_share_position_pub.publish(r1_shpos);
+						nbReceivedR1++;
+					}
+					if (offset==1) {
+						r2_shpos.timestamp=hrt_absolute_time();
+						r2_shpos.index=id;
+						_r2vehicle_share_position_pub.publish(r2_shpos);
+						nbReceivedR2++;
+					}
+					if (offset==2) {
+						r3_shpos.timestamp=hrt_absolute_time();
+						r3_shpos.index=id;
+						_r3vehicle_share_position_pub.publish(r3_shpos);
+						nbReceivedR3++;
+					}
 				}
-				if (typecmd == OFFSET_YOW) {
-					//PX4_INFO(" offset pitch-roll id %x status:%d",canFrame.id,(int)rx_integrales[offset]->status);
-					rx_integrales[offset]->yaw_rate_integral=tmpp->v1;
-					rx_integrales[offset]->thrust=tmpp->v2;
-					rx_integrales[offset]->status=integrale_s::INTEGRALE_STATUS_PARTIAL;
-				}
-				if (typecmd == OFFSET_VXY) {
-					//PX4_INFO(" offset pitch-roll id %x status:%d",canFrame.id,(int)rx_integrales[offset]->status);
-					rx_integrales[offset]->vx=tmpp->v1;
-					rx_integrales[offset]->vy=tmpp->v2;
-					rx_integrales[offset]->status=integrale_s::INTEGRALE_STATUS_PARTIAL;
-				}
-
+				rx_shpos[offset]->status=vehicle_share_position_s::VSP_STATUS_NONE;
 			}
 		}
-
 	} else {
 		PX4_ERR("Invalid can id %x",canFrame.id);
 		PX4_ERR("Invalid id %x",id);
