@@ -22,4 +22,4 @@ sh /etc/init.d/rc.mc_defaults
 
 set MIXER z_flyboard
 
-set PWM_OUT 1234678
+set PWM_OUT 12345678
