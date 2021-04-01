@@ -164,6 +164,7 @@ set(msg_files
 	vehicle_odometry.msg
 	vehicle_rates_setpoint.msg
 	vehicle_roi.msg
+	vehicle_share_position.msg
 	vehicle_status.msg
 	vehicle_status_flags.msg
 	vehicle_trajectory_bezier.msg
