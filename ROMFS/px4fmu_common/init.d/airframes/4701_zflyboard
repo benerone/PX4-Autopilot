@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# @name Generic Quadcopter
+# @name Z_Flyboard
 #
 # @type Quadrotor x
 # @class Copter
@@ -9,15 +9,13 @@
 # @output MAIN2 motor 2
 # @output MAIN3 motor 3
 # @output MAIN4 motor 4
-# @output MAIN5 feed-through of RC AUX1 channel
-# @output MAIN6 feed-through of RC AUX2 channel
+# @output MAIN5 motor 5
+# @output MAIN6 motor 6
+# @output MAIN7 motor 7
+# @output MAIN8 motor 8
 #
-# @output AUX1 feed-through of RC AUX1 channel
-# @output AUX2 feed-through of RC AUX2 channel
-# @output AUX3 feed-through of RC AUX3 channel
-# @output AUX4 feed-through of RC FLAPS channel
+# @maintainer Fred
 #
-# @maintainer Lorenz Meier <lorenz@px4.io>
 #
 
 sh /etc/init.d/rc.mc_defaults
