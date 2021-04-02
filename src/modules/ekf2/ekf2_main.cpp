@@ -80,8 +80,11 @@
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/wind_estimate.h>
 #include <uORB/topics/yaw_estimator_status.h>
+#include "pipetools.h"
 
 #include "Utility/PreFlightChecker.hpp"
+
+using namespace zapata;
 
 // defines used to specify the mask position for use of different accuracy metrics in the GPS blending algorithm
 #define BLEND_MASK_USE_SPD_ACC      1
@@ -245,6 +248,9 @@ private:
 	uORB::Subscription _sensor_selection_sub{ORB_ID(sensor_selection)};
 	uORB::Subscription _status_sub{ORB_ID(vehicle_status)};
 	uORB::Subscription _vehicle_land_detected_sub{ORB_ID(vehicle_land_detected)};
+	uORB::Subscription _r1vehicle_share_position_sub{ORB_ID(r1vehicle_share_position)};
+	uORB::Subscription _r2vehicle_share_position_sub{ORB_ID(r2vehicle_share_position)};
+	uORB::Subscription _r3vehicle_share_position_sub{ORB_ID(r3vehicle_share_position)};
 
 	uORB::SubscriptionCallbackWorkItem _sensor_combined_sub{this, ORB_ID(sensor_combined)};
 	static constexpr int MAX_SENSOR_COUNT = 3;
@@ -538,8 +544,11 @@ private:
 
 		// Used by EKF-GSF experimental yaw estimator
 		(ParamExtFloat<px4::params::EKF2_GSF_TAS>)
-		_param_ekf2_gsf_tas_default	///< default value of true airspeed assumed during fixed wing operation
+		_param_ekf2_gsf_tas_default, ///< default value of true airspeed assumed during fixed wing operation
 
+		(ParamInt<px4::params::MAV_SYS_ID>) _param_mav_sys_id,
+		(ParamFloat<px4::params::EKF2_PI_MUL_Z>) _param_ekf2_pi_mul_z,
+		(ParamFloat<px4::params::EKF2_PI_LIM_Z>) _param_ekf2_pi_lim_z
 	)
 
 };
@@ -1240,7 +1249,7 @@ void Ekf2::Run()
 				// generate vehicle local position data
 				vehicle_local_position_s &lpos = _vehicle_local_position_pub.get();
 				vehicle_share_position_s &spos = _vehicle_share_position_pub.get();
-
+				spos.index=_param_mav_sys_id.get();
 				// generate vehicle odometry data
 				vehicle_odometry_s odom{};
 
@@ -2497,7 +2506,48 @@ int Ekf2::task_spawn(int argc, char *argv[])
 }
 
 void Ekf2::pipeFuseData(vehicle_local_position_s &lpos,vehicle_share_position_s &spos) {
-
+	//---------------------------------------------------
+	// PIPE: ESTIMATE ERROR
+	//---------------------------------------------------
+	vehicle_share_position_s _r1vsp;
+	vehicle_share_position_s _r2vsp;
+	vehicle_share_position_s _r3vsp;
+	int nbRemoteValid=0;
+	//Get remote integrale
+	if (!_r1vehicle_share_position_sub.copy(&_r1vsp)) {
+		_r1vsp.status=vehicle_share_position_s::VSP_STATUS_NONE;
+	} else {
+		if(PipeTools::isVSPValid(_r1vsp)) {
+			nbRemoteValid++;
+		}
+	}
+	if (!_r2vehicle_share_position_sub.copy(&_r2vsp)) {
+		_r2vsp.status=vehicle_share_position_s::VSP_STATUS_NONE;
+	}else {
+		if(PipeTools::isVSPValid(_r2vsp)) {
+			nbRemoteValid++;
+		}
+	}
+	if (!_r3vehicle_share_position_sub.copy(&_r3vsp)) {
+		_r3vsp.status=vehicle_share_position_s::VSP_STATUS_NONE;
+	}else {
+		if(PipeTools::isVSPValid(_r3vsp)) {
+			nbRemoteValid++;
+		}
+	}
+	int nbMedian=0;
+	// ------------------ Z ---------------
+	double zposError=0.0;
+	int32_t medianzpos;
+	zposError=(double)spos.z-PipeTools::processMedianVSP(spos,_r1vsp,_r2vsp,_r3vsp,&nbMedian,
+			[](const vehicle_share_position_s &r) {
+				return r.z;
+			},
+			[](const vehicle_share_position_s &r) {
+				return r.z_valid;
+			},&medianzpos);
+	double zCorrection=PipeTools::processMultAndClamp(zposError,_param_ekf2_pi_mul_z.get(),_param_ekf2_pi_lim_z.get());
+	lpos.z=lpos.z-(float)zCorrection;
 }
 
 int Ekf2::print_usage(const char *reason)

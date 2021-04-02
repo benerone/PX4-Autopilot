@@ -9,6 +9,7 @@ namespace zapata {
 
 	typedef float (*FieldSelectorCallback) (const integrale_s &r) ;
 	typedef float (*FieldSelectorCallbackVSP) (const vehicle_share_position_s &r) ;
+	typedef bool (*ValiderCallbackVSP) (const vehicle_share_position_s &r) ;
 
 	typedef struct {
 		double value;
@@ -40,7 +41,14 @@ namespace zapata {
 		 * @param fcb Filed selector callback
 		 * @return float
 		 */
-		static double processMedianVSP(const vehicle_share_position_s &local,const vehicle_share_position_s &r1,const vehicle_share_position_s &r2,const vehicle_share_position_s &r3,int * nbMedian,FieldSelectorCallbackVSP fcb,int32_t * medianIndex);
+		static double processMedianVSP(const vehicle_share_position_s &local,
+					       const vehicle_share_position_s &r1,
+					       const vehicle_share_position_s &r2,
+					       const vehicle_share_position_s &r3,
+					       int * nbMedian,
+					       FieldSelectorCallbackVSP fcb,
+					       ValiderCallbackVSP vcb,
+					       int32_t * medianIndex);
 		/**
 		 * @brief Process median on array of float values
 		 *

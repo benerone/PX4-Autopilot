@@ -1457,3 +1457,14 @@ PARAM_DEFINE_INT32(EKF2_MAG_CHECK, 0);
  * @decimal 1
  */
 PARAM_DEFINE_FLOAT(EKF2_GSF_TAS, 15.0f);
+
+/*
+	pipe multiplier
+*/
+PARAM_DEFINE_FLOAT(EKF2_PI_MUL_Z, 1.0f);
+
+/*
+	limit of pipe
+*/
+PARAM_DEFINE_FLOAT(EKF2_PI_LIM_Z, 1000.0f);
+

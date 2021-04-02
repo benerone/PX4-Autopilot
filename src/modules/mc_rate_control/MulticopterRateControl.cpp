@@ -380,153 +380,30 @@ MulticopterRateControl::Run()
 			medianVy=0;
 			medianThrust=0;
 			medianThrAct=0;
-			if (nbRemoteValid!=1) {
-				if (PipeTools::isIntegraleValid(_r3integrale)) {
-					PX4_INFO("_r3integrale valid!!!!");
-				}
-				if (nbRemoteValid==0) {
-					if (oldNbRemoteValid!=nbRemoteValid) PX4_INFO("!!!!!Case 1 %d %d",oldNbRemoteValid,nbRemoteValid);
-				}
-				if (nbRemoteValid==2) {
-					if (oldNbRemoteValid!=nbRemoteValid) PX4_INFO("!!!!!Case 3 %d %d",oldNbRemoteValid,nbRemoteValid);
-					/*if (integrale_data.index<=0 || integrale_data.index>3) {
-						PX4_INFO("error local index");
-					}
-					if (_r1integrale.index<=0 || _r1integrale.index>3) {
-						PX4_INFO("error _r1integrale index");
-					}
-					if (_r2integrale.index<=0 || _r2integrale.index>3) {
-						PX4_INFO("error _r2integrale index");
-					}
-					if (integrale_data.index==_r1integrale.index) {
-						PX4_INFO("local=r1");
-					}
-					if (integrale_data.index==_r2integrale.index) {
-						PX4_INFO("local=r2");
-					}
-					if (_r1integrale.index==_r2integrale.index) {
-						PX4_INFO("r1=r2");
-					}*/
-				}
-				if (nbRemoteValid==3) {
-					PX4_INFO("nbRemoteValid==3");
-				}
-				//Case 1,3 or 4
-				rollError=(double)integrale_data.roll_rate_integral-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
-					return r.roll_rate_integral;
-				},&medianRoll);
 
-				pitchError=(double)integrale_data.pitch_rate_integral-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
-					return r.pitch_rate_integral;
-				},&medianPitch);
-				yawError=(double)integrale_data.yaw_rate_integral-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
-					return r.yaw_rate_integral;
-				},&medianYaw);
-				vxError=(double)integrale_data.vx-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
-					return r.vx;
-				},&medianThrust);
-				vyError=(double)integrale_data.vy-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
-					return r.vy;
-				},&medianThrust);
-				trustError=(double)integrale_data.thrust-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
-					return r.thrust;
-				},&medianThrust);
-				thrActError=(double)integrale_data.throttle_act-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
-					return r.throttle_act;
-				},&medianThrAct);
-			} else {
-				if (oldNbRemoteValid!=nbRemoteValid) PX4_INFO("!!!!!Case 2 %d %d",oldNbRemoteValid,nbRemoteValid);
-				//Case 2
-				if (sys_id==1 ||
-					(sys_id==2 && !PipeTools::isIntegraleValid(_r1integrale)) ||
-					(sys_id==3 && !PipeTools::isIntegraleValid(_r1integrale) && !PipeTools::isIntegraleValid(_r2integrale)) ||
-					(sys_id==4 && !PipeTools::isIntegraleValid(_r1integrale) && !PipeTools::isIntegraleValid(_r2integrale) && !PipeTools::isIntegraleValid(_r3integrale))) {
-					rollError=0.0f;
-					pitchError=0.0f;
-					yawError=0.0f;
-					trustError=0.0f;
-					vxError=0.0f;
-					vyError=0.0f;
-					thrActError=0.0f;
-					medianRoll=sys_id;
-					medianPitch=sys_id;
-					medianYaw=sys_id;
-					medianVx=sys_id;
-					medianVy=sys_id;
-					medianThrust=sys_id;
-					medianThrAct=sys_id;
-				} else {
-					if (sys_id==2) {
-						rollError=(double)(integrale_data.roll_rate_integral-_r1integrale.roll_rate_integral);
-						pitchError=(double)(integrale_data.pitch_rate_integral-_r1integrale.pitch_rate_integral);
-						yawError=(double)(integrale_data.yaw_rate_integral-_r1integrale.yaw_rate_integral);
-						vxError=(double)(integrale_data.vx-_r1integrale.vx);
-						vyError=(double)(integrale_data.vy-_r1integrale.vy);
-						trustError=(double)(integrale_data.thrust-_r1integrale.thrust);
-						thrActError=(double)(integrale_data.thrust-_r1integrale.thrust);
-						medianRoll=_r1integrale.index;
-						medianPitch=_r1integrale.index;
-						medianYaw=_r1integrale.index;
-						medianVx=_r1integrale.index;
-						medianVy=_r1integrale.index;
-						medianThrust=_r1integrale.index;
-						medianThrAct=_r1integrale.index;
-					}
-					if (sys_id==3) {
-						integrale_s _vintegrale={0L,0.0f,0.0f,0.0f,0.0f,integrale_s::INTEGRALE_STATUS_NONE};
-						if (PipeTools::isIntegraleValid(_r1integrale)) {
-							_vintegrale=_r1integrale;
-						} else {
-							if (PipeTools::isIntegraleValid(_r2integrale)) {
-								_vintegrale=_r2integrale;
-							}
-						}
 
-						rollError=(double)(integrale_data.roll_rate_integral-_vintegrale.roll_rate_integral);
-						pitchError=(double)(integrale_data.pitch_rate_integral-_vintegrale.pitch_rate_integral);
-						yawError=(double)(integrale_data.yaw_rate_integral-_vintegrale.yaw_rate_integral);
-						vxError=(double)(integrale_data.vx-_vintegrale.vx);
-						vyError=(double)(integrale_data.vy-_vintegrale.vy);
-						trustError=(double)(integrale_data.thrust-_vintegrale.thrust);
-						thrActError=(double)(integrale_data.throttle_act-_vintegrale.throttle_act);
-						medianRoll=_vintegrale.index;
-						medianPitch=_vintegrale.index;
-						medianYaw=_vintegrale.index;
-						medianVx=_vintegrale.index;
-						medianVy=_vintegrale.index;
-						medianThrust=_vintegrale.index;
-						medianThrAct=_vintegrale.index;
-					}
-					if (sys_id==4) {
-						integrale_s _vintegrale={0L,0.0f,0.0f,0.0f,0.0f,integrale_s::INTEGRALE_STATUS_NONE};
-						if (PipeTools::isIntegraleValid(_r1integrale)) {
-							_vintegrale=_r1integrale;
-						} else {
-							if (PipeTools::isIntegraleValid(_r2integrale)) {
-								_vintegrale=_r2integrale;
-							} else {
-								if (PipeTools::isIntegraleValid(_r3integrale)) {
-									_vintegrale=_r3integrale;
-								}
-							}
-						}
-						rollError=(double)(integrale_data.roll_rate_integral-_vintegrale.roll_rate_integral);
-						pitchError=(double)(integrale_data.pitch_rate_integral-_vintegrale.pitch_rate_integral);
-						yawError=(double)(integrale_data.yaw_rate_integral-_vintegrale.yaw_rate_integral);
-						vxError=(double)(integrale_data.vx-_vintegrale.vx);
-						vyError=(double)(integrale_data.vy-_vintegrale.vy);
-						trustError=(double)(integrale_data.thrust-_vintegrale.thrust);
-						thrActError=(double)(integrale_data.throttle_act-_vintegrale.throttle_act);
-						medianRoll=_vintegrale.index;
-						medianPitch=_vintegrale.index;
-						medianYaw=_vintegrale.index;
-						medianVx=_vintegrale.index;
-						medianVy=_vintegrale.index;
-						medianThrust=_vintegrale.index;
-						medianThrAct=_vintegrale.index;
-					}
-				}
-			}
+			rollError=(double)integrale_data.roll_rate_integral-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
+				return r.roll_rate_integral;
+			},&medianRoll);
+
+			pitchError=(double)integrale_data.pitch_rate_integral-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
+				return r.pitch_rate_integral;
+			},&medianPitch);
+			yawError=(double)integrale_data.yaw_rate_integral-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
+				return r.yaw_rate_integral;
+			},&medianYaw);
+			vxError=(double)integrale_data.vx-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
+				return r.vx;
+			},&medianThrust);
+			vyError=(double)integrale_data.vy-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
+				return r.vy;
+			},&medianThrust);
+			trustError=(double)integrale_data.thrust-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
+				return r.thrust;
+			},&medianThrust);
+			thrActError=(double)integrale_data.throttle_act-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
+				return r.throttle_act;
+			},&medianThrAct);
 
 			//---------------------------------------------------
 			// PIPE: APPLY CORRECTION
