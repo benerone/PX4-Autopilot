@@ -550,7 +550,9 @@ private:
 
 		(ParamInt<px4::params::MAV_SYS_ID>) _param_mav_sys_id,
 		(ParamFloat<px4::params::EKF2_PI_MUL_Z>) _param_ekf2_pi_mul_z,
-		(ParamFloat<px4::params::EKF2_PI_LIM_Z>) _param_ekf2_pi_lim_z
+		(ParamFloat<px4::params::EKF2_PI_LIM_Z>) _param_ekf2_pi_lim_z,
+		(ParamFloat<px4::params::EKF2_PI_MUL_VZ>) _param_ekf2_pi_mul_vz,
+		(ParamFloat<px4::params::EKF2_PI_LIM_VZ>) _param_ekf2_pi_lim_vz
 	)
 
 };
@@ -2541,7 +2543,8 @@ void Ekf2::pipeFuseData(vehicle_local_position_s &lpos,vehicle_share_position_s 
 	int nbMedian=0;
 	// ------------------ Z ---------------
 	double zposError=0.0;
-	int32_t medianzpos;
+	double vzposError=0.0;
+	int32_t medianzpos,medianvzpos;
 	zposError=(double)spos.z-PipeTools::processMedianVSP(spos,_r1vsp,_r2vsp,_r3vsp,&nbMedian,
 			[](const vehicle_share_position_s &r) {
 				return r.z;
@@ -2551,12 +2554,22 @@ void Ekf2::pipeFuseData(vehicle_local_position_s &lpos,vehicle_share_position_s 
 			},&medianzpos);
 	double zCorrection=PipeTools::processMultAndClamp(zposError,_param_ekf2_pi_mul_z.get(),_param_ekf2_pi_lim_z.get());
 	lpos.z=lpos.z-(float)zCorrection;
-
+	vzposError=(double)spos.vz-PipeTools::processMedianVSP(spos,_r1vsp,_r2vsp,_r3vsp,&nbMedian,
+			[](const vehicle_share_position_s &r) {
+				return r.vz;
+			},
+			[](const vehicle_share_position_s &r) {
+				return r.v_z_valid;
+			},&medianvzpos);
+	double vzCorrection=PipeTools::processMultAndClamp(vzposError,_param_ekf2_pi_mul_vz.get(),_param_ekf2_pi_lim_vz.get());
+	lpos.vz=lpos.vz-(float)vzCorrection;
 
 	//Report
 	pipepos_correction_s corr={0L,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0,0,0,0,0,0};
 	corr.z_corr=(float)zCorrection;
 	corr.median_z=medianzpos;
+	corr.vz_corr=(float)vzCorrection;
+	corr.median_vz=medianvzpos;
 	_pipepos_correction_pub.publish(corr);
 }
 
