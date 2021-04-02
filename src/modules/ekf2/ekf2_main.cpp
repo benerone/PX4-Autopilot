@@ -549,9 +549,17 @@ private:
 		_param_ekf2_gsf_tas_default, ///< default value of true airspeed assumed during fixed wing operation
 
 		(ParamInt<px4::params::MAV_SYS_ID>) _param_mav_sys_id,
+		(ParamFloat<px4::params::EKF2_PI_MUL_X>) _param_ekf2_pi_mul_x,
+		(ParamFloat<px4::params::EKF2_PI_MUL_Y>) _param_ekf2_pi_mul_y,
 		(ParamFloat<px4::params::EKF2_PI_MUL_Z>) _param_ekf2_pi_mul_z,
+		(ParamFloat<px4::params::EKF2_PI_LIM_X>) _param_ekf2_pi_lim_x,
+		(ParamFloat<px4::params::EKF2_PI_LIM_Y>) _param_ekf2_pi_lim_y,
 		(ParamFloat<px4::params::EKF2_PI_LIM_Z>) _param_ekf2_pi_lim_z,
+		(ParamFloat<px4::params::EKF2_PI_MUL_VX>) _param_ekf2_pi_mul_vx,
+		(ParamFloat<px4::params::EKF2_PI_MUL_VY>) _param_ekf2_pi_mul_vy,
 		(ParamFloat<px4::params::EKF2_PI_MUL_VZ>) _param_ekf2_pi_mul_vz,
+		(ParamFloat<px4::params::EKF2_PI_LIM_VX>) _param_ekf2_pi_lim_vx,
+		(ParamFloat<px4::params::EKF2_PI_LIM_VY>) _param_ekf2_pi_lim_vy,
 		(ParamFloat<px4::params::EKF2_PI_LIM_VZ>) _param_ekf2_pi_lim_vz
 	)
 
@@ -2542,9 +2550,31 @@ void Ekf2::pipeFuseData(vehicle_local_position_s &lpos,vehicle_share_position_s 
 	}
 	int nbMedian=0;
 	// ------------------ Z ---------------
+	double xposError=0.0;
+	double yposError=0.0;
 	double zposError=0.0;
+	double vxposError=0.0;
+	double vyposError=0.0;
 	double vzposError=0.0;
-	int32_t medianzpos,medianvzpos;
+	int32_t medianxpos,medianvxpos,medianypos,medianvypos,medianzpos,medianvzpos;
+	xposError=(double)spos.x-PipeTools::processMedianVSP(spos,_r1vsp,_r2vsp,_r3vsp,&nbMedian,
+			[](const vehicle_share_position_s &r) {
+				return r.x;
+			},
+			[](const vehicle_share_position_s &r) {
+				return r.xy_valid;
+			},&medianxpos);
+	double xCorrection=PipeTools::processMultAndClamp(xposError,_param_ekf2_pi_mul_x.get(),_param_ekf2_pi_lim_x.get());
+	lpos.x=lpos.x-(float)xCorrection;
+	yposError=(double)spos.y-PipeTools::processMedianVSP(spos,_r1vsp,_r2vsp,_r3vsp,&nbMedian,
+			[](const vehicle_share_position_s &r) {
+				return r.y;
+			},
+			[](const vehicle_share_position_s &r) {
+				return r.xy_valid;
+			},&medianypos);
+	double yCorrection=PipeTools::processMultAndClamp(yposError,_param_ekf2_pi_mul_y.get(),_param_ekf2_pi_lim_y.get());
+	lpos.y=lpos.y-(float)yCorrection;
 	zposError=(double)spos.z-PipeTools::processMedianVSP(spos,_r1vsp,_r2vsp,_r3vsp,&nbMedian,
 			[](const vehicle_share_position_s &r) {
 				return r.z;
@@ -2554,6 +2584,26 @@ void Ekf2::pipeFuseData(vehicle_local_position_s &lpos,vehicle_share_position_s 
 			},&medianzpos);
 	double zCorrection=PipeTools::processMultAndClamp(zposError,_param_ekf2_pi_mul_z.get(),_param_ekf2_pi_lim_z.get());
 	lpos.z=lpos.z-(float)zCorrection;
+
+
+	vxposError=(double)spos.vx-PipeTools::processMedianVSP(spos,_r1vsp,_r2vsp,_r3vsp,&nbMedian,
+			[](const vehicle_share_position_s &r) {
+				return r.vx;
+			},
+			[](const vehicle_share_position_s &r) {
+				return r.v_xy_valid;
+			},&medianvxpos);
+	double vxCorrection=PipeTools::processMultAndClamp(vxposError,_param_ekf2_pi_mul_vx.get(),_param_ekf2_pi_lim_vx.get());
+	lpos.vx=lpos.vx-(float)vxCorrection;
+	vyposError=(double)spos.vy-PipeTools::processMedianVSP(spos,_r1vsp,_r2vsp,_r3vsp,&nbMedian,
+			[](const vehicle_share_position_s &r) {
+				return r.vy;
+			},
+			[](const vehicle_share_position_s &r) {
+				return r.v_xy_valid;
+			},&medianvypos);
+	double vyCorrection=PipeTools::processMultAndClamp(vyposError,_param_ekf2_pi_mul_vy.get(),_param_ekf2_pi_lim_vy.get());
+	lpos.vy=lpos.vy-(float)vyCorrection;
 	vzposError=(double)spos.vz-PipeTools::processMedianVSP(spos,_r1vsp,_r2vsp,_r3vsp,&nbMedian,
 			[](const vehicle_share_position_s &r) {
 				return r.vz;
@@ -2566,9 +2616,17 @@ void Ekf2::pipeFuseData(vehicle_local_position_s &lpos,vehicle_share_position_s 
 
 	//Report
 	pipepos_correction_s corr={0L,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0,0,0,0,0,0};
+	corr.x_corr=(float)xCorrection;
+	corr.y_corr=(float)yCorrection;
 	corr.z_corr=(float)zCorrection;
-	corr.median_z=medianzpos;
+	corr.vx_corr=(float)vxCorrection;
+	corr.vy_corr=(float)vyCorrection;
 	corr.vz_corr=(float)vzCorrection;
+	corr.median_x=medianxpos;
+	corr.median_y=medianypos;
+	corr.median_z=medianzpos;
+	corr.median_vx=medianvxpos;
+	corr.median_vy=medianvypos;
 	corr.median_vz=medianvzpos;
 	_pipepos_correction_pub.publish(corr);
 }
