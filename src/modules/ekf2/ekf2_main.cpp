@@ -1252,6 +1252,7 @@ void Ekf2::Run()
 				vehicle_local_position_s &lpos = _vehicle_local_position_pub.get();
 				vehicle_share_position_s &spos = _vehicle_share_position_pub.get();
 				spos.index=_param_mav_sys_id.get();
+				spos.status=vehicle_share_position_s::VSP_STATUS_COMPLETE;
 				// generate vehicle odometry data
 				vehicle_odometry_s odom{};
 
@@ -2550,6 +2551,7 @@ void Ekf2::pipeFuseData(vehicle_local_position_s &lpos,vehicle_share_position_s 
 			},&medianzpos);
 	double zCorrection=PipeTools::processMultAndClamp(zposError,_param_ekf2_pi_mul_z.get(),_param_ekf2_pi_lim_z.get());
 	lpos.z=lpos.z-(float)zCorrection;
+
 
 	//Report
 	pipepos_correction_s corr={0L,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0,0,0,0,0,0};

@@ -26,6 +26,10 @@ double PipeTools::processMedian(const integrale_s &local,const integrale_s &r1,c
 		allValues.push_back({(double)(*fcb)(r3),r3.index});
 		(*nbMedian)|=8;
 	}
+	if (allValues.size()==0) {
+		(*medianIndex)=local.index;
+		return 0;
+	}
 	return processMedianOnVector(allValues,medianIndex);
 }
 double PipeTools::processMedianVSP(const vehicle_share_position_s &local,
@@ -57,10 +61,15 @@ double PipeTools::processMedianVSP(const vehicle_share_position_s &local,
 		allValues.push_back({(double)(*fcb)(r3),r3.index});
 		(*nbMedian)|=8;
 	}
+	if (allValues.size()==0) {
+		(*medianIndex)=local.index;
+		return 0;
+	}
 	return processMedianOnVector(allValues,medianIndex);
 }
 
 double PipeTools::processMedianOnVector(zapata::StdVector<ValIndex> &values,int32_t * medianIndex) {
+	printf("%d ",values.size());
 	if (values.size()==1) {
 		return values[0].value;
 	}

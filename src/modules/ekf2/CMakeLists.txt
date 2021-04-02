@@ -37,7 +37,7 @@ px4_add_module(
 	MODULE modules__ekf2
 	MAIN ekf2
 	COMPILE_FLAGS
-	STACK_MAX 2400
+	STACK_MAX 3600
 	SRCS
 		ekf2_main.cpp
 	DEPENDS

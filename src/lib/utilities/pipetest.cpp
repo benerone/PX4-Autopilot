@@ -48,10 +48,10 @@ TEST(PipeTest, processAverage) {
 }
 
 TEST(PipeTest, processMedian) {
-	integrale_s local={0L,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	integrale_s r1={0L,2.0f,2.0f,2.0f,2.0f,2.0f,2.0f,2,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	integrale_s r2={0L,3.0f,3.0f,3.0f,3.0f,3.0f,3.0f,3,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	integrale_s r3={0L,3.0f,3.0f,3.0f,3.0f,3.0f,3.0f,3,integrale_s::INTEGRALE_STATUS_NONE};
+	integrale_s local={0L,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	integrale_s r1={0L,2.0f,2.0f,2.0f,2.0f,2.0f,2.0f,1.0f,2,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	integrale_s r2={0L,3.0f,3.0f,3.0f,3.0f,3.0f,3.0f,1.0f,3,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	integrale_s r3={0L,3.0f,3.0f,3.0f,3.0f,3.0f,3.0f,1.0f,3,integrale_s::INTEGRALE_STATUS_NONE};
 	int nbMedian;
 	int32_t medianIndex;
 	double result=PipeTools::processMedian(local,r1,r2,r3,&nbMedian,[](const integrale_s &r) {
@@ -63,10 +63,10 @@ TEST(PipeTest, processMedian) {
 }
 
 TEST(PipeTest, processMedian2) {
-	integrale_s local={0L,2.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	integrale_s r1={0L,1.0f,2.0f,2.0f,2.0f,2.0f,2.0f,2,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	integrale_s r2={0L,3.0f,3.0f,3.0f,3.0f,3.0f,3.0f,3,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	integrale_s r3={0L,3.0f,3.0f,3.0f,3.0f,3.0f,3.0f,3,integrale_s::INTEGRALE_STATUS_NONE};
+	integrale_s local={0L,2.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	integrale_s r1={0L,1.0f,2.0f,2.0f,2.0f,2.0f,2.0f,1.0f,2,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	integrale_s r2={0L,3.0f,3.0f,3.0f,3.0f,3.0f,3.0f,1.0f,3,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	integrale_s r3={0L,3.0f,3.0f,3.0f,3.0f,3.0f,3.0f,1.0f,3,integrale_s::INTEGRALE_STATUS_NONE};
 	int nbMedian;
 	int32_t medianIndex;
 	double result=PipeTools::processMedian(local,r1,r2,r3,&nbMedian,[](const integrale_s &r) {
@@ -77,10 +77,10 @@ TEST(PipeTest, processMedian2) {
 	EXPECT_EQ(medianIndex,1);
 }
 TEST(PipeTest, processMedian3) {
-	integrale_s local={0L,3.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	integrale_s r1={0L,1.0f,2.0f,2.0f,2.0f,2.0f,2.0f,2,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	integrale_s r2={0L,2.0f,3.0f,3.0f,3.0f,3.0f,3.0f,3,integrale_s::INTEGRALE_STATUS_COMPLETE};
-	integrale_s r3={0L,1.5f,3.0f,3.0f,3.0f,3.0f,3.0f,3,integrale_s::INTEGRALE_STATUS_NONE};
+	integrale_s local={0L,3.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	integrale_s r1={0L,1.0f,2.0f,2.0f,2.0f,2.0f,2.0f,1.0f,2,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	integrale_s r2={0L,2.0f,3.0f,3.0f,3.0f,3.0f,3.0f,1.0f,3,integrale_s::INTEGRALE_STATUS_COMPLETE};
+	integrale_s r3={0L,1.5f,3.0f,3.0f,3.0f,3.0f,3.0f,1.0f,3,integrale_s::INTEGRALE_STATUS_NONE};
 	int nbMedian;
 	int32_t medianIndex;
 	double result=PipeTools::processMedian(local,r1,r2,r3,&nbMedian,[](const integrale_s &r) {
@@ -90,3 +90,4 @@ TEST(PipeTest, processMedian3) {
 	EXPECT_EQ(nbMedian,7);
 	EXPECT_EQ(medianIndex,3);
 }
+
