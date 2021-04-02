@@ -80,6 +80,7 @@
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/wind_estimate.h>
 #include <uORB/topics/yaw_estimator_status.h>
+#include <uORB/topics/pipepos_correction.h>
 #include "pipetools.h"
 
 #include "Utility/PreFlightChecker.hpp"
@@ -291,6 +292,7 @@ private:
 	uORB::PublicationData<vehicle_odometry_s>		_vehicle_visual_odometry_aligned_pub{ORB_ID(vehicle_visual_odometry_aligned)};
 	uORB::PublicationMulti<wind_estimate_s>			_wind_pub{ORB_ID(wind_estimate)};
 	uORB::PublicationData<vehicle_share_position_s>		_vehicle_share_position_pub{ORB_ID(vehicle_share_position)};
+	uORB::Publication<pipepos_correction_s> 		_pipepos_correction_pub{ORB_ID(pipepos_correction)};
 
 	Ekf _ekf;
 
@@ -2548,6 +2550,12 @@ void Ekf2::pipeFuseData(vehicle_local_position_s &lpos,vehicle_share_position_s 
 			},&medianzpos);
 	double zCorrection=PipeTools::processMultAndClamp(zposError,_param_ekf2_pi_mul_z.get(),_param_ekf2_pi_lim_z.get());
 	lpos.z=lpos.z-(float)zCorrection;
+
+	//Report
+	pipepos_correction_s corr={0L,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0,0,0,0,0,0};
+	corr.z_corr=(float)zCorrection;
+	corr.median_z=medianzpos;
+	_pipepos_correction_pub.publish(corr);
 }
 
 int Ekf2::print_usage(const char *reason)

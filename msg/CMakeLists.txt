@@ -99,6 +99,7 @@ set(msg_files
 	parameter_update.msg
 	ping.msg
 	pipe_correction.msg
+	pipepos_correction.msg
 	position_controller_landing_status.msg
 	position_controller_status.msg
 	position_setpoint.msg
