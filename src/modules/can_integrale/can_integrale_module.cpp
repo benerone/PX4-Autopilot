@@ -24,6 +24,10 @@ typedef struct {
 	int32_t v1;
 	int32_t v2;
 } IntegralCanDataInt;
+typedef struct {
+	int32_t v1;
+	float32 v2;
+} IntegralCanDataMix;
 
 
 #define OFFSET_PITCH_ROLL 	1
@@ -188,7 +192,7 @@ void ModuleCanIntegrale::run()
 		vehicle_share_position_s vehicle_share_position;
 		//pipe_correction_s pipe_correction;
 		IntegralCanData tmp;
-		IntegralCanDataInt tmpi;
+		IntegralCanDataMix tmpm;
 		bool resultSend;//,resultSend2;
 
 		auto startTime=hrt_absolute_time();
@@ -267,6 +271,7 @@ void ModuleCanIntegrale::run()
 				V_ZVel=vehicle_share_position.vz;
 				V_XVel=vehicle_share_position.vx;
 				V_YVel=vehicle_share_position.vy;
+				heading=vehicle_share_position.heading;
 				valid_xy=vehicle_share_position.xy_valid;
 				valid_z=vehicle_share_position.z_valid;
 				valid_vxy=vehicle_share_position.v_xy_valid;
@@ -313,9 +318,9 @@ void ModuleCanIntegrale::run()
 			break;
 			case 7: //Valid
 			if (postV_status) {
-				tmpi.v1=(valid_xy?VALID_XY:0)|(valid_z?VALID_Z:0)|(valid_vxy?VALID_VXY:0)|(valid_vz?VALID_VZ:0);
-				tmpi.v2=0;
-				resultSend=sendFrame(iFace,sys_id | (OFFSET_STATUS<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmpi,8);
+				tmpm.v1=(valid_xy?VALID_XY:0)|(valid_z?VALID_Z:0)|(valid_vxy?VALID_VXY:0)|(valid_vz?VALID_VZ:0);
+				tmpm.v2=heading;
+				resultSend=sendFrame(iFace,sys_id | (OFFSET_STATUS<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmpm,8);
 				//resultSend2=sendFrame(iFace2,sys_id | (OFFSET_STATUS<<TYPE_SHIFT),(const uavcan::uint8_t *)&VALID_VZ,8);
 				if (resultSend /*|| resultSend2*/) {
 					cycle++;
@@ -434,7 +439,7 @@ void ModuleCanIntegrale::run()
 void ModuleCanIntegrale::processReceivedFrame(uavcan::ICanIface * iFacePart,uavcan::CanFrame &canFrame) {
 //Process received
 	IntegralCanData *tmpp=(IntegralCanData *)canFrame.data;
-	IntegralCanDataInt *tmpip=(IntegralCanDataInt *)canFrame.data;
+	IntegralCanDataMix *tmpm=(IntegralCanDataMix *)canFrame.data;
 	int32_t id=(int32_t)(canFrame.id & MASK_ID);
 	int32_t typecmd=(int32_t)(canFrame.id >> TYPE_SHIFT);
 	if (id<5) {
@@ -511,10 +516,11 @@ void ModuleCanIntegrale::processReceivedFrame(uavcan::ICanIface * iFacePart,uavc
 				rx_shpos[offset]->status=vehicle_share_position_s::VSP_STATUS_PARTIAL;
 			}
 			if (typecmd == OFFSET_STATUS) {
-				rx_shpos[offset]->xy_valid=(tmpip->v1 & VALID_XY)==VALID_XY;
-				rx_shpos[offset]->z_valid=(tmpip->v1 & VALID_Z)==VALID_Z;
-				rx_shpos[offset]->v_xy_valid=(tmpip->v1 & VALID_VXY)==VALID_VXY;
-				rx_shpos[offset]->v_z_valid=(tmpip->v1 & VALID_VZ)==VALID_VZ;
+				rx_shpos[offset]->xy_valid=(tmpm->v1 & VALID_XY)==VALID_XY;
+				rx_shpos[offset]->z_valid=(tmpm->v1 & VALID_Z)==VALID_Z;
+				rx_shpos[offset]->v_xy_valid=(tmpm->v1 & VALID_VXY)==VALID_VXY;
+				rx_shpos[offset]->v_z_valid=(tmpm->v1 & VALID_VZ)==VALID_VZ;
+				rx_shpos[offset]->heading=tmpm->v2;
 				if (rx_shpos[offset]->status==vehicle_share_position_s::VSP_STATUS_PARTIAL) {
 					rx_shpos[offset]->status=vehicle_share_position_s::VSP_STATUS_COMPLETE;
 					if (offset==0) {

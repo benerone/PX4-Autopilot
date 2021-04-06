@@ -555,12 +555,16 @@ private:
 		(ParamFloat<px4::params::EKF2_PI_LIM_X>) _param_ekf2_pi_lim_x,
 		(ParamFloat<px4::params::EKF2_PI_LIM_Y>) _param_ekf2_pi_lim_y,
 		(ParamFloat<px4::params::EKF2_PI_LIM_Z>) _param_ekf2_pi_lim_z,
+
 		(ParamFloat<px4::params::EKF2_PI_MUL_VX>) _param_ekf2_pi_mul_vx,
 		(ParamFloat<px4::params::EKF2_PI_MUL_VY>) _param_ekf2_pi_mul_vy,
 		(ParamFloat<px4::params::EKF2_PI_MUL_VZ>) _param_ekf2_pi_mul_vz,
 		(ParamFloat<px4::params::EKF2_PI_LIM_VX>) _param_ekf2_pi_lim_vx,
 		(ParamFloat<px4::params::EKF2_PI_LIM_VY>) _param_ekf2_pi_lim_vy,
-		(ParamFloat<px4::params::EKF2_PI_LIM_VZ>) _param_ekf2_pi_lim_vz
+		(ParamFloat<px4::params::EKF2_PI_LIM_VZ>) _param_ekf2_pi_lim_vz,
+
+		(ParamFloat<px4::params::EKF2_PI_MUL_HE>) _param_ekf2_pi_mul_he,
+		(ParamFloat<px4::params::EKF2_PI_LIM_HE>) _param_ekf2_pi_lim_he
 	)
 
 };
@@ -1316,6 +1320,19 @@ void Ekf2::Run()
 				// publish vehicle share position data
 				_vehicle_share_position_pub.update();
 
+				// The rotation of the tangent plane vs. geographical north
+				const matrix::Quatf q = _ekf.getQuaternion();
+
+				matrix::Quatf delta_q_reset;
+				_ekf.get_quat_reset(&delta_q_reset(0), &lpos.heading_reset_counter);
+
+				lpos.heading = matrix::Eulerf(q).psi();
+				spos.heading = lpos.heading;
+				lpos.delta_heading = matrix::Eulerf(delta_q_reset).psi();
+
+				// Vehicle odometry quaternion
+				q.copyTo(odom.q);
+
 				pipeFuseData(lpos,spos);
 
 				// Vehicle odometry position
@@ -1344,17 +1361,7 @@ void Ekf2::Run()
 					lpos.ref_lon = ekf_origin.lon_rad * 180.0 / M_PI; // Reference point longitude in degrees
 				}
 
-				// The rotation of the tangent plane vs. geographical north
-				const matrix::Quatf q = _ekf.getQuaternion();
 
-				matrix::Quatf delta_q_reset;
-				_ekf.get_quat_reset(&delta_q_reset(0), &lpos.heading_reset_counter);
-
-				lpos.heading = matrix::Eulerf(q).psi();
-				lpos.delta_heading = matrix::Eulerf(delta_q_reset).psi();
-
-				// Vehicle odometry quaternion
-				q.copyTo(odom.q);
 
 				// Vehicle odometry angular rates
 				const Vector3f gyro_bias = _ekf.getGyroBias();
@@ -2556,7 +2563,8 @@ void Ekf2::pipeFuseData(vehicle_local_position_s &lpos,vehicle_share_position_s 
 	double vxposError=0.0;
 	double vyposError=0.0;
 	double vzposError=0.0;
-	int32_t medianxpos,medianvxpos,medianypos,medianvypos,medianzpos,medianvzpos;
+	double headingError=0.0;
+	int32_t medianxpos,medianvxpos,medianypos,medianvypos,medianzpos,medianvzpos,medianheading;
 	xposError=(double)spos.x-PipeTools::processMedianVSP(spos,_r1vsp,_r2vsp,_r3vsp,&nbMedian,
 			[](const vehicle_share_position_s &r) {
 				return r.x;
@@ -2614,6 +2622,16 @@ void Ekf2::pipeFuseData(vehicle_local_position_s &lpos,vehicle_share_position_s 
 	double vzCorrection=PipeTools::processMultAndClamp(vzposError,_param_ekf2_pi_mul_vz.get(),_param_ekf2_pi_lim_vz.get());
 	lpos.vz=lpos.vz-(float)vzCorrection;
 
+	headingError=(double)spos.heading-PipeTools::processMedianVSP(spos,_r1vsp,_r2vsp,_r3vsp,&nbMedian,
+			[](const vehicle_share_position_s &r) {
+				return r.heading;
+			},
+			[](const vehicle_share_position_s &r) {
+				return true;
+			},&medianheading);
+	double headingCorrection=PipeTools::processMultAndClamp(headingError,_param_ekf2_pi_mul_he.get(),_param_ekf2_pi_lim_he.get());
+	lpos.heading=lpos.heading-(float)headingCorrection;
+
 	//Report
 	pipepos_correction_s corr={0L,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0,0,0,0,0,0};
 	corr.x_corr=(float)xCorrection;
@@ -2622,12 +2640,14 @@ void Ekf2::pipeFuseData(vehicle_local_position_s &lpos,vehicle_share_position_s 
 	corr.vx_corr=(float)vxCorrection;
 	corr.vy_corr=(float)vyCorrection;
 	corr.vz_corr=(float)vzCorrection;
+	corr.he_corr=(float)headingCorrection;
 	corr.median_x=medianxpos;
 	corr.median_y=medianypos;
 	corr.median_z=medianzpos;
 	corr.median_vx=medianvxpos;
 	corr.median_vy=medianvypos;
 	corr.median_vz=medianvzpos;
+	corr.median_he=medianheading;
 	_pipepos_correction_pub.publish(corr);
 }
 

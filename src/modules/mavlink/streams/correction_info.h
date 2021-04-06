@@ -55,6 +55,7 @@ protected:
 				msg.corrposvx=pipepos_correction.vx_corr;
 				msg.corrposvy=pipepos_correction.vy_corr;
 				msg.corrposvz=pipepos_correction.vz_corr;
+				msg.corrhe=pipepos_correction.he_corr;
 				msg.medianpx=pipepos_correction.median_x;
 				msg.medianpy=pipepos_correction.median_y;
 				msg.medianpz=pipepos_correction.median_z;

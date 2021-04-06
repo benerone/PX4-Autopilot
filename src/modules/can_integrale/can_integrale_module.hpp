@@ -100,6 +100,7 @@ private:
 	float V_ZVel;
 	float V_XVel;
 	float V_YVel;
+	float heading;
 	bool valid_xy;
 	bool valid_z;
 	bool valid_vxy;
