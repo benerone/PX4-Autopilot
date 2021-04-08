@@ -10,6 +10,8 @@
 #include <uORB/topics/pipe_correction.h>
 #include <uORB/topics/can_status.h>
 #include <uORB/topics/vehicle_share_position.h>
+#include <uORB/topics/actuator_controls.h>
+#include <uORB/topics/actuator_controls_re.h>
 
 # include <uavcan_stm32/uavcan_stm32.hpp>
 
@@ -57,6 +59,7 @@ private:
 	uORB::Subscription 	_integrale_sub{ORB_ID(integrale)};
 	uORB::Subscription	_pipe_correction_sub{ORB_ID(pipe_correction)};
 	uORB::Subscription      _vehicle_share_position_sub{ORB_ID(vehicle_share_position)};
+	uORB::Subscription      _actuator_controls_0_sub{ORB_ID(actuator_controls_0)};
 	uORB::Publication<integrale_s>			_r1integrale_pub{ORB_ID(r1integrale)};
 	uORB::Publication<integrale_s>			_r2integrale_pub{ORB_ID(r2integrale)};
 	uORB::Publication<integrale_s>			_r3integrale_pub{ORB_ID(r3integrale)};
@@ -64,11 +67,18 @@ private:
 	uORB::Publication<vehicle_share_position_s>	_r2vehicle_share_position_pub{ORB_ID(r2vehicle_share_position)};
 	uORB::Publication<vehicle_share_position_s>	_r3vehicle_share_position_pub{ORB_ID(r3vehicle_share_position)};
 	uORB::Publication<can_status_s>			_can_status_pub{ORB_ID(can_status)};
+	uORB::Publication<actuator_controls_re_s>	_r1act_pub{ORB_ID(actuator_controls_re_1)};
+	uORB::Publication<actuator_controls_re_s>	_r2act_pub{ORB_ID(actuator_controls_re_2)};
+	uORB::Publication<actuator_controls_re_s>	_r3act_pub{ORB_ID(actuator_controls_re_3)};
 	can_status_s can_status;
 	integrale_s r1_integrale;
 	integrale_s r2_integrale;
 	integrale_s r3_integrale;
 	integrale_s * rx_integrales[MAX_REMOTE_INTEGRALE];
+	actuator_controls_re_s act_r1;
+	actuator_controls_re_s act_r2;
+	actuator_controls_re_s act_r3;
+	actuator_controls_re_s * rx_act[MAX_REMOTE_INTEGRALE];
 	vehicle_share_position_s r1_shpos;
 	vehicle_share_position_s r2_shpos;
 	vehicle_share_position_s r3_shpos;

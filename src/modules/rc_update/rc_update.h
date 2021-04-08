@@ -65,6 +65,9 @@
 #include <uORB/topics/input_rc_changed.h>
 #include <uORB/topics/vehicle_control_mode.h>
 #include <uORB/topics/pipe_correction.h>
+#include <uORB/topics/actuator_controls.h>
+#include <uORB/topics/actuator_controls_re.h>
+#include <uORB/topics/pipe_act_correction.h>
 
 namespace RCUpdate
 {
@@ -161,9 +164,14 @@ private:
 	uORB::Subscription	_rc_parameter_map_sub{ORB_ID(rc_parameter_map)};	/**< rc parameter map subscription */
 	uORB::Subscription      _v_control_mode_sub{ORB_ID(vehicle_control_mode)};
 	uORB::Subscription      _pipe_correction_sub{ORB_ID(pipe_correction)};
+	uORB::Subscription      _actuator_controls_0_sub{ORB_ID(actuator_controls_0)};
+	uORB::Subscription	_r1act_sub{ORB_ID(actuator_controls_re_1)};
+	uORB::Subscription	_r2act_sub{ORB_ID(actuator_controls_re_2)};
+	uORB::Subscription	_r3act_sub{ORB_ID(actuator_controls_re_3)};
 	uORB::Publication<rc_channels_s>	_rc_pub{ORB_ID(rc_channels)};
 	uORB::Publication<input_rc_changed_s>	_input_rc_pub{ORB_ID(input_rc_changed)};				/**< raw r/c control topic */
 	uORB::Publication<actuator_controls_s>	_actuator_group_3_pub{ORB_ID(actuator_controls_3)};	/**< manual control as actuator topic */
+	uORB::Publication<pipe_act_correction_s> _pipe_act_correction_pub{ORB_ID(pipe_act_correction)};
 
 	uORB::PublicationMulti<manual_control_setpoint_s>	_manual_control_setpoint_pub{ORB_ID(manual_control_setpoint), ORB_PRIO_HIGH};	/**< manual control signal topic */
 
@@ -230,7 +238,11 @@ private:
 		(ParamFloat<px4::params::RC_MAN_TH>) _param_rc_man_th,
 		(ParamFloat<px4::params::RC_RETURN_TH>) _param_rc_return_th,
 
-		(ParamInt<px4::params::RC_CHAN_CNT>) _param_rc_chan_cnt
+		(ParamInt<px4::params::RC_CHAN_CNT>) _param_rc_chan_cnt,
+
+		(ParamFloat<px4::params::RC_PI_LIM_YAW>) _param_rc_lim_yaw,
+		(ParamFloat<px4::params::RC_PI_MUL_YAW>) _param_rc_mul_yaw,
+		(ParamInt<px4::params::MAV_SYS_ID>) _param_mav_sys_id
 	)
 
 };

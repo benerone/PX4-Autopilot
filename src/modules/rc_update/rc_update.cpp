@@ -38,6 +38,8 @@
  */
 
 #include "rc_update.h"
+#include "pipetools.h"
+using namespace zapata;
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MINABS(a,b) ((abs(a)) < (abs(b)) ? (a) : (b))
@@ -413,6 +415,50 @@ RCUpdate::Run()
 				rc_input.values[tr_index]-=pipe_correction.throttle_act_correction;
 			}
 		}*/
+
+		//Pipe yaw
+		{
+			//Rescale
+			int tr_index=_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_YAW];
+			int tmp=85*((int)rc_input.values[tr_index]-(int)_parameters.trim[tr_index]);
+			rc_input.values[tr_index]=(uint16_t)((int)_parameters.trim[tr_index]+tmp/100);
+
+			actuator_controls_s act_ctrl;
+
+			if (_actuator_controls_0_sub.copy(&act_ctrl)) {
+				actuator_controls_re_s local_act;
+				//Build local
+				local_act.timestamp=act_ctrl.timestamp;
+				local_act.status=actuator_controls_re_s::ACT_STATUS_COMPLETE;
+				local_act.control[actuator_controls_re_s::INDEX_YAW]=act_ctrl.control[actuator_controls_s::INDEX_YAW];
+				local_act.index=_param_mav_sys_id.get();
+				//Get remotes
+				actuator_controls_re_s r1_act;
+				actuator_controls_re_s r2_act;
+				actuator_controls_re_s r3_act;
+				_r1act_sub.copy(&r1_act);
+				_r2act_sub.copy(&r2_act);
+				_r3act_sub.copy(&r3_act);
+				double yawActError;
+				int nbMedian=0;
+				int32_t medianYawAct;
+				medianYawAct=0;
+				yawActError=(double)local_act.control[actuator_controls_re_s::INDEX_YAW]-PipeTools::processMedianACT(local_act,r1_act,r2_act,r3_act,&nbMedian,[](const actuator_controls_re_s &r) {
+					return r.control[actuator_controls_re_s::INDEX_YAW];
+				},&medianYawAct);
+
+				//---------------------------------------------------
+				// PIPE: APPLY CORRECTION
+				//---------------------------------------------------
+				double yawCorrection=PipeTools::processMultAndClamp(yawActError,_param_rc_mul_yaw.get(),_param_rc_lim_yaw.get());
+				rc_input.values[tr_index]-=(int)yawCorrection;
+				pipe_act_correction_s pac;
+				pac.timestamp=act_ctrl.timestamp;
+				pac.yawact_correction=yawCorrection;
+				pac.median_yawact=medianYawAct;
+				_pipe_act_correction_pub.publish(pac);
+			}
+		}
 
 
 		/* read out and scale values from raw message even if signal is invalid */

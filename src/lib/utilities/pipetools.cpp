@@ -68,8 +68,42 @@ double PipeTools::processMedianVSP(const vehicle_share_position_s &local,
 	return processMedianOnVector(allValues,medianIndex);
 }
 
+double PipeTools::processMedianACT(const actuator_controls_re_s &local,
+					       const actuator_controls_re_s &r1,
+					       const actuator_controls_re_s &r2,
+					       const actuator_controls_re_s &r3,
+					       int * nbMedian,
+					       FieldSelectorCallbackACT fcb,
+					       int32_t * medianIndex) {
+	zapata::StdVector<ValIndex> allValues;
+	(*nbMedian)=0;
+	//Local contrib
+	if (local.status==actuator_controls_re_s::ACT_STATUS_COMPLETE) {
+		allValues.push_back({(double)(*fcb)(local),local.index});
+		(*nbMedian)|=1;
+	}
+	//Remote contrib
+	if (r1.status==actuator_controls_re_s::ACT_STATUS_COMPLETE) {
+		allValues.push_back({(double)(*fcb)(r1),r1.index});
+		(*nbMedian)|=2;
+	}
+	if (r2.status==actuator_controls_re_s::ACT_STATUS_COMPLETE) {
+		allValues.push_back({(double)(*fcb)(r2),r2.index});
+		(*nbMedian)|=4;
+	}
+	if (r3.status==actuator_controls_re_s::ACT_STATUS_COMPLETE) {
+		allValues.push_back({(double)(*fcb)(r3),r3.index});
+		(*nbMedian)|=8;
+	}
+	if (allValues.size()==0) {
+		(*medianIndex)=local.index;
+		return 0;
+	}
+	return processMedianOnVector(allValues,medianIndex);
+}
+
 double PipeTools::processMedianOnVector(zapata::StdVector<ValIndex> &values,int32_t * medianIndex) {
-	printf("%d ",values.size());
+	//printf("%d ",values.size());
 	if (values.size()==1) {
 		return values[0].value;
 	}
@@ -143,4 +177,7 @@ bool PipeTools::isVSPValid(const vehicle_share_position_s &val) {
 		PX4_ISFINITE(val.vy) &&
 		PX4_ISFINITE(val.vz) &&
 		val.status==vehicle_share_position_s::VSP_STATUS_COMPLETE;
+}
+bool PipeTools::isACTValid(const actuator_controls_re_s &val) {
+	return PX4_ISFINITE(val.control[actuator_controls_re_s::INDEX_YAW]) && val.status==actuator_controls_re_s::ACT_STATUS_COMPLETE;
 }

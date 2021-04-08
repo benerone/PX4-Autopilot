@@ -3,6 +3,7 @@
 
 #include <uORB/topics/pipe_correction.h>
 #include <uORB/topics/pipepos_correction.h>
+#include <uORB/topics/pipe_act_correction.h>
 
 class MavlinkStreamCorrection : public MavlinkStream
 {
@@ -25,6 +26,7 @@ private:
 
 	uORB::Subscription _correction_sub{ORB_ID(pipe_correction)};
 	uORB::Subscription _correctionpos_sub{ORB_ID(pipepos_correction)};
+	uORB::Subscription _correctionact_sub{ORB_ID(pipe_act_correction)};
 
 protected:
 	bool send(const hrt_abstime t) override
@@ -32,6 +34,7 @@ protected:
 
 		pipe_correction_s pipe_correction;
 		pipepos_correction_s pipepos_correction;
+		pipe_act_correction_s pac;
 
 		if (_correction_sub.update(&pipe_correction)) {
 			mavlink_correction_values_t msg{};
@@ -62,6 +65,10 @@ protected:
 				msg.medianpvx=pipepos_correction.median_vx;
 				msg.medianpvy=pipepos_correction.median_vy;
 				msg.medianpvz=pipepos_correction.median_vz;
+			}
+			if (_correctionact_sub.update(&pac)) {
+				msg.corryawact=pac.yawact_correction;
+				msg.medianyawact=pac.median_yawact;
 			}
 			mavlink_msg_correction_values_send_struct(_mavlink->get_channel(), &msg);
 			return true;

@@ -3,12 +3,14 @@
 #include <px4_platform_common/defines.h>
 #include <uORB/topics/integrale.h>
 #include <uORB/topics/vehicle_share_position.h>
+#include <uORB/topics/actuator_controls_re.h>
 #include "stdvector.h"
 
 namespace zapata {
 
 	typedef float (*FieldSelectorCallback) (const integrale_s &r) ;
 	typedef float (*FieldSelectorCallbackVSP) (const vehicle_share_position_s &r) ;
+	typedef float (*FieldSelectorCallbackACT) (const actuator_controls_re_s &r) ;
 	typedef bool (*ValiderCallbackVSP) (const vehicle_share_position_s &r) ;
 
 	typedef struct {
@@ -50,6 +52,24 @@ namespace zapata {
 					       ValiderCallbackVSP vcb,
 					       int32_t * medianIndex);
 		/**
+		 * @brief Process median actuator_controls_re
+		 *
+		 * @param local local actuator_controls_re
+		 * @param r1 r1 actuator_controls_re
+		 * @param r2 r2 actuator_controls_re
+		 * @param r3 r3 actuator_controls_re
+		 * @param nbMedian nbMedian
+		 * @param fcb Filed selector callback
+		 * @return float
+		 */
+		static double processMedianACT(const actuator_controls_re_s &local,
+					       const actuator_controls_re_s &r1,
+					       const actuator_controls_re_s &r2,
+					       const actuator_controls_re_s &r3,
+					       int * nbMedian,
+					       FieldSelectorCallbackACT fcb,
+					       int32_t * medianIndex);
+		/**
 		 * @brief Process median on array of float values
 		 *
 		 * @param values
@@ -76,6 +96,11 @@ namespace zapata {
 		 *
 		 */
 		static bool isVSPValid(const vehicle_share_position_s &val);
+		/**
+		 * @brief test if actuator_controls_re_s is valid
+		 *
+		 */
+		static bool isACTValid(const actuator_controls_re_s &val);
 	};
 
 }

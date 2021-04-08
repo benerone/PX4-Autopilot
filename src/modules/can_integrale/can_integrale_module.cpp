@@ -38,6 +38,7 @@ typedef struct {
 #define OFFSET_POSZ_VELZ	6
 #define OFFSET_VELXY	 	7
 #define OFFSET_STATUS	 	8
+#define OFFSET_ACT_1	 	9
 #define MASK_ID 		0b111
 #define TYPE_SHIFT		3
 #define MAX_DELAY_REFRESH	500000
@@ -159,7 +160,20 @@ void ModuleCanIntegrale::run()
 	rx_shpos[0]=&r1_shpos;
 	rx_shpos[1]=&r2_shpos;
 	rx_shpos[2]=&r3_shpos;
-
+	rx_act[0]=&act_r1;
+	rx_act[1]=&act_r2;
+	rx_act[2]=&act_r3;
+	for(int i=0;i<3;i++) {
+		rx_act[i]->timestamp=0L;
+		for(int j=0;j<4;j++) {
+			rx_act[i]->control[j]=0.0f;
+		}
+		rx_act[i]->index=0;
+		rx_act[i]->status=actuator_controls_re_s::ACT_STATUS_NONE;
+	}
+	_r1act_pub.publish(act_r1);
+	_r2act_pub.publish(act_r2);
+	_r3act_pub.publish(act_r3);
 	//Can start if necessary
 	static CanInitHelper *can = nullptr;
 	if (can == nullptr) {
@@ -184,7 +198,7 @@ void ModuleCanIntegrale::run()
 	iFace=can->driver.getIface(0);
 	iFace2=can->driver.getIface(1);
 
-	usleep(sys_id*TIME_CYCLE*8); //id*packet_transfert_delay*nbpacket (2I and 2C)
+	usleep(sys_id*TIME_CYCLE*9); //id*packet_transfert_delay*nbpacket (2I and 2C)
 
 	while(!should_exit()) {
 
@@ -330,9 +344,25 @@ void ModuleCanIntegrale::run()
 				cycle++;
 			}
 			break;
+			case 8:
+			if (_actuator_controls_0_sub.updated()) {
+				actuator_controls_s actuator_controls;
+				_actuator_controls_0_sub.copy(&actuator_controls);
+				tmp.v1=actuator_controls.control[actuator_controls_s::INDEX_YAW];
+				tmp.v2=0.0f;
+				resultSend=sendFrame(iFace,sys_id | (OFFSET_ACT_1<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
+				//resultSend2=sendFrame(iFace2,sys_id | (OFFSET_ACT_1<<TYPE_SHIFT),(const uavcan::uint8_t *)&VALID_VZ,8);
+				if (resultSend /*|| resultSend2*/) {
+					cycle++;
+					postV_status=false;
+				}
+			} else {
+				cycle++;
+			}
+			break;
 			default:
 				cycle++;
-				if (cycle%24==0) {
+				if (cycle%36==0) {
 					cycle=0;
 				}
 			break;
@@ -401,6 +431,18 @@ void ModuleCanIntegrale::run()
 		if (currentTime-r3_shpos.timestamp>MAX_DELAY_REFRESH) {
 			r3_shpos.status=vehicle_share_position_s::VSP_STATUS_NONE;
 			_r3vehicle_share_position_pub.publish(r3_shpos);
+		}
+		if (currentTime-act_r1.timestamp>MAX_DELAY_REFRESH) {
+			act_r1.status=actuator_controls_re_s::ACT_STATUS_NONE;
+			_r1act_pub.publish(act_r1);
+		}
+		if (currentTime-act_r2.timestamp>MAX_DELAY_REFRESH) {
+			act_r2.status=actuator_controls_re_s::ACT_STATUS_NONE;
+			_r2act_pub.publish(act_r2);
+		}
+		if (currentTime-act_r3.timestamp>MAX_DELAY_REFRESH) {
+			act_r3.status=actuator_controls_re_s::ACT_STATUS_NONE;
+			_r3act_pub.publish(act_r3);
 		}
 		if (countIt==0) {
 			can_status.timestamp=currentTime;
@@ -543,6 +585,24 @@ void ModuleCanIntegrale::processReceivedFrame(uavcan::ICanIface * iFacePart,uavc
 					}
 				}
 				rx_shpos[offset]->status=vehicle_share_position_s::VSP_STATUS_NONE;
+			}
+			if (typecmd == OFFSET_ACT_1) {
+				rx_act[offset]->control[actuator_controls_s::INDEX_YAW]=tmpp->v1;
+				rx_act[offset]->timestamp=hrt_absolute_time();
+				rx_act[offset]->index=id;
+				rx_act[offset]->status=actuator_controls_re_s::ACT_STATUS_COMPLETE;
+				if (offset==0) {
+					_r1act_pub.publish(act_r1);
+					nbReceivedR1++;
+				}
+				if (offset==1) {
+					_r2act_pub.publish(act_r2);
+					nbReceivedR2++;
+				}
+				if (offset==2) {
+					_r3act_pub.publish(act_r3);
+					nbReceivedR3++;
+				}
 			}
 		}
 	} else {
