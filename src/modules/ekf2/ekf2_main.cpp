@@ -1333,6 +1333,9 @@ void Ekf2::Run()
 				// Vehicle odometry quaternion
 				q.copyTo(odom.q);
 
+				// publish vehicle share position data
+				_vehicle_share_position_pub.update();
+
 				pipeFuseData(lpos,spos);
 
 				// Vehicle odometry position

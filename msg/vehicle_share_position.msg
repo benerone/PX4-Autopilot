@@ -15,7 +15,8 @@ float32 y				# East position in NED earth-fixed frame, (metres)
 float32 z				# Down position (negative altitude) in NED earth-fixed frame, (metres)
 float32 vx 				# North velocity in NED earth-fixed frame, (metres/sec)
 float32 vy				# East velocity in NED earth-fixed frame, (metres/sec)
-float32 vz
+float32 vz				# Vertical velocity
+float32 heading				# Heading
 int32 index				# mavlink index
 uint8 status				# data status
 
