@@ -207,7 +207,7 @@ void ModuleCanIntegrale::run()
 		//pipe_correction_s pipe_correction;
 		IntegralCanData tmp;
 		IntegralCanDataMix tmpm;
-		bool resultSend;//,resultSend2;
+		bool resultSend,resultSend2;
 
 		auto startTime=hrt_absolute_time();
 		//Transmit
@@ -223,8 +223,8 @@ void ModuleCanIntegrale::run()
 				vyValue=integrale.vy;
 				thrAct=integrale.throttle_act;
 				resultSend=sendFrame(iFace,sys_id | (OFFSET_PITCH_ROLL<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
-				//resultSend2=sendFrame(iFace2,sys_id | (OFFSET_PITCH_ROLL<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
-				if (resultSend /*|| resultSend2*/) {
+				resultSend2=sendFrame(iFace2,sys_id | (OFFSET_PITCH_ROLL<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend || resultSend2) {
 					cycle++;
 					postYow=true;
 				}
@@ -237,8 +237,8 @@ void ModuleCanIntegrale::run()
 				tmp.v1=yowIntegraleValue;
 				tmp.v2=thrustValue;
 				resultSend=sendFrame(iFace,sys_id | (OFFSET_YOW<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
-				//resultSend2=sendFrame(iFace2,sys_id |  (OFFSET_YOW<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
-				if (resultSend /*|| resultSend2*/) {
+				resultSend2=sendFrame(iFace2,sys_id |  (OFFSET_YOW<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend || resultSend2) {
 					cycle++;
 					postYow=false;
 					postVxy=true;
@@ -252,8 +252,8 @@ void ModuleCanIntegrale::run()
 				tmp.v1=vxValue;
 				tmp.v2=vyValue;
 				resultSend=sendFrame(iFace,sys_id | (OFFSET_VXY<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
-				//resultSend2=sendFrame(iFace2,sys_id | (OFFSET_VXY<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
-				if (resultSend /*|| resultSend2*/) {
+				resultSend2=sendFrame(iFace2,sys_id | (OFFSET_VXY<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend || resultSend2) {
 					cycle++;
 					postVxy=false;
 					postThrAct=true;
@@ -267,8 +267,8 @@ void ModuleCanIntegrale::run()
 				tmp.v1=thrAct;
 				tmp.v2=0.0f;
 				resultSend=sendFrame(iFace,sys_id | (OFFSET_THR_ACT<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
-				//resultSend2=sendFrame(iFace2,sys_id | (OFFSET_THR_ACT<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
-				if (resultSend /*|| resultSend2*/) {
+				resultSend2=sendFrame(iFace2,sys_id | (OFFSET_THR_ACT<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend || resultSend2) {
 					cycle++;
 					postThrAct=false;
 				}
@@ -291,8 +291,8 @@ void ModuleCanIntegrale::run()
 				valid_vxy=vehicle_share_position.v_xy_valid;
 				valid_vz=vehicle_share_position.v_z_valid;
 				resultSend=sendFrame(iFace,sys_id | (OFFSET_POSXY<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
-				//resultSend2=sendFrame(iFace2,sys_id | (OFFSET_POSXY<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
-				if (resultSend /*|| resultSend2*/) {
+				resultSend2=sendFrame(iFace2,sys_id | (OFFSET_POSXY<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend || resultSend2) {
 					cycle++;
 					postV_Zinfo=true;
 				}
@@ -305,8 +305,8 @@ void ModuleCanIntegrale::run()
 				tmp.v1=V_ZPos;
 				tmp.v2=V_ZVel;
 				resultSend=sendFrame(iFace,sys_id | (OFFSET_POSZ_VELZ<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
-				//resultSend2=sendFrame(iFace2,sys_id | (OFFSET_POSZ_VELZ<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
-				if (resultSend /*|| resultSend2*/) {
+				resultSend2=sendFrame(iFace2,sys_id | (OFFSET_POSZ_VELZ<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend || resultSend2) {
 					cycle++;
 					postV_Zinfo=false;
 					postV_VXY=true;
@@ -320,8 +320,8 @@ void ModuleCanIntegrale::run()
 				tmp.v1=V_XVel;
 				tmp.v2=V_YVel;
 				resultSend=sendFrame(iFace,sys_id | (OFFSET_VELXY<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
-				//resultSend2=sendFrame(iFace2,sys_id | (OFFSET_VELXY<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
-				if (resultSend /*|| resultSend2*/) {
+				resultSend2=sendFrame(iFace2,sys_id | (OFFSET_VELXY<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend || resultSend2) {
 					cycle++;
 					postV_VXY=false;
 					postV_status=true;
@@ -335,8 +335,8 @@ void ModuleCanIntegrale::run()
 				tmpm.v1=(valid_xy?VALID_XY:0)|(valid_z?VALID_Z:0)|(valid_vxy?VALID_VXY:0)|(valid_vz?VALID_VZ:0);
 				tmpm.v2=heading;
 				resultSend=sendFrame(iFace,sys_id | (OFFSET_STATUS<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmpm,8);
-				//resultSend2=sendFrame(iFace2,sys_id | (OFFSET_STATUS<<TYPE_SHIFT),(const uavcan::uint8_t *)&VALID_VZ,8);
-				if (resultSend /*|| resultSend2*/) {
+				resultSend2=sendFrame(iFace2,sys_id | (OFFSET_STATUS<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmpm,8);
+				if (resultSend || resultSend2) {
 					cycle++;
 					postV_status=false;
 				}
@@ -351,8 +351,8 @@ void ModuleCanIntegrale::run()
 				tmp.v1=actuator_controls.control[actuator_controls_s::INDEX_YAW];
 				tmp.v2=actuator_controls.control[actuator_controls_s::INDEX_THROTTLE];
 				resultSend=sendFrame(iFace,sys_id | (OFFSET_ACT_1<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
-				//resultSend2=sendFrame(iFace2,sys_id | (OFFSET_ACT_1<<TYPE_SHIFT),(const uavcan::uint8_t *)&VALID_VZ,8);
-				if (resultSend /*|| resultSend2*/) {
+				resultSend2=sendFrame(iFace2,sys_id | (OFFSET_ACT_1<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
+				if (resultSend || resultSend2) {
 					cycle++;
 					postV_status=false;
 				}
@@ -391,7 +391,7 @@ void ModuleCanIntegrale::run()
 			}
 		}
 		receiveResult=1;
-		/*while (receiveResult>0)  {
+		while (receiveResult>0)  {
 			receiveResult=iFace2->receive(canFrame,mtime,out_ts_utc,out_flags);
 			if (receiveResult==0) {
 				//PX4_ERR("CAN driver RX empty");
@@ -404,7 +404,7 @@ void ModuleCanIntegrale::run()
 			if (receiveResult==1) {
 				processReceivedFrame(iFace2,canFrame);
 			}
-		}*/
+		}
 
 		//Check unrefresh
 		uint64_t currentTime=hrt_absolute_time();
