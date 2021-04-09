@@ -679,26 +679,6 @@ MulticopterPositionControl::Run()
 				itc(1)=pipe_correction.vy_correction;
 				itc(2)=pipe_correction.thrust_correction;
 				_control.setVelocityIntegralThrust(_control.getVelocityIntegralThrust()-itc);
-				/*if (sys_id!=pipe_correction.median_thr_act && pipe_correction.median_thr_act!=0) {
-					//Check for reset
-					_flight_tasks.enableLock(false);
-					if (fabs(pipe_correction.throttle_act_correction)>thr_act_div_amp) {
-						if (timestampThrAct==0L) {
-							timestampThrAct=time_stamp_now;
-						} else {
-							if ((time_stamp_now-timestampThrAct)>(1000L*(uint64_t)thr_act_div_delay)) {
-								setpoint.z=NAN;
-								PX4_INFO("reset setPoint pos z");
-								_flight_tasks.updatePositionControllerIO(Vector3f(setpoint.x, setpoint.y, setpoint.z));
-								timestampThrAct=time_stamp_now;
-							}
-						}
-					} else {
-						timestampThrAct=0L;
-					}
-				} else {
-					_flight_tasks.enableLock(true);
-				}*/
 			}
 			if (!_control.update(dt)) {
 				if ((time_stamp_now - _last_warn) > 1_s) {

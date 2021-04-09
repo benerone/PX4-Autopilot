@@ -362,7 +362,7 @@ MulticopterRateControl::Run()
 			}
 			double rollError,pitchError,yawError;
 			double trustError,vxError,vyError;
-			double thrActError;
+
 			int nbMedian=0;
 			rollError=0.0f;
 			pitchError=0.0f;
@@ -370,16 +370,16 @@ MulticopterRateControl::Run()
 			vxError=0.0f;
 			vyError=0.0f;
 			trustError=0.0f;
-			thrActError=0.0f;
 
-			int32_t medianRoll,medianPitch,medianYaw,medianThrust,medianVx,medianVy,medianThrAct;
+
+			int32_t medianRoll,medianPitch,medianYaw,medianThrust,medianVx,medianVy;
 			medianRoll=0;
 			medianPitch=0;
 			medianYaw=0;
 			medianVx=0;
 			medianVy=0;
 			medianThrust=0;
-			medianThrAct=0;
+
 
 
 			rollError=(double)integrale_data.roll_rate_integral-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
@@ -401,9 +401,6 @@ MulticopterRateControl::Run()
 			trustError=(double)integrale_data.thrust-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
 				return r.thrust;
 			},&medianThrust);
-			thrActError=(double)integrale_data.throttle_act-PipeTools::processMedian(integrale_data,_r1integrale,_r2integrale,_r3integrale,&nbMedian,[](const integrale_s &r) {
-				return r.throttle_act;
-			},&medianThrAct);
 
 			//---------------------------------------------------
 			// PIPE: APPLY CORRECTION
@@ -414,14 +411,13 @@ MulticopterRateControl::Run()
 			double vxCorrection=PipeTools::processMultAndClamp(vxError,_pi_mult[3],_pi_limit[3]);
 			double vyCorrection=PipeTools::processMultAndClamp(vyError,_pi_mult[4],_pi_limit[4]);
 			double thrustCorrection=PipeTools::processMultAndClamp(trustError,_pi_mult[5],_pi_limit[5]);
-			double throttleActCorrection=PipeTools::processMultAndClamp(thrActError,_pi_mult[6],_pi_limit[6]);
 			rollCorrection=PipeTools::processAverage(accuCorrectionRoll,rollCorrection,moyCorItems_roll);
 			pitchCorrection=PipeTools::processAverage(accuCorrectionPitch,pitchCorrection,moyCorItems_pitch);
 			yawCorrection=PipeTools::processAverage(accuCorrectionYaw,yawCorrection,moyCorItems_yaw);
 			vxCorrection=PipeTools::processAverage(accuCorrectionVx,vxCorrection,moyCorItems_vx);
 			vyCorrection=PipeTools::processAverage(accuCorrectionVy,vyCorrection,moyCorItems_vy);
 			thrustCorrection=PipeTools::processAverage(accuCorrectionThrust,thrustCorrection,moyCorItems_thrust);
-			throttleActCorrection=PipeTools::processAverage(accuCorrectionThrAct,throttleActCorrection,moyCorItems_thr_act);
+
 			/*cnt++;
 			if (cnt>1000) {
 				cnt=0;
@@ -443,7 +439,6 @@ MulticopterRateControl::Run()
 			pipe_correction.vx_correction=(float)vxCorrection;
 			pipe_correction.vy_correction=(float)vyCorrection;
 			pipe_correction.thrust_correction=(float)thrustCorrection;
-			pipe_correction.throttle_act_correction=(float)throttleActCorrection;
 			pipe_correction.nb_median=(float)nbMedian;
 			pipe_correction.param_mr=_pi_mult[0];
 			pipe_correction.param_mp=_pi_mult[1];
@@ -455,7 +450,6 @@ MulticopterRateControl::Run()
 			pipe_correction.median_vx=medianVx;
 			pipe_correction.median_vy=medianVy;
 			pipe_correction.median_thrust=medianThrust;
-			pipe_correction.median_thr_act=medianThrAct;
 			_pipe_correction_pub.publish(pipe_correction);
 
 			oldNbRemoteValid=nbRemoteValid;

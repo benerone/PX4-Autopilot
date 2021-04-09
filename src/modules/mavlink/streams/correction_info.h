@@ -45,12 +45,10 @@ protected:
 			msg.corrvx = pipe_correction.vx_correction;
 			msg.corrvy = pipe_correction.vy_correction;
 			msg.corrthrust = pipe_correction.thrust_correction;
-			msg.corrthract = pipe_correction.throttle_act_correction;
 			msg.medianroll=pipe_correction.median_roll;
 			msg.medianpitch=pipe_correction.median_pitch;
 			msg.medianyaw=pipe_correction.median_yaw;
 			msg.medianthrust=pipe_correction.median_thrust;
-			msg.medianthract=pipe_correction.median_thr_act;
 			if (_correctionpos_sub.update(&pipepos_correction)) {
 				msg.corrposx=pipepos_correction.x_corr;
 				msg.corrposy=pipepos_correction.y_corr;
@@ -69,6 +67,8 @@ protected:
 			if (_correctionact_sub.update(&pac)) {
 				msg.corryawact=pac.yawact_correction;
 				msg.medianyawact=pac.median_yawact;
+				msg.corrthract =pac.thract_correction;
+				msg.medianthract=pac.median_thract;
 			}
 			mavlink_msg_correction_values_send_struct(_mavlink->get_channel(), &msg);
 			return true;

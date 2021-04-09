@@ -349,7 +349,7 @@ void ModuleCanIntegrale::run()
 				actuator_controls_s actuator_controls;
 				_actuator_controls_0_sub.copy(&actuator_controls);
 				tmp.v1=actuator_controls.control[actuator_controls_s::INDEX_YAW];
-				tmp.v2=0.0f;
+				tmp.v2=actuator_controls.control[actuator_controls_s::INDEX_THROTTLE];
 				resultSend=sendFrame(iFace,sys_id | (OFFSET_ACT_1<<TYPE_SHIFT),(const uavcan::uint8_t *)&tmp,8);
 				//resultSend2=sendFrame(iFace2,sys_id | (OFFSET_ACT_1<<TYPE_SHIFT),(const uavcan::uint8_t *)&VALID_VZ,8);
 				if (resultSend /*|| resultSend2*/) {
@@ -588,6 +588,7 @@ void ModuleCanIntegrale::processReceivedFrame(uavcan::ICanIface * iFacePart,uavc
 			}
 			if (typecmd == OFFSET_ACT_1) {
 				rx_act[offset]->control[actuator_controls_s::INDEX_YAW]=tmpp->v1;
+				rx_act[offset]->control[actuator_controls_s::INDEX_THROTTLE]=tmpp->v2;
 				rx_act[offset]->timestamp=hrt_absolute_time();
 				rx_act[offset]->index=id;
 				rx_act[offset]->status=actuator_controls_re_s::ACT_STATUS_COMPLETE;

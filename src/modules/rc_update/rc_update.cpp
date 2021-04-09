@@ -403,25 +403,17 @@ RCUpdate::Run()
 			}
 		}
 
-		/*if (control_mode.flag_control_altitude_enabled && control_mode.flag_control_climb_rate_enabled) {
-			pipe_correction_s pipe_correction{};
-
-			//Rescale
-			int tr_index=_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_THROTTLE];
-			int tmp=85*((int)rc_input.values[tr_index]-(int)_parameters.trim[tr_index]);
-			rc_input.values[tr_index]=(uint16_t)((int)_parameters.trim[tr_index]+tmp/100);
-
-			if (_pipe_correction_sub.copy(&pipe_correction)) {
-				rc_input.values[tr_index]-=pipe_correction.throttle_act_correction;
-			}
-		}*/
-
-		//Pipe yaw
+		//Pipe yaw & Throttle
 		{
-			//Rescale
-			int tr_index=_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_YAW];
-			int tmp=85*((int)rc_input.values[tr_index]-(int)_parameters.trim[tr_index]);
-			rc_input.values[tr_index]=(uint16_t)((int)_parameters.trim[tr_index]+tmp/100);
+			//Rescale Yaw
+			int tr_indexY=_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_YAW];
+			int tmp=85*((int)rc_input.values[tr_indexY]-(int)_parameters.trim[tr_indexY]);
+			rc_input.values[tr_indexY]=(uint16_t)((int)_parameters.trim[tr_indexY]+tmp/100);
+
+			//Rescale Throttle
+			int tr_indexT=_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_THROTTLE];
+			tmp=85*((int)rc_input.values[tr_indexT]-(int)_parameters.trim[tr_indexT]);
+			rc_input.values[tr_indexT]=(uint16_t)((int)_parameters.trim[tr_indexT]+tmp/100);
 
 			actuator_controls_s act_ctrl;
 
@@ -431,6 +423,7 @@ RCUpdate::Run()
 				local_act.timestamp=act_ctrl.timestamp;
 				local_act.status=actuator_controls_re_s::ACT_STATUS_COMPLETE;
 				local_act.control[actuator_controls_re_s::INDEX_YAW]=act_ctrl.control[actuator_controls_s::INDEX_YAW];
+				local_act.control[actuator_controls_re_s::INDEX_THROTTLE]=act_ctrl.control[actuator_controls_s::INDEX_THROTTLE];
 				local_act.index=_param_mav_sys_id.get();
 				//Get remotes
 				actuator_controls_re_s r1_act;
@@ -439,23 +432,41 @@ RCUpdate::Run()
 				_r1act_sub.copy(&r1_act);
 				_r2act_sub.copy(&r2_act);
 				_r3act_sub.copy(&r3_act);
-				double yawActError;
+				double yawActError,thrActError;
 				int nbMedian=0;
-				int32_t medianYawAct;
+				int32_t medianYawAct,medianThrAct;
 				medianYawAct=0;
+				medianThrAct=0;
 				yawActError=(double)local_act.control[actuator_controls_re_s::INDEX_YAW]-PipeTools::processMedianACT(local_act,r1_act,r2_act,r3_act,&nbMedian,[](const actuator_controls_re_s &r) {
 					return r.control[actuator_controls_re_s::INDEX_YAW];
 				},&medianYawAct);
+				thrActError=(double)local_act.control[actuator_controls_re_s::INDEX_THROTTLE]-PipeTools::processMedianACT(local_act,r1_act,r2_act,r3_act,&nbMedian,[](const actuator_controls_re_s &r) {
+					return r.control[actuator_controls_re_s::INDEX_THROTTLE];
+				},&medianThrAct);
 
 				//---------------------------------------------------
 				// PIPE: APPLY CORRECTION
 				//---------------------------------------------------
 				double yawCorrection=PipeTools::processMultAndClamp(yawActError,_param_rc_mul_yaw.get(),_param_rc_lim_yaw.get());
-				rc_input.values[tr_index]-=(int)yawCorrection;
+				double thrCorrection=PipeTools::processMultAndClamp(thrActError,_param_rc_mul_thr.get(),_param_rc_lim_thr.get());
+				if (control_mode.flag_control_altitude_enabled && control_mode.flag_control_climb_rate_enabled) {
+					rc_input.values[tr_indexT]-=(int)thrCorrection;
+					if (yawCorrection<0.0 && (rc_input.values[tr_indexY]-(int)yawCorrection)<((int)_parameters.trim[tr_indexY]+_param_rc_step_yaw.get())) {
+						yawCorrection=(int)rc_input.values[tr_indexY]-((int)_parameters.trim[tr_indexY]+_param_rc_step_yaw.get());
+					}
+					if (yawCorrection>0.0 && (rc_input.values[tr_indexY]-(int)yawCorrection)>((int)_parameters.trim[tr_indexY]-_param_rc_step_yaw.get())) {
+						yawCorrection=(int)rc_input.values[tr_indexY]-((int)_parameters.trim[tr_indexY]-_param_rc_step_yaw.get());
+					}
+					rc_input.values[tr_indexY]-=(int)yawCorrection;
+				} else {
+					rc_input.values[tr_indexY]-=(int)yawCorrection;
+				}
 				pipe_act_correction_s pac;
 				pac.timestamp=act_ctrl.timestamp;
 				pac.yawact_correction=yawCorrection;
+				pac.thract_correction=thrCorrection;
 				pac.median_yawact=medianYawAct;
+				pac.median_thract=medianThrAct;
 				_pipe_act_correction_pub.publish(pac);
 			}
 		}

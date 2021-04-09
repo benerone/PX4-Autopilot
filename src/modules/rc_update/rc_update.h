@@ -242,6 +242,9 @@ private:
 
 		(ParamFloat<px4::params::RC_PI_LIM_YAW>) _param_rc_lim_yaw,
 		(ParamFloat<px4::params::RC_PI_MUL_YAW>) _param_rc_mul_yaw,
+		(ParamFloat<px4::params::RC_PI_LIM_THR>) _param_rc_lim_thr,
+		(ParamFloat<px4::params::RC_PI_MUL_THR>) _param_rc_mul_thr,
+		(ParamInt<px4::params::RC_PI_STEP_YAW>) _param_rc_step_yaw,
 		(ParamInt<px4::params::MAV_SYS_ID>) _param_mav_sys_id
 	)
 
