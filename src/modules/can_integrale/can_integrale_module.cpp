@@ -61,8 +61,8 @@ int ModuleCanIntegrale::print_status()
 	PX4_INFO("R1 Nb:%d ri=%lf pi=%lf yi=%lf status=%d",nbReceivedR1,(double)r1_integrale.pitch_rate_integral,(double)r1_integrale.roll_rate_integral,(double)r1_integrale.yaw_rate_integral,(int)r1_integrale.status);
 	PX4_INFO("R2 Nb:%d ri=%lf pi=%lf yi=%lf status=%d",nbReceivedR2,(double)r2_integrale.pitch_rate_integral,(double)r2_integrale.roll_rate_integral,(double)r2_integrale.yaw_rate_integral,(int)r2_integrale.status);
 	PX4_INFO("R3 Nb:%d ri=%lf pi=%lf yi=%lf status=%d",nbReceivedR3,(double)r3_integrale.pitch_rate_integral,(double)r3_integrale.roll_rate_integral,(double)r3_integrale.yaw_rate_integral,(int)r3_integrale.status);
-	PX4_INFO("Can0 RxNbE:%d TxNbE:%d",nbReceivedError[0],nbEmittedError[0]);
-	PX4_INFO("Can1 RxNbE:%d TxNbE:%d",nbReceivedError[1],nbEmittedError[1]);
+	PX4_INFO("Can0 RxNbE:%d TxNbE:%d %s",nbReceivedError[0],nbEmittedError[0],can_status.can_error_1?"Error":"Ok");
+	PX4_INFO("Can1 RxNbE:%d TxNbE:%d %s",nbReceivedError[1],nbEmittedError[1],can_status.can_error_2?"Error":"Ok");
 	return 0;
 }
 
@@ -141,6 +141,8 @@ void ModuleCanIntegrale::run()
 	postVxy=false;
 	postThrAct=false;
 	int32_t countIt=0;
+
+	can_status={0L,0,0,0,0,0,0,0,0,0,0,0,false,false};
 
 	r1_integrale={0L,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,integrale_s::INTEGRALE_STATUS_NONE};
 	r2_integrale={0L,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,integrale_s::INTEGRALE_STATUS_NONE};
@@ -453,6 +455,8 @@ void ModuleCanIntegrale::run()
 			can_status.nb_emitted_2=nbEmitted[1];
 			can_status.nb_received_1=nbReceived[0];
 			can_status.nb_received_2=nbReceived[1];
+			can_status.can_error_1=(can_status.nb_emitted_error_1!=nbEmittedError[0]) || (can_status.nb_received_error_1!=nbReceivedError[0]);
+			can_status.can_error_2=(can_status.nb_emitted_error_2!=nbEmittedError[1]) || (can_status.nb_received_error_2!=nbReceivedError[1]);
 			can_status.nb_emitted_error_1=nbEmittedError[0];
 			can_status.nb_emitted_error_2=nbEmittedError[1];
 			can_status.nb_received_error_1=nbReceivedError[0];
