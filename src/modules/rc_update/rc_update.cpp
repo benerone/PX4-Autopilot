@@ -405,15 +405,21 @@ RCUpdate::Run()
 
 		//Pipe yaw & Throttle
 		{
-			//Rescale Yaw
 			int tr_indexY=_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_YAW];
-			int tmp=85*((int)rc_input.values[tr_indexY]-(int)_parameters.trim[tr_indexY]);
-			rc_input.values[tr_indexY]=(uint16_t)((int)_parameters.trim[tr_indexY]+tmp/100);
+			if (control_mode.flag_control_attitude_enabled) {
+				//Rescale Yaw
 
-			//Rescale Throttle
+				int tmp=85*((int)rc_input.values[tr_indexY]-(int)_parameters.trim[tr_indexY]);
+				rc_input.values[tr_indexY]=(uint16_t)((int)_parameters.trim[tr_indexY]+tmp/100);
+			}
+
 			int tr_indexT=_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_THROTTLE];
-			tmp=85*((int)rc_input.values[tr_indexT]-(int)_parameters.trim[tr_indexT]);
-			rc_input.values[tr_indexT]=(uint16_t)((int)_parameters.trim[tr_indexT]+tmp/100);
+			if (control_mode.flag_control_altitude_enabled && control_mode.flag_control_climb_rate_enabled) {
+				//Rescale Throttle
+
+				int tmp=85*((int)rc_input.values[tr_indexT]-(int)_parameters.trim[tr_indexT]);
+				rc_input.values[tr_indexT]=(uint16_t)((int)_parameters.trim[tr_indexT]+tmp/100);
+			}
 
 			actuator_controls_s act_ctrl;
 
@@ -458,7 +464,7 @@ RCUpdate::Run()
 						yawCorrection=(int)rc_input.values[tr_indexY]-((int)_parameters.trim[tr_indexY]-_param_rc_step_yaw.get());
 					}
 					rc_input.values[tr_indexY]-=(int)yawCorrection;
-				} else {
+				} else if (control_mode.flag_control_attitude_enabled) {
 					rc_input.values[tr_indexY]-=(int)yawCorrection;
 				}
 				pipe_act_correction_s pac;
