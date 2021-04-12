@@ -11,6 +11,8 @@ int32 nb_received_error_1
 int32 nb_received_error_2
 int32 nb_emitted_error_1
 int32 nb_emitted_error_2
+bool can_error_1
+bool can_error_2
 
 # TOPICS can_status
 
