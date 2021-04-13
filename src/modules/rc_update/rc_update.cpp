@@ -404,7 +404,7 @@ RCUpdate::Run()
 		}
 
 		//Pipe yaw & Throttle
-		{
+		/*if (!control_mode.flag_control_auto_enabled) */{
 			int tr_indexY=_rc.function[rc_channels_s::RC_CHANNELS_FUNCTION_YAW];
 			if (control_mode.flag_control_attitude_enabled) {
 				//Rescale Yaw
