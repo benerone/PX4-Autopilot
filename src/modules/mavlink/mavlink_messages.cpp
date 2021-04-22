@@ -3070,13 +3070,12 @@ protected:
 };
 
 
-template <int N>
 class MavlinkStreamServoOutputRaw : public MavlinkStream
 {
 public:
 	const char *get_name() const override
 	{
-		return MavlinkStreamServoOutputRaw<N>::get_name_static();
+		return MavlinkStreamServoOutputRaw::get_name_static();
 	}
 
 	static constexpr uint16_t get_id_static()
@@ -3091,27 +3090,22 @@ public:
 
 	static constexpr const char *get_name_static()
 	{
-		switch (N) {
-		case 0:
-			return "SERVO_OUTPUT_RAW_0";
-
-		case 1:
-			return "SERVO_OUTPUT_RAW_1";
-		}
+		return "SERVO_OUTPUT_RAW_0";
 	}
 
 	static MavlinkStream *new_instance(Mavlink *mavlink)
 	{
-		return new MavlinkStreamServoOutputRaw<N>(mavlink);
+		return new MavlinkStreamServoOutputRaw(mavlink);
 	}
 
 	unsigned get_size() override
 	{
-		return _act_sub.advertised() ? MAVLINK_MSG_ID_SERVO_OUTPUT_RAW_LEN + MAVLINK_NUM_NON_PAYLOAD_BYTES : 0;
+		return _act_sub0.advertised() ? MAVLINK_MSG_ID_SERVO_OUTPUT_RAW_LEN + MAVLINK_NUM_NON_PAYLOAD_BYTES : 0;
 	}
 
 private:
-	uORB::Subscription _act_sub{ORB_ID(actuator_outputs), N};
+	uORB::Subscription _act_sub0{ORB_ID(actuator_outputs), 0};
+	uORB::Subscription _act_sub1{ORB_ID(actuator_outputs), 1};
 
 	/* do not allow top copying this class */
 	MavlinkStreamServoOutputRaw(MavlinkStreamServoOutputRaw &) = delete;
@@ -3124,14 +3118,15 @@ protected:
 	bool send(const hrt_abstime t) override
 	{
 		actuator_outputs_s act;
+		actuator_outputs_s act1;
 
-		if (_act_sub.update(&act)) {
+		if (_act_sub0.update(&act)) {
 			mavlink_servo_output_raw_t msg{};
 
 			static_assert(sizeof(act.output) / sizeof(act.output[0]) >= 16, "mavlink message requires at least 16 outputs");
 
 			msg.time_usec = act.timestamp;
-			msg.port = N;
+			msg.port = 0;
 			msg.servo1_raw = act.output[0];
 			msg.servo2_raw = act.output[1];
 			msg.servo3_raw = act.output[2];
@@ -3140,14 +3135,26 @@ protected:
 			msg.servo6_raw = act.output[5];
 			msg.servo7_raw = act.output[6];
 			msg.servo8_raw = act.output[7];
-			msg.servo9_raw = act.output[8];
-			msg.servo10_raw = act.output[9];
-			msg.servo11_raw = act.output[10];
-			msg.servo12_raw = act.output[11];
-			msg.servo13_raw = act.output[12];
-			msg.servo14_raw = act.output[13];
-			msg.servo15_raw = act.output[14];
-			msg.servo16_raw = act.output[15];
+			if (_act_sub1.copy(&act1)) {
+				msg.servo9_raw = act1.output[0];
+				msg.servo10_raw = act1.output[1];
+				msg.servo11_raw = act1.output[2];
+				msg.servo12_raw = act1.output[3];
+				msg.servo13_raw = act1.output[4];
+				msg.servo14_raw = act1.output[5];
+				msg.servo15_raw = act1.output[6];
+				msg.servo16_raw = act1.output[7];
+			} else {
+				msg.servo9_raw = act.output[8];
+				msg.servo10_raw = act.output[9];
+				msg.servo11_raw = act.output[10];
+				msg.servo12_raw = act.output[11];
+				msg.servo13_raw = act.output[12];
+				msg.servo14_raw = act.output[13];
+				msg.servo15_raw = act.output[14];
+				msg.servo16_raw = act.output[15];
+			}
+
 
 			mavlink_msg_servo_output_raw_send_struct(_mavlink->get_channel(), &msg);
 
@@ -3157,6 +3164,96 @@ protected:
 		return false;
 	}
 };
+
+// template <int N>
+// class MavlinkStreamServoOutputRaw : public MavlinkStream
+// {
+// public:
+// 	const char *get_name() const override
+// 	{
+// 		return MavlinkStreamServoOutputRaw<N>::get_name_static();
+// 	}
+
+// 	static constexpr uint16_t get_id_static()
+// 	{
+// 		return MAVLINK_MSG_ID_SERVO_OUTPUT_RAW;
+// 	}
+
+// 	uint16_t get_id() override
+// 	{
+// 		return get_id_static();
+// 	}
+
+// 	static constexpr const char *get_name_static()
+// 	{
+// 		switch (N) {
+// 		case 0:
+// 			return "SERVO_OUTPUT_RAW_0";
+
+// 		case 1:
+// 			return "SERVO_OUTPUT_RAW_1";
+// 		}
+// 	}
+
+// 	static MavlinkStream *new_instance(Mavlink *mavlink)
+// 	{
+// 		return new MavlinkStreamServoOutputRaw<N>(mavlink);
+// 	}
+
+// 	unsigned get_size() override
+// 	{
+// 		return _act_sub.advertised() ? MAVLINK_MSG_ID_SERVO_OUTPUT_RAW_LEN + MAVLINK_NUM_NON_PAYLOAD_BYTES : 0;
+// 	}
+
+// private:
+// 	uORB::Subscription _act_sub{ORB_ID(actuator_outputs), N};
+
+// 	/* do not allow top copying this class */
+// 	MavlinkStreamServoOutputRaw(MavlinkStreamServoOutputRaw &) = delete;
+// 	MavlinkStreamServoOutputRaw &operator = (const MavlinkStreamServoOutputRaw &) = delete;
+
+// protected:
+// 	explicit MavlinkStreamServoOutputRaw(Mavlink *mavlink) : MavlinkStream(mavlink)
+// 	{}
+
+// 	bool send(const hrt_abstime t) override
+// 	{
+// 		actuator_outputs_s act;
+
+// 		if (_act_sub.update(&act)) {
+// 			mavlink_servo_output_raw_t msg{};
+
+// 			static_assert(sizeof(act.output) / sizeof(act.output[0]) >= 16, "mavlink message requires at least 16 outputs");
+
+// 			msg.time_usec = act.timestamp;
+// 			msg.port = N;
+// 			msg.servo1_raw = act.output[0];
+// 			msg.servo2_raw = act.output[1];
+// 			msg.servo3_raw = act.output[2];
+// 			msg.servo4_raw = act.output[3];
+// 			msg.servo5_raw = act.output[4];
+// 			msg.servo6_raw = act.output[5];
+// 			msg.servo7_raw = act.output[6];
+// 			msg.servo8_raw = act.output[7];
+// 			msg.servo9_raw = act.output[8];
+// 			msg.servo10_raw = act.output[9];
+// 			msg.servo11_raw = act.output[10];
+// 			msg.servo12_raw = act.output[11];
+// 			msg.servo13_raw = act.output[12];
+// 			msg.servo14_raw = act.output[13];
+// 			msg.servo15_raw = act.output[14];
+// 			msg.servo16_raw = act.output[15];
+
+// 			mavlink_msg_servo_output_raw_send_struct(_mavlink->get_channel(), &msg);
+
+// 			return true;
+// 		}
+
+// 		return false;
+// 	}
+// };
+
+
 
 template <int N>
 class MavlinkStreamActuatorControlTarget : public MavlinkStream
@@ -5274,8 +5371,8 @@ static const StreamListItem streams_list[] = {
 	create_stream_list_item<MavlinkStreamVibration>(),
 	create_stream_list_item<MavlinkStreamAttPosMocap>(),
 	create_stream_list_item<MavlinkStreamHomePosition>(),
-	create_stream_list_item<MavlinkStreamServoOutputRaw<0> >(),
-	create_stream_list_item<MavlinkStreamServoOutputRaw<1> >(),
+	create_stream_list_item<MavlinkStreamServoOutputRaw>(),
+	//create_stream_list_item<MavlinkStreamServoOutputRaw<1> >(),
 	create_stream_list_item<MavlinkStreamHILActuatorControls>(),
 	create_stream_list_item<MavlinkStreamPositionTargetGlobalInt>(),
 	create_stream_list_item<MavlinkStreamLocalPositionSetpoint>(),

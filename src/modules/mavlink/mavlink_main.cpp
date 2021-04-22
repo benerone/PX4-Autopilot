@@ -1795,7 +1795,7 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 		configure_stream_local("SCALED_IMU2", 25.0f);
 		configure_stream_local("SCALED_IMU3", 25.0f);
 		configure_stream_local("SERVO_OUTPUT_RAW_0", 20.0f);
-		configure_stream_local("SERVO_OUTPUT_RAW_1", 20.0f);
+		//configure_stream_local("SERVO_OUTPUT_RAW_1", 20.0f);
 		configure_stream_local("SYS_STATUS", 1.0f);
 		configure_stream_local("SYSTEM_TIME", 1.0f);
 		configure_stream_local("UTM_GLOBAL_POSITION", 1.0f);
