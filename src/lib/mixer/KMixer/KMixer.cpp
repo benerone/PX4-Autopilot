@@ -52,7 +52,7 @@
 
 KMixer::KMixer(ControlCallback control_cb, uintptr_t cb_handle, kmixer_s *mixinfo) :
 	Mixer(control_cb, cb_handle),
-	_pinfo(mixinfo),_trim(0.0f)
+	_pinfo(mixinfo),_trim(-0.6f)
 {
 }
 
@@ -263,12 +263,12 @@ KMixer::mix(float *outputs, unsigned space)
 	if (sum>_pinfo->max) {
 		sum=_pinfo->max;
 	}
-	/*if (sum>=0) {
+	if (sum>=0) {
 		*outputs=((1.0f-_trim)*sum/_pinfo->max)+_trim;
 	} else {
 		*outputs=((1.0f+_trim)*(_pinfo->min-sum)/_pinfo->min)-1.0f;
-	}*/
-	*outputs=-1.0f+2.0f*(sum-_pinfo->min)/(_pinfo->max-_pinfo->min);
+	}
+	//*outputs=-1.0f+2.0f*(sum-_pinfo->min)/(_pinfo->max-_pinfo->min);
 	return 1;
 }
 /**
