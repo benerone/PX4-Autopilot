@@ -119,7 +119,7 @@ private:
 	static int parse_control_scaler(const char *buf, unsigned &buflen, float &scaler, uint8_t &control_group,
 					uint8_t &control_index);
 
-
-	kmixer_s			*_pinfo;
 	float _trim;
+	kmixer_s			*_pinfo;
+
 };

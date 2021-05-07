@@ -258,6 +258,7 @@ mixer_tick()
 	if (update_trims && r_status_flags & PX4IO_P_STATUS_FLAGS_MIXER_OK) {
 		update_trims = false;
 		mixer_group.set_trims(r_page_servo_control_trim, PX4IO_SERVO_COUNT);
+		mixer_group.get_trims(r_page_servo_control_trim);
 	}
 
 	/*

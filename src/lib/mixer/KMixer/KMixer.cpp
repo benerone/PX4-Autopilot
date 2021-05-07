@@ -52,9 +52,10 @@
 
 KMixer::KMixer(ControlCallback control_cb, uintptr_t cb_handle, kmixer_s *mixinfo) :
 	Mixer(control_cb, cb_handle),
-	_pinfo(mixinfo),_trim(-0.6f)
+	_trim(0.0f),_pinfo(mixinfo)
 {
 }
+
 
 KMixer::~KMixer()
 {
