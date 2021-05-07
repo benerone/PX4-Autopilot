@@ -1078,6 +1078,7 @@ PX4IO::task_main()
 
 						param_get(param_h, &pval);
 						pwm_values.values[i] = (int16_t)(10000 * pval);
+						PX4_INFO("IO:%s: %d", pname, pwm_values.values[i]);
 					}
 				}
 
@@ -2102,6 +2103,7 @@ PX4IO::print_debug()
 int
 PX4IO::mixer_send(const char *buf, unsigned buflen, unsigned retries)
 {
+	printf("mixer loading:%s\n",buf);
 	/* get debug level */
 	int debuglevel = io_reg_get(PX4IO_PAGE_SETUP, PX4IO_P_SETUP_SET_DEBUG);
 
@@ -2210,6 +2212,7 @@ PX4IO::mixer_send(const char *buf, unsigned buflen, unsigned retries)
 		return -EINVAL;
 
 	} else {
+		printf("mixer loaded:%s\n",buf);
 		/* all went well, set the mixer ok flag */
 		return io_reg_modify(PX4IO_PAGE_STATUS, PX4IO_P_STATUS_FLAGS, 0, PX4IO_P_STATUS_FLAGS_MIXER_OK);
 	}
@@ -2252,6 +2255,28 @@ PX4IO::print_status(bool extended_status)
 	}
 
 	printf("]");
+
+	struct pwm_output_values pwm;
+	pwm.channel_count = _max_actuators;
+
+	int ret = io_reg_get(PX4IO_PAGE_CONTROL_TRIM_PWM, 0, pwm.values, _max_actuators);
+
+	if (ret != OK) {
+		ret = -EIO;
+	}
+	for (unsigned i = 0; i < _max_actuators; i++) {
+		PX4_INFO("IO get TRIM:%d",  pwm.values[i]);
+	}
+
+	ret = io_reg_get(PX4IO_PAGE_CONTROLS, 0, pwm.values, _max_actuators);
+
+	if (ret != OK) {
+		ret = -EIO;
+	}
+	for (unsigned i = 0; i < _max_actuators; i++) {
+		PX4_INFO("IO get source actuator:%f", (double) REG_TO_FLOAT(pwm.values[i]));
+	}
+
 
 	float trim_roll = REG_TO_FLOAT(io_reg_get(PX4IO_PAGE_SETUP, PX4IO_P_SETUP_TRIM_ROLL));
 	float trim_pitch = REG_TO_FLOAT(io_reg_get(PX4IO_PAGE_SETUP, PX4IO_P_SETUP_TRIM_PITCH));
@@ -2564,7 +2589,9 @@ PX4IO::ioctl(file *filep, int cmd, unsigned long arg)
 			{
 				return -E2BIG;
 			}
-
+			for (unsigned i = 0; i < _max_actuators; i++) {
+				PX4_INFO("IO set:%d",  pwm->values[i]);
+			}
 			/* copy values to registers in IO */
 			ret = io_reg_set(PX4IO_PAGE_CONTROL_TRIM_PWM, 0, pwm->values, pwm->channel_count);
 			break;
