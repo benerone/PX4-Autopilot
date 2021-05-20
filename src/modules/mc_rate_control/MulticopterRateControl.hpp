@@ -160,6 +160,8 @@ private:
 	int32_t sys_id;
 	int oldNbRemoteValid=0;
 	int cnt;
+	uint8_t previous_nav_state;
+	bool disable_man;
 
 	zapata::StdVector<double> accuCorrectionPitch;
 	zapata::StdVector<double> accuCorrectionRoll;
@@ -228,7 +230,8 @@ private:
 		(ParamInt<px4::params::MC_PI_MOY_COR_VY>) _param_mc_pi_moy_cor_vy,
 		(ParamInt<px4::params::MC_PI_MOY_COR_TH>) _param_mc_pi_moy_cor_thrust,
 		(ParamInt<px4::params::MC_PI_MOY_COR_TA>) _param_mc_pi_moy_cor_thr_act,
-		(ParamInt<px4::params::MAV_SYS_ID>) _param_mav_sys_id
+		(ParamInt<px4::params::MAV_SYS_ID>) _param_mav_sys_id,
+		(ParamInt<px4::params::MC_DISABLE_MAN>) _param_disable_man
 	)
 
 	matrix::Vector3f _acro_rate_max;	/**< max attitude rates in acro mode */

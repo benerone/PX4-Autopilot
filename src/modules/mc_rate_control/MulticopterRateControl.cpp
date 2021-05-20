@@ -53,6 +53,8 @@ MulticopterRateControl::MulticopterRateControl(bool vtol) :
 	parameters_updated();
 	cnt=0;
 	oldNbRemoteValid=0;
+	previous_nav_state=vehicle_status_s::NAVIGATION_STATE_UNUSED;
+	disable_man=false;
 }
 
 MulticopterRateControl::~MulticopterRateControl()
@@ -77,12 +79,23 @@ MulticopterRateControl::parameters_updated()
 	// rate control parameters
 	// The controller gain K is used to convert the parallel (P + I/s + sD) form
 	// to the ideal (K * [1 + 1/sTi + sTd]) form
-	const Vector3f rate_k = Vector3f(_param_mc_rollrate_k.get(), _param_mc_pitchrate_k.get(), _param_mc_yawrate_k.get());
+	disable_man=(_param_disable_man.get()==1);
+	if (_vehicle_status.nav_state==vehicle_status_s::NAVIGATION_STATE_MANUAL && disable_man) {
+		const Vector3f rate_k = Vector3f(0.0f, 0.0f, 0.0f);
 
-	_rate_control.setGains(
-		rate_k.emult(Vector3f(_param_mc_rollrate_p.get(), _param_mc_pitchrate_p.get(), _param_mc_yawrate_p.get())),
-		rate_k.emult(Vector3f(_param_mc_rollrate_i.get(), _param_mc_pitchrate_i.get(), _param_mc_yawrate_i.get())),
-		rate_k.emult(Vector3f(_param_mc_rollrate_d.get(), _param_mc_pitchrate_d.get(), _param_mc_yawrate_d.get())));
+		_rate_control.setGains(
+				rate_k.emult(Vector3f(0.0f, 0.0f, 0.0f)),
+				rate_k.emult(Vector3f(0.0f, 0.0f, 0.0f)),
+				rate_k.emult(Vector3f(0.0f, 0.0f, 0.0f)));
+	} else {
+		const Vector3f rate_k = Vector3f(_param_mc_rollrate_k.get(), _param_mc_pitchrate_k.get(), _param_mc_yawrate_k.get());
+
+		_rate_control.setGains(
+			rate_k.emult(Vector3f(_param_mc_rollrate_p.get(), _param_mc_pitchrate_p.get(), _param_mc_yawrate_p.get())),
+			rate_k.emult(Vector3f(_param_mc_rollrate_i.get(), _param_mc_pitchrate_i.get(), _param_mc_yawrate_i.get())),
+			rate_k.emult(Vector3f(_param_mc_rollrate_d.get(), _param_mc_pitchrate_d.get(), _param_mc_yawrate_d.get())));
+	}
+
 
 	_rate_control.setIntegratorLimit(
 		Vector3f(_param_mc_rr_int_lim.get(), _param_mc_pr_int_lim.get(), _param_mc_yr_int_lim.get()));
@@ -197,6 +210,20 @@ MulticopterRateControl::Run()
 		}
 
 		_vehicle_status_sub.update(&_vehicle_status);
+		if (_vehicle_status.nav_state!=previous_nav_state) {
+			if (disable_man) {
+				if (_vehicle_status.nav_state==vehicle_status_s::NAVIGATION_STATE_MANUAL) {
+					parameters_updated();
+					_rate_control.resetIntegral();
+				} else {
+					if (previous_nav_state==vehicle_status_s::NAVIGATION_STATE_MANUAL) {
+						parameters_updated();
+						_rate_control.resetIntegral();
+					}
+				}
+			}
+			previous_nav_state=_vehicle_status.nav_state;
+		}
 
 		const bool manual_control_updated = _manual_control_setpoint_sub.update(&_manual_control_setpoint);
 
