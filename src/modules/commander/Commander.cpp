@@ -3263,6 +3263,7 @@ Commander::update_control_mode()
 	case vehicle_status_s::NAVIGATION_STATE_ACRO:
 		control_mode.flag_control_manual_enabled = true;
 		control_mode.flag_control_rates_enabled = true;
+		control_mode.flag_control_attitude_enabled = false;
 		break;
 
 	case vehicle_status_s::NAVIGATION_STATE_DESCEND:
