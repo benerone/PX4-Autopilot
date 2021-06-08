@@ -49,7 +49,6 @@
 #include <lib/mathlib/mathlib.h>
 #include <lib/mathlib/math/filter/LowPassFilter2p.hpp>
 #include <lib/perf/perf_counter.h>
-#include <lib/matrix/matrix/Vector4.hpp>
 #include <uORB/Publication.hpp>
 #include <uORB/PublicationMulti.hpp>
 #include <uORB/Subscription.hpp>
