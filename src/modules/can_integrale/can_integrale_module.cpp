@@ -377,37 +377,41 @@ void ModuleCanIntegrale::run()
 		uavcan::UtcTime out_ts_utc;
 		uavcan::CanIOFlags out_flags;
 		uavcan::CanFrame canFrame;
-		while (receiveResult>0)  {
+		if (iFace!=nullptr) {
+			while (receiveResult>0)  {
 
-			receiveResult=iFace->receive(canFrame,mtime,out_ts_utc,out_flags);
-			if (receiveResult==0) {
-				//PX4_ERR("CAN driver RX empty");
-				//nbReceivedError++;
-			}
-			if (receiveResult<0) {
-				PX4_ERR("CAN driver RX error");
-				nbReceivedError[0]++;
-			}
-			if (receiveResult==1) {
-				processReceivedFrame(iFace,canFrame);
+				receiveResult=iFace->receive(canFrame,mtime,out_ts_utc,out_flags);
+				if (receiveResult==0) {
+					//PX4_ERR("CAN driver RX empty");
+					//nbReceivedError++;
+				}
+				if (receiveResult<0) {
+					PX4_ERR("CAN driver RX error");
+					nbReceivedError[0]++;
+				}
+				if (receiveResult==1) {
+					processReceivedFrame(iFace,canFrame);
+				}
 			}
 		}
+
 		receiveResult=1;
-		while (receiveResult>0)  {
-			receiveResult=iFace2->receive(canFrame,mtime,out_ts_utc,out_flags);
-			if (receiveResult==0) {
-				//PX4_ERR("CAN driver RX empty");
-				//nbReceivedError++;
-			}
-			if (receiveResult<0) {
-				PX4_ERR("CAN driver RX error");
-				nbReceivedError[1]++;
-			}
-			if (receiveResult==1) {
-				processReceivedFrame(iFace2,canFrame);
+		if (iFace2!=nullptr) {
+			while (receiveResult>0)  {
+				receiveResult=iFace2->receive(canFrame,mtime,out_ts_utc,out_flags);
+				if (receiveResult==0) {
+					//PX4_ERR("CAN driver RX empty");
+					//nbReceivedError++;
+				}
+				if (receiveResult<0) {
+					PX4_ERR("CAN driver RX error");
+					nbReceivedError[1]++;
+				}
+				if (receiveResult==1) {
+					processReceivedFrame(iFace2,canFrame);
+				}
 			}
 		}
-
 		//Check unrefresh
 		uint64_t currentTime=hrt_absolute_time();
 		if (currentTime-r1_integrale.timestamp>MAX_DELAY_REFRESH) {
@@ -624,6 +628,9 @@ void ModuleCanIntegrale::processReceivedFrame(uavcan::ICanIface * iFacePart,uavc
 
 }
 bool ModuleCanIntegrale::sendFrame(uavcan::ICanIface * iFacePart,uint32_t can_id, const uint8_t* can_data, uint8_t data_len) {
+	if (iFacePart==nullptr) {
+		return false;
+	}
 	uavcan::CanFrame canFrame=uavcan::CanFrame(can_id,can_data,data_len);
 	//PX4_INFO("send pr can id %x",canFrame.id);
 	auto sendResult=iFacePart->send(canFrame,uavcan::MonotonicTime::fromUSec(20000),0);
