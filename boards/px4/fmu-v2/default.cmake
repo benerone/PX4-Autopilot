@@ -36,8 +36,8 @@ px4_add_board(
 		#imu/adis16448
 		#imu/adis16477
 		#imu/adis16497
-		imu/l3gd20
-		imu/lsm303d
+		#imu/l3gd20
+		#imu/lsm303d
 		#imu/invensense/icm20608g
 		#imu/invensense/icm20948
 		imu/invensense/mpu6000
@@ -49,6 +49,7 @@ px4_add_board(
 		lights/rgbled
 		#magnetometer # all available magnetometer drivers
 		magnetometer/hmc5883
+		magnetometer/ist8310
 		#mkblctrl
 		#optical_flow # all available optical flow drivers
 		#optical_flow/px4flow
@@ -76,8 +77,8 @@ px4_add_board(
 		ekf2
 		#esc_battery
 		#events
-		fw_att_control
-		fw_pos_control_l1
+		#fw_att_control
+		#fw_pos_control_l1
 		land_detector
 		#landing_target_estimator
 		load_mon
