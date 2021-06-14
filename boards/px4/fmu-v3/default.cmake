@@ -66,6 +66,7 @@ px4_add_board(
 		battery_status
 		camera_feedback
 		can_integrale
+		sbg
 		commander
 		dataman
 		#ekf2

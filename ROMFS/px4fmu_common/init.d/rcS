@@ -579,6 +579,7 @@ else
 
 
 	can_integrale start
+	sbg start
 
 #
 # End of autostart.
