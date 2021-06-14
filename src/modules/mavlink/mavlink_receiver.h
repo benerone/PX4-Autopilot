@@ -102,6 +102,9 @@
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/vehicle_trajectory_bezier.h>
 #include <uORB/topics/vehicle_trajectory_waypoint.h>
+#include <uORB/topics/vehicle_acceleration.h>
+#include <uORB/topics/vehicle_angular_acceleration.h>
+#include <uORB/topics/vehicle_angular_velocity.h>
 
 class Mavlink;
 
@@ -260,6 +263,11 @@ private:
 	uORB::Publication<vehicle_rates_setpoint_s>		_rates_sp_pub{ORB_ID(vehicle_rates_setpoint)};
 	uORB::Publication<vehicle_trajectory_bezier_s>	_trajectory_bezier_pub{ORB_ID(vehicle_trajectory_bezier)};
 	uORB::Publication<vehicle_trajectory_waypoint_s>	_trajectory_waypoint_pub{ORB_ID(vehicle_trajectory_waypoint)};
+	uORB::Publication<vehicle_acceleration_s>               _vehicle_acceleration_pub{ORB_ID(vehicle_acceleration)};
+	uORB::Publication<vehicle_angular_acceleration_s> _vehicle_angular_acceleration_pub{ORB_ID(vehicle_angular_acceleration)};
+	uORB::Publication<vehicle_angular_velocity_s> _vehicle_angular_velocity_pub{ORB_ID(vehicle_angular_velocity)};
+
+
 
 	// ORB publications (multi)
 	uORB::PublicationMulti<distance_sensor_s>		_distance_sensor_pub{ORB_ID(distance_sensor), ORB_PRIO_LOW};
@@ -307,6 +315,9 @@ private:
 	bool				_hil_local_proj_inited{false};
 
 	hrt_abstime			_last_utm_global_pos_com{0};
+
+	vehicle_angular_velocity_s vavprevious;
+	bool vavprevious_exist;
 
 	// Allocated if needed.
 	TunePublisher *_tune_publisher{nullptr};

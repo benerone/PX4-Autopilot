@@ -351,7 +351,7 @@ else
 	if param greater SYS_HITL 0
 	then
 		set OUTPUT_MODE hil
-		sensors start -h
+		#sensors start -h
 		commander start -h
 		# disable GPS
 		param set GPS_1_CONFIG 0
@@ -378,15 +378,15 @@ else
 		#
 		# board sensors: rc.sensors
 		#
-		set BOARD_RC_SENSORS /etc/init.d/rc.board_sensors
-		if [ -f $BOARD_RC_SENSORS ]
-		then
-			echo "Board sensors: ${BOARD_RC_SENSORS}"
-			sh $BOARD_RC_SENSORS
-		fi
-		unset BOARD_RC_SENSORS
+		#set BOARD_RC_SENSORS /etc/init.d/rc.board_sensors
+		#if [ -f $BOARD_RC_SENSORS ]
+		#then
+		#	echo "Board sensors: ${BOARD_RC_SENSORS}"
+		#	sh $BOARD_RC_SENSORS
+		#fi
+		#unset BOARD_RC_SENSORS
 
-		sh /etc/init.d/rc.sensors
+		#sh /etc/init.d/rc.sensors
 
 		if param compare -s BAT1_SOURCE 2
 		then

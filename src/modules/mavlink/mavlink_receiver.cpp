@@ -89,7 +89,8 @@ MavlinkReceiver::MavlinkReceiver(Mavlink *parent) :
 	_mavlink_log_handler(parent),
 	_mission_manager(parent),
 	_parameters_manager(parent),
-	_mavlink_timesync(parent)
+	_mavlink_timesync(parent),
+	vavprevious_exist(false)
 {
 }
 
@@ -2613,7 +2614,7 @@ MavlinkReceiver::handle_message_hil_state_quaternion(mavlink_message_t *msg)
 
 	/* accelerometer */
 	{
-		if (_px4_accel == nullptr) {
+		/*if (_px4_accel == nullptr) {
 			// 1311244: DRV_IMU_DEVTYPE_SIM, BUS: 1, ADDR: 1, TYPE: SIMULATION
 			_px4_accel = new PX4Accelerometer(1311244);
 
@@ -2626,12 +2627,19 @@ MavlinkReceiver::handle_message_hil_state_quaternion(mavlink_message_t *msg)
 			// accel in mG
 			_px4_accel->set_scale(CONSTANTS_ONE_G / 1000.0f);
 			_px4_accel->update(timestamp, hil_state.xacc, hil_state.yacc, hil_state.zacc);
-		}
+		}*/
+		vehicle_acceleration_s va{};
+		va.timestamp = timestamp;
+		va.timestamp_sample = timestamp;
+		va.xyz[0]= hil_state.xacc;
+		va.xyz[1]= hil_state.yacc;
+		va.xyz[2]= hil_state.zacc;
+		_vehicle_acceleration_pub.publish(va);
 	}
 
 	/* gyroscope */
 	{
-		if (_px4_gyro == nullptr) {
+		/*if (_px4_gyro == nullptr) {
 			// 1311244: DRV_IMU_DEVTYPE_SIM, BUS: 1, ADDR: 1, TYPE: SIMULATION
 			_px4_gyro = new PX4Gyroscope(1311244);
 
@@ -2642,7 +2650,30 @@ MavlinkReceiver::handle_message_hil_state_quaternion(mavlink_message_t *msg)
 
 		if (_px4_gyro != nullptr) {
 			_px4_gyro->update(timestamp, hil_state.rollspeed, hil_state.pitchspeed, hil_state.yawspeed);
+		}*/
+		vehicle_angular_velocity_s vav{};
+		vav.timestamp = timestamp;
+		vav.timestamp_sample = timestamp;
+		vav.xyz[0]= hil_state.rollspeed;
+		vav.xyz[1]= hil_state.pitchspeed;
+		vav.xyz[2]= hil_state.yawspeed;
+		_vehicle_angular_velocity_pub.publish(vav);
+
+		if (vavprevious_exist) {
+			vehicle_angular_acceleration_s vaa{};
+			vaa.timestamp = timestamp;
+			vaa.timestamp_sample = timestamp;
+			if (vav.timestamp-vavprevious.timestamp>0) {
+				vaa.xyz[0]= (vav.xyz[0]-vavprevious.xyz[0])/((float)(vav.timestamp-vavprevious.timestamp));
+				vaa.xyz[1]= (vav.xyz[1]-vavprevious.xyz[1])/((float)(vav.timestamp-vavprevious.timestamp));
+				vaa.xyz[2]= (vav.xyz[2]-vavprevious.xyz[2])/((float)(vav.timestamp-vavprevious.timestamp));
+				_vehicle_angular_acceleration_pub.publish(vaa);
+			}
 		}
+		vavprevious_exist=true;
+		vavprevious=vav;
+
+
 	}
 
 	/* battery status */
