@@ -2529,7 +2529,31 @@ MavlinkReceiver::handle_message_hil_state_quaternion(mavlink_message_t *msg)
 
 	const uint64_t timestamp = hrt_absolute_time();
 
-	/* airspeed */
+	hil_state_quaternion_s u_hil;
+
+	u_hil.timestamp=hil_state.time_usec;
+	for(int i=0;i<4;i++) {
+		u_hil.attitude_quaternion[i]=hil_state.attitude_quaternion[i];
+	}
+	u_hil.rollspeed=hil_state.rollspeed;
+	u_hil.pitchspeed=hil_state.pitchspeed;
+	u_hil.yawspeed=hil_state.yawspeed;
+	u_hil.lat=hil_state.lat;
+	u_hil.lon=hil_state.lon;
+	u_hil.alt=hil_state.alt;
+	u_hil.vx=hil_state.vx;
+	u_hil.vy=hil_state.vy;
+	u_hil.vz=hil_state.vz;
+	u_hil.ind_airspeed=hil_state.ind_airspeed;
+	u_hil.true_airspeed=hil_state.true_airspeed;
+	u_hil.xacc=hil_state.xacc;
+	u_hil.yacc=hil_state.yacc;
+	u_hil.zacc=hil_state.zacc;
+
+	_hil_state_quaternion_pub.publish(u_hil);
+
+
+	/* airspeed
 	{
 		airspeed_s airspeed{};
 
@@ -2538,9 +2562,9 @@ MavlinkReceiver::handle_message_hil_state_quaternion(mavlink_message_t *msg)
 		airspeed.true_airspeed_m_s = hil_state.true_airspeed * 1e-2f;
 
 		_airspeed_pub.publish(airspeed);
-	}
+	} */
 
-	/* attitude */
+	/* attitude
 	{
 		vehicle_attitude_s hil_attitude{};
 
@@ -2550,9 +2574,9 @@ MavlinkReceiver::handle_message_hil_state_quaternion(mavlink_message_t *msg)
 		q.copyTo(hil_attitude.q);
 
 		_attitude_pub.publish(hil_attitude);
-	}
+	} */
 
-	/* global position */
+	/* global position
 	{
 		vehicle_global_position_s hil_global_pos{};
 
@@ -2564,9 +2588,9 @@ MavlinkReceiver::handle_message_hil_state_quaternion(mavlink_message_t *msg)
 		hil_global_pos.epv = 4.0f;
 
 		_global_pos_pub.publish(hil_global_pos);
-	}
+	} */
 
-	/* local position */
+	/* local position
 	{
 		double lat = hil_state.lat * 1e-7;
 		double lon = hil_state.lon * 1e-7;
@@ -2610,7 +2634,7 @@ MavlinkReceiver::handle_message_hil_state_quaternion(mavlink_message_t *msg)
 		hil_local_pos.hagl_max = INFINITY;
 
 		_local_pos_pub.publish(hil_local_pos);
-	}
+	} */
 
 	/* accelerometer */
 	{
@@ -2628,13 +2652,13 @@ MavlinkReceiver::handle_message_hil_state_quaternion(mavlink_message_t *msg)
 			_px4_accel->set_scale(CONSTANTS_ONE_G / 1000.0f);
 			_px4_accel->update(timestamp, hil_state.xacc, hil_state.yacc, hil_state.zacc);
 		}*/
-		vehicle_acceleration_s va{};
+		/*vehicle_acceleration_s va{};
 		va.timestamp = timestamp;
-		va.timestamp_sample = timestamp;
-		va.xyz[0]= hil_state.xacc;
-		va.xyz[1]= hil_state.yacc;
-		va.xyz[2]= hil_state.zacc;
-		_vehicle_acceleration_pub.publish(va);
+		va.timestamp_sample = hil_state.time_usec;
+		va.xyz[0]= ((float32)hil_state.xacc)*9.81f/1000.0f;
+		va.xyz[1]= ((float32)hil_state.yacc)*9.81f/1000.0f;
+		va.xyz[2]= ((float32)hil_state.zacc)*9.81f/1000.0f;
+		_vehicle_acceleration_pub.publish(va);*/
 	}
 
 	/* gyroscope */
@@ -2651,27 +2675,27 @@ MavlinkReceiver::handle_message_hil_state_quaternion(mavlink_message_t *msg)
 		if (_px4_gyro != nullptr) {
 			_px4_gyro->update(timestamp, hil_state.rollspeed, hil_state.pitchspeed, hil_state.yawspeed);
 		}*/
-		vehicle_angular_velocity_s vav{};
+		/*vehicle_angular_velocity_s vav{};
 		vav.timestamp = timestamp;
-		vav.timestamp_sample = timestamp;
+		vav.timestamp_sample = hil_state.time_usec;
 		vav.xyz[0]= hil_state.rollspeed;
 		vav.xyz[1]= hil_state.pitchspeed;
 		vav.xyz[2]= hil_state.yawspeed;
-		_vehicle_angular_velocity_pub.publish(vav);
+		_vehicle_angular_velocity_pub.publish(vav); */
 
-		if (vavprevious_exist) {
-			vehicle_angular_acceleration_s vaa{};
+		//if (vavprevious_exist) {
+			/*vehicle_angular_acceleration_s vaa{};
 			vaa.timestamp = timestamp;
-			vaa.timestamp_sample = timestamp;
-			if (vav.timestamp-vavprevious.timestamp>0) {
-				vaa.xyz[0]= (vav.xyz[0]-vavprevious.xyz[0])/((float)(vav.timestamp-vavprevious.timestamp));
-				vaa.xyz[1]= (vav.xyz[1]-vavprevious.xyz[1])/((float)(vav.timestamp-vavprevious.timestamp));
-				vaa.xyz[2]= (vav.xyz[2]-vavprevious.xyz[2])/((float)(vav.timestamp-vavprevious.timestamp));
+			vaa.timestamp_sample = hil_state.time_usec;
+			if (vav.timestamp_sample-vavprevious.timestamp_sample>0) {
+				vaa.xyz[0]= (vav.xyz[0]-vavprevious.xyz[0])/((float)(vav.timestamp_sample-vavprevious.timestamp_sample));
+				vaa.xyz[1]= (vav.xyz[1]-vavprevious.xyz[1])/((float)(vav.timestamp_sample-vavprevious.timestamp_sample));
+				vaa.xyz[2]= (vav.xyz[2]-vavprevious.xyz[2])/((float)(vav.timestamp_sample-vavprevious.timestamp_sample));
 				_vehicle_angular_acceleration_pub.publish(vaa);
-			}
-		}
-		vavprevious_exist=true;
-		vavprevious=vav;
+			}*/
+		//}
+		//vavprevious_exist=true;
+		//vavprevious=vav;
 
 
 	}

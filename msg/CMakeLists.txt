@@ -69,6 +69,7 @@ set(msg_files
 	geofence_result.msg
 	gps_dump.msg
 	gps_inject_data.msg
+	hil_state_quaternion.msg
 	home_position.msg
 	hover_thrust_estimate.msg
 	input_rc.msg

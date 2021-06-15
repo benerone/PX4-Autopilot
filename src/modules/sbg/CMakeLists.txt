@@ -8,4 +8,6 @@ px4_add_module(
 		sbg_module.cpp
 	DEPENDS
 		modules__uORB
+		git_ecl
+		ecl_geo
 	)
