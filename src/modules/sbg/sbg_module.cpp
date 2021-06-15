@@ -2,7 +2,11 @@
 #include <systemlib/px4_macros.h>
 #include <math.h>
 
+
 #include "sbg_module.hpp"
+#include "pipetools.h"
+
+using namespace zapata;
 
 int ModuleSBG::print_status()
 {
@@ -114,7 +118,7 @@ void ModuleSBG::processHIL() {
 					_global_pos_pub.publish(hil_global_pos);
 				}
 
-				/* local position */
+				/* local position + (share)*/
 				{
 					double lat = hil_state.lat * 1e-7;
 					double lon = hil_state.lon * 1e-7;
@@ -156,6 +160,8 @@ void ModuleSBG::processHIL() {
 					hil_local_pos.vz_max = INFINITY;
 					hil_local_pos.hagl_min = INFINITY;
 					hil_local_pos.hagl_max = INFINITY;
+
+					processLocalPosition(hil_local_pos);
 
 					_local_pos_pub.publish(hil_local_pos);
 				}
@@ -207,6 +213,157 @@ void ModuleSBG::run()
 	}
 
 
+}
+void ModuleSBG::processLocalPosition(vehicle_local_position_s &lpos) {
+	vehicle_share_position_s &spos = _vehicle_share_position_pub.get();
+
+	spos.index=sys_id;
+	spos.status=vehicle_share_position_s::VSP_STATUS_COMPLETE;
+
+	spos.timestamp = lpos.timestamp;
+	spos.x = lpos.x;
+	spos.y = lpos.y;
+	spos.z = lpos.z;
+	spos.vx = lpos.vx;
+	spos.vy = lpos.vy;
+	spos.vz = lpos.vz;
+	spos.xy_valid = lpos.xy_valid;
+	spos.z_valid = lpos.z_valid;
+	spos.v_xy_valid = lpos.v_xy_valid;
+	spos.v_z_valid = lpos.v_z_valid;
+	spos.heading = lpos.heading;
+
+	// publish vehicle share position data
+	_vehicle_share_position_pub.update();
+
+	pipeFuseData(lpos,spos);
+
+}
+
+void ModuleSBG::pipeFuseData(vehicle_local_position_s &lpos,vehicle_share_position_s &spos) {
+	//---------------------------------------------------
+	// PIPE: ESTIMATE ERROR
+	//---------------------------------------------------
+	vehicle_share_position_s _r1vsp;
+	vehicle_share_position_s _r2vsp;
+	vehicle_share_position_s _r3vsp;
+	int nbRemoteValid=0;
+	//Get remote integrale
+	if (!_r1vehicle_share_position_sub.copy(&_r1vsp)) {
+		_r1vsp.status=vehicle_share_position_s::VSP_STATUS_NONE;
+	} else {
+		if(PipeTools::isVSPValid(_r1vsp)) {
+			nbRemoteValid++;
+		}
+	}
+	if (!_r2vehicle_share_position_sub.copy(&_r2vsp)) {
+		_r2vsp.status=vehicle_share_position_s::VSP_STATUS_NONE;
+	}else {
+		if(PipeTools::isVSPValid(_r2vsp)) {
+			nbRemoteValid++;
+		}
+	}
+	if (!_r3vehicle_share_position_sub.copy(&_r3vsp)) {
+		_r3vsp.status=vehicle_share_position_s::VSP_STATUS_NONE;
+	}else {
+		if(PipeTools::isVSPValid(_r3vsp)) {
+			nbRemoteValid++;
+		}
+	}
+	int nbMedian=0;
+	// ------------------ Z ---------------
+	double xposError=0.0;
+	double yposError=0.0;
+	double zposError=0.0;
+	double vxposError=0.0;
+	double vyposError=0.0;
+	double vzposError=0.0;
+	double headingError=0.0;
+	int32_t medianxpos,medianvxpos,medianypos,medianvypos,medianzpos,medianvzpos,medianheading;
+	xposError=(double)spos.x-PipeTools::processMedianVSP(spos,_r1vsp,_r2vsp,_r3vsp,&nbMedian,
+			[](const vehicle_share_position_s &r) {
+				return r.x;
+			},
+			[](const vehicle_share_position_s &r) {
+				return r.xy_valid;
+			},&medianxpos);
+	double xCorrection=PipeTools::processMultAndClamp(xposError,_param_ekf2_pi_mul_x.get(),_param_ekf2_pi_lim_x.get());
+	lpos.x=lpos.x-(float)xCorrection;
+	yposError=(double)spos.y-PipeTools::processMedianVSP(spos,_r1vsp,_r2vsp,_r3vsp,&nbMedian,
+			[](const vehicle_share_position_s &r) {
+				return r.y;
+			},
+			[](const vehicle_share_position_s &r) {
+				return r.xy_valid;
+			},&medianypos);
+	double yCorrection=PipeTools::processMultAndClamp(yposError,_param_ekf2_pi_mul_y.get(),_param_ekf2_pi_lim_y.get());
+	lpos.y=lpos.y-(float)yCorrection;
+	zposError=(double)spos.z-PipeTools::processMedianVSP(spos,_r1vsp,_r2vsp,_r3vsp,&nbMedian,
+			[](const vehicle_share_position_s &r) {
+				return r.z;
+			},
+			[](const vehicle_share_position_s &r) {
+				return r.z_valid;
+			},&medianzpos);
+	double zCorrection=PipeTools::processMultAndClamp(zposError,_param_ekf2_pi_mul_z.get(),_param_ekf2_pi_lim_z.get());
+	lpos.z=lpos.z-(float)zCorrection;
+
+
+	vxposError=(double)spos.vx-PipeTools::processMedianVSP(spos,_r1vsp,_r2vsp,_r3vsp,&nbMedian,
+			[](const vehicle_share_position_s &r) {
+				return r.vx;
+			},
+			[](const vehicle_share_position_s &r) {
+				return r.v_xy_valid;
+			},&medianvxpos);
+	double vxCorrection=PipeTools::processMultAndClamp(vxposError,_param_ekf2_pi_mul_vx.get(),_param_ekf2_pi_lim_vx.get());
+	lpos.vx=lpos.vx-(float)vxCorrection;
+	vyposError=(double)spos.vy-PipeTools::processMedianVSP(spos,_r1vsp,_r2vsp,_r3vsp,&nbMedian,
+			[](const vehicle_share_position_s &r) {
+				return r.vy;
+			},
+			[](const vehicle_share_position_s &r) {
+				return r.v_xy_valid;
+			},&medianvypos);
+	double vyCorrection=PipeTools::processMultAndClamp(vyposError,_param_ekf2_pi_mul_vy.get(),_param_ekf2_pi_lim_vy.get());
+	lpos.vy=lpos.vy-(float)vyCorrection;
+	vzposError=(double)spos.vz-PipeTools::processMedianVSP(spos,_r1vsp,_r2vsp,_r3vsp,&nbMedian,
+			[](const vehicle_share_position_s &r) {
+				return r.vz;
+			},
+			[](const vehicle_share_position_s &r) {
+				return r.v_z_valid;
+			},&medianvzpos);
+	double vzCorrection=PipeTools::processMultAndClamp(vzposError,_param_ekf2_pi_mul_vz.get(),_param_ekf2_pi_lim_vz.get());
+	lpos.vz=lpos.vz-(float)vzCorrection;
+
+	headingError=(double)spos.heading-PipeTools::processMedianVSP(spos,_r1vsp,_r2vsp,_r3vsp,&nbMedian,
+			[](const vehicle_share_position_s &r) {
+				return r.heading;
+			},
+			[](const vehicle_share_position_s &r) {
+				return true;
+			},&medianheading);
+	double headingCorrection=PipeTools::processMultAndClamp(headingError,_param_ekf2_pi_mul_he.get(),_param_ekf2_pi_lim_he.get());
+	lpos.heading=lpos.heading-(float)headingCorrection;
+
+	//Report
+	pipepos_correction_s corr={0L,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0,0,0,0,0,0};
+	corr.x_corr=(float)xCorrection;
+	corr.y_corr=(float)yCorrection;
+	corr.z_corr=(float)zCorrection;
+	corr.vx_corr=(float)vxCorrection;
+	corr.vy_corr=(float)vyCorrection;
+	corr.vz_corr=(float)vzCorrection;
+	corr.he_corr=(float)headingCorrection;
+	corr.median_x=medianxpos;
+	corr.median_y=medianypos;
+	corr.median_z=medianzpos;
+	corr.median_vx=medianvxpos;
+	corr.median_vy=medianvypos;
+	corr.median_vz=medianvzpos;
+	corr.median_he=medianheading;
+	_pipepos_correction_pub.publish(corr);
 }
 
 

@@ -10,4 +10,5 @@ px4_add_module(
 		modules__uORB
 		git_ecl
 		ecl_geo
+		utilitieslib
 	)
