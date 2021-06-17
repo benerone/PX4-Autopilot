@@ -60,7 +60,6 @@
 #include <px4_platform_common/shutdown.h>
 #include <px4_platform_common/tasks.h>
 #include <systemlib/mavlink_log.h>
-#include <replay/definitions.hpp>
 #include <version/version.h>
 
 //#define DBGPRINT //write status output every few seconds

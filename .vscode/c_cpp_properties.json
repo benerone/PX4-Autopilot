@@ -19,8 +19,6 @@
                 "${workspaceFolder}/src/include/visibility.h"
             ],
             "includePath": [
-                "${workspaceFolder}/boards/px4/sitl/src",
-                "${workspaceFolder}/build/px4_sitl_default",
                 "${workspaceFolder}/platforms/common/include",
                 "${workspaceFolder}/platforms/posix/include",
                 "${workspaceFolder}/platforms/posix/src/px4/common/include",
