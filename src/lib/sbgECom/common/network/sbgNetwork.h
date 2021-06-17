@@ -42,7 +42,7 @@
 extern "C" {
 #endif
 
-#include <sbgCommon.h>
+#include <sbgECom/common/sbgCommon.h>
 
 //----------------------------------------------------------------------//
 //- Common IPv4 definitions                                            -//

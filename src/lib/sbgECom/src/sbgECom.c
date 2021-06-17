@@ -1,5 +1,5 @@
 ﻿#include "sbgECom.h"
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 #include "commands/sbgEComCmdCommon.h"
 
 //----------------------------------------------------------------------//
@@ -170,7 +170,6 @@ SbgErrorCode sbgEComHandle(SbgEComHandle *pHandle)
 	// Check input arguments
 	//
 	assert(pHandle);
-
 	//
 	// Try to read all received frames, we thus loop until we get an SBG_NOT_READY error
 	//

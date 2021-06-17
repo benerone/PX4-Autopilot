@@ -1,5 +1,5 @@
 ﻿/* sbgCommonLib headers */
-#include <sbgCommon.h>
+#include <sbgECom/common/sbgCommon.h>
 
 /* Local headers */
 #include "sbgInterface.h"

@@ -1,4 +1,4 @@
-﻿#include <sbgCommon.h>
+﻿#include <sbgECom/common/sbgCommon.h>
 #include <stdarg.h>
 #include <time.h>
 
@@ -81,7 +81,10 @@ SBG_COMMON_LIB_API void sbgPlatformDebugLogMsg(const char *pFileName, const char
 {
 	char		errorMsg[SBG_CONFIG_LOG_MAX_SIZE];
 	va_list		args;
-	
+	uint32_t	timestamp;
+
+	timestamp = sbgGetTime();
+
 	//
 	// Initialize the list of variable arguments on the latest function argument
 	//
@@ -90,7 +93,7 @@ SBG_COMMON_LIB_API void sbgPlatformDebugLogMsg(const char *pFileName, const char
 	//
 	// Generate the error message string
 	//
-	vsprintf(errorMsg, pFormat, args);
+	vsnprintf(errorMsg, sizeof(errorMsg), pFormat, args);
 
 	//
 	// Close the list of variable arguments
@@ -112,9 +115,11 @@ SBG_COMMON_LIB_API void sbgPlatformDebugLogMsg(const char *pFileName, const char
 		fprintf(stderr, "*INFO* %s\n\r", errorMsg);
 		break;
 	case SBG_DEBUG_LOG_TYPE_DEBUG:
-		fprintf(stderr, "*DBG * %s\n\r", errorMsg);
+		fprintf(stderr, "*DBG * [timestamp: %u]: %s\n\r",timestamp, errorMsg);
 		break;
 	default:
 		fprintf(stderr, "*UKNW*\t[%s]%s(%u): %s\n\r", sbgErrorCodeToString(errorCode), pFunctionName, line, errorMsg);
 	}
+
+	fflush(stderr);
 }

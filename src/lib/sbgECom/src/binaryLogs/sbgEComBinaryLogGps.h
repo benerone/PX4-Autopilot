@@ -1,39 +1,27 @@
-﻿/*!
- * \file           sbgEComBinaryLogGps.h
- * \author         SBG Systems
- * \date           20 February 2013
+/*!
+ *	\file		sbgEComBinaryLogGps.h
+ *  \author		SBG Systems (Raphael Siryani)
+ *	\date		20 February 2013
  *
- * \brief          This file is used to parse received GPS binary logs.
+ *	\brief		This file is used to parse received GPS binary logs.
  *
- * \section CodeCopyright Copyright Notice
- * The MIT license
- *
- * Copyright (C) 2007-2020, SBG Systems SAS. All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ *	\section CodeCopyright Copyright Notice 
+ *	Copyright (C) 2007-2013, SBG Systems SAS. All rights reserved.
+ *	
+ *	This source code is intended for use only by SBG Systems SAS and
+ *	those that have explicit written permission to use it from
+ *	SBG Systems SAS.
+ *	
+ *	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ *	KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ *	IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ *	PARTICULAR PURPOSE.
  */
-
 #ifndef __SBG_ECOM_BINARY_LOG_GPS_H__
 #define __SBG_ECOM_BINARY_LOG_GPS_H__
 
-#include <sbgCommon.h>
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/sbgCommon.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
 //----------------------------------------------------------------------//
 //- Log GPS velocity const definitions                                 -//
@@ -60,29 +48,13 @@
 #define SBG_ECOM_GPS_POS_TYPE_MASK			(0x0000003Fu)			/*!< Mask used to keep only the GPS position type part. */
 
 /*!
- * GNSS signals definitions
+ * GPS position mask definitions
  */
-#define	SBG_ECOM_GPS_POS_GPS_L1_USED		(0x00000001u << 12)		/*!< Set to 1 if GPS L1CA/L1P is used in solution. */
-#define	SBG_ECOM_GPS_POS_GPS_L2_USED		(0x00000001u << 13)		/*!< Set to 1 if GPS L2P/L2C is used in solution. */
+#define	SBG_ECOM_GPS_POS_GPS_L1_USED		(0x00000001u << 12)		/*!< Set to 1 if GPS L1 is used in solution. */
+#define	SBG_ECOM_GPS_POS_GPS_L2_USED		(0x00000001u << 13)		/*!< Set to 1 if GPS L2 is used in solution. */
 #define	SBG_ECOM_GPS_POS_GPS_L5_USED		(0x00000001u << 14)		/*!< Set to 1 if GPS L5 is used in solution. */
-
-#define	SBG_ECOM_GPS_POS_GLO_L1_USED		(0x00000001u << 15)		/*!< Set to 1 if GLONASS L1CA is used in solution. */
-#define	SBG_ECOM_GPS_POS_GLO_L2_USED		(0x00000001u << 16)		/*!< Set to 1 if GLONASS L2C/L2P is used in solution. */
-#define	SBG_ECOM_GPS_POS_GLO_L3_USED		(0x00000001u << 17)		/*!< Set to 1 if GLONASS L3 is used in solution. */
-
-#define	SBG_ECOM_GPS_POS_GAL_E1_USED		(0x00000001u << 18)		/*!< Set to 1 if Galileo E1 is used in solution. */
-#define	SBG_ECOM_GPS_POS_GAL_E5A_USED		(0x00000001u << 19)		/*!< Set to 1 if Galileo E5a is used in solution. */
-#define	SBG_ECOM_GPS_POS_GAL_E5B_USED		(0x00000001u << 20)		/*!< Set to 1 if Galileo E5b is used in solution. */
-#define	SBG_ECOM_GPS_POS_GAL_E5ALT_USED		(0x00000001u << 21)		/*!< Set to 1 if Galileo E5 AltBoc is used in solution. */
-#define	SBG_ECOM_GPS_POS_GAL_E6_USED		(0x00000001u << 22)		/*!< Set to 1 if Galileo E6 is used in solution. */
-
-#define	SBG_ECOM_GPS_POS_BDS_B1_USED		(0x00000001u << 23)		/*!< Set to 1 if BeiDou B1 is used in solution. */
-#define	SBG_ECOM_GPS_POS_BDS_B2_USED		(0x00000001u << 24)		/*!< Set to 1 if BeiDou B2 is used in solution. */
-#define	SBG_ECOM_GPS_POS_BDS_B3_USED		(0x00000001u << 25)		/*!< Set to 1 if BeiDou B3 is used in solution. */
-
-#define	SBG_ECOM_GPS_POS_QZSS_L1_USED		(0x00000001u << 26)		/*!< Set to 1 if QZSS L1CA is used in solution. */
-#define	SBG_ECOM_GPS_POS_QZSS_L2_USED		(0x00000001u << 27)		/*!< Set to 1 if QZSS L2C is used in solution. */
-#define	SBG_ECOM_GPS_POS_QZSS_L5_USED		(0x00000001u << 28)		/*!< Set to 1 if QZSS L5 is used in solution. */
+#define	SBG_ECOM_GPS_POS_GLO_L1_USED		(0x00000001u << 15)		/*!< Set to 1 if GLONASS L1 is used in solution. */
+#define	SBG_ECOM_GPS_POS_GLO_L2_USED		(0x00000001u << 16)		/*!< Set to 1 if GLONASS L2 is used in solution. */
 
 //----------------------------------------------------------------------//
 //- Log GPS HDT const definitions                                      -//
@@ -295,9 +267,9 @@ SBG_INLINE uint32_t sbgEComLogGpsHdtBuildStatus(SbgEComGpsHdtStatus status, uint
  */
 typedef struct _SbgLogGpsVel
 {
-	uint32_t		timeStamp;				/*!< Time in us since the sensor power up. */
-	uint32_t		status;					/*!< GPS velocity status, type and bitmask. */
-	uint32_t		timeOfWeek;				/*!< GPS time of week in ms. */
+	uint32_t			timeStamp;				/*!< Time in us since the sensor power up. */
+	uint32_t			status;					/*!< GPS velocity status, type and bitmask. */
+	uint32_t			timeOfWeek;				/*!< GPS time of week in ms. */
 	float			velocity[3];			/*!< GPS North, East, Down velocity in m.s^-1. */
 	float			velocityAcc[3];			/*!< GPS North, East, Down velocity 1 sigma accuracy in m.s^-1. */
 	float			course;					/*!< Track ground course in degrees. */
@@ -309,9 +281,9 @@ typedef struct _SbgLogGpsVel
  */
 typedef struct _SbgLogGpsPos
 {
-	uint32_t		timeStamp;				/*!< Time in us since the sensor power up. */
-	uint32_t		status;					/*!< GPS position status, type and bitmask. */
-	uint32_t		timeOfWeek;				/*!< GPS time of week in ms. */
+	uint32_t			timeStamp;				/*!< Time in us since the sensor power up. */
+	uint32_t			status;					/*!< GPS position status, type and bitmask. */
+	uint32_t			timeOfWeek;				/*!< GPS time of week in ms. */
 	double			latitude;				/*!< Latitude in degrees, positive north. */
 	double			longitude;				/*!< Longitude in degrees, positive east. */
 	double			altitude;				/*!< Altitude above Mean Sea Level in meters. */
@@ -320,8 +292,8 @@ typedef struct _SbgLogGpsPos
 	float			longitudeAccuracy;		/*!< 1 sigma longitude accuracy in meters. */
 	float			altitudeAccuracy;		/*!< 1 sigma altitude accuracy in meters. */
 	uint8_t			numSvUsed;				/*!< Number of space vehicles used to compute the solution (since version 1.4). */
-	uint16_t		baseStationId;			/*!< Base station id for differential corrections (0-4095). Set to 0xFFFF if differential corrections are not used (since version 1.4). */
-	uint16_t		differentialAge;		/*!< Differential correction age in 0.01 seconds. Set to 0XFFFF if differential corrections are not used (since version 1.4). */
+	uint16_t			baseStationId;			/*!< Base station id for differential corrections (0-4095). Set to 0xFFFF if differential corrections are not used (since version 1.4). */
+	uint16_t			differentialAge;		/*!< Differential correction age in 0.01 seconds. Set to 0XFFFF if differential corrections are not used (since version 1.4). */
 } SbgLogGpsPos;
 
 /*!
@@ -329,9 +301,9 @@ typedef struct _SbgLogGpsPos
  */
 typedef struct _SbgLogGpsHdt
 {
-	uint32_t		timeStamp;				/*!< Time in us since the sensor power up. */
-	uint16_t		status;					/*!< GPS HDT status, type and bitmask. */
-	uint32_t		timeOfWeek;				/*!< GPS time of week in ms. */
+	uint32_t			timeStamp;				/*!< Time in us since the sensor power up. */
+	uint16_t			status;					/*!< GPS HDT status, type and bitmask. */
+	uint32_t			timeOfWeek;				/*!< GPS time of week in ms. */
 	float			heading;				/*!< GPS true heading in degrees. */
 	float			headingAccuracy;		/*!< 1 sigma GPS true heading accuracy in degrees. */
 	float			pitch;					/*!< GPS pitch angle measured from the master to the rover in degrees. */

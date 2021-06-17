@@ -32,7 +32,7 @@ extern "C" {
 #endif
 
 /* sbgCommonLib headers */
-#include <sbgCommon.h>
+#include <sbgECom/common/sbgCommon.h>
 
 //----------------------------------------------------------------------//
 //- Constant definitions                                               -//

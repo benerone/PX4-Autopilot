@@ -1,5 +1,5 @@
 ﻿#include "sbgEComCmdInfo.h"
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
 //----------------------------------------------------------------------//
 //- Info commands		                                               -//

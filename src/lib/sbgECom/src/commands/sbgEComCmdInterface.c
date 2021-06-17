@@ -1,5 +1,5 @@
 ﻿#include "sbgEComCmdInterface.h"
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
 //----------------------------------------------------------------------//
 //- Interface commands                                                 -//
@@ -13,6 +13,7 @@ SbgErrorCode sbgEComCmdInterfaceGetUartConf(SbgEComHandle *pHandle, SbgEComPortI
 	uint8_t				receivedBuffer[SBG_ECOM_MAX_BUFFER_SIZE];
 	SbgStreamBuffer		inputStream;
 	uint8_t				outputBuffer;
+	uint8_t				cast;
 
 	assert(pHandle);
 	assert(pConf);
@@ -52,9 +53,9 @@ SbgErrorCode sbgEComCmdInterfaceGetUartConf(SbgEComHandle *pHandle, SbgEComPortI
 				// Read parameters
 				// First is returned interfaceId, then baud rate and the mode at last.
 				//
-				interfaceId = (SbgEComPortId)sbgStreamBufferReadUint8LE(&inputStream);
+				interfaceId = (SbgEComPortId) (cast = sbgStreamBufferReadUint8LE(&inputStream));
 				pConf->baudRate = sbgStreamBufferReadUint32LE(&inputStream);
-				pConf->mode = (SbgEComPortMode)sbgStreamBufferReadUint8LE(&inputStream);
+				pConf->mode = (SbgEComPortMode) (cast = sbgStreamBufferReadUint8LE(&inputStream));
 
 				//
 				// The command has been executed successfully so return
@@ -146,6 +147,8 @@ SbgErrorCode sbgEComCmdInterfaceGetCanConf(SbgEComHandle *pHandle, SbgEComCanBit
 	size_t				receivedSize;
 	uint8_t				receivedBuffer[SBG_ECOM_MAX_BUFFER_SIZE];
 	SbgStreamBuffer		inputStream;
+	uint8_t castu8;
+	uint16_t castu16;
 
 	assert(pHandle);
 	assert(pBitrate);
@@ -184,7 +187,7 @@ SbgErrorCode sbgEComCmdInterfaceGetCanConf(SbgEComHandle *pHandle, SbgEComCanBit
 				//
 				// Read bit rate returned by the device
 				//
-				*pBitrate = (SbgEComCanBitRate)sbgStreamBufferReadUint16LE(&inputStream);
+				*pBitrate = (SbgEComCanBitRate) (castu16 = sbgStreamBufferReadUint16LE(&inputStream));
 
 				//
 				// Check if we can parse the CAN mode that has been introduced in sbgECom version 2.0
@@ -194,7 +197,7 @@ SbgErrorCode sbgEComCmdInterfaceGetCanConf(SbgEComHandle *pHandle, SbgEComCanBit
 					//
 					// Read mode returned by the device
 					//
-					*pMode = (SbgEComCanMode)sbgStreamBufferReadUint8(&inputStream);
+					*pMode = (SbgEComCanMode) (castu8 = sbgStreamBufferReadUint8(&inputStream));
 				}
 				else
 				{
@@ -230,8 +233,8 @@ SbgErrorCode sbgEComCmdInterfaceSetCanConf(SbgEComHandle *pHandle, SbgEComCanBit
 	SbgStreamBuffer		outputStream;
 
 	assert(pHandle);
-	assert(bitrate <= UINT16_MAX);
-	assert(mode <= UINT8_MAX);
+	//assert(bitrate <= UINT16_MAX);
+	//assert(mode <= UINT8_MAX);
 
 	//
 	// Build the command payload

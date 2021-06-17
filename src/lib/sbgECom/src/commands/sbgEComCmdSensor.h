@@ -1,40 +1,25 @@
-ï»¿/*!
- * \file           sbgEComCmdSensor.h
- * \author         SBG Systems
- * \date           11 June 2014
+/*!
+ *	\file		sbgEComCmdSensor.h
+ *  \author		SBG Systems (Maxime Renaudet)
+ *	\date		11 June 2014
  *
- * \brief          This file implements SbgECom commands related to sensor.
+ *	\brief		This file implements SbgECom commands related to sensor.
  *
- * \section CodeCopyright Copyright Notice
- * The MIT license
- *
- * Copyright (C) 2007-2020, SBG Systems SAS. All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ *	\section CodeCopyright Copyright Notice 
+ *	Copyright (C) 2007-2013, SBG Systems SAS. All rights reserved.
+ *	
+ *	This source code is intended for use only by SBG Systems SAS and
+ *	those that have explicit written permission to use it from
+ *	SBG Systems SAS.
+ *	
+ *	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ *	KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ *	IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ *	PARTICULAR PURPOSE.
  */
-#ifndef SBG_ECOM_CMD_SENSOR_H
-#define SBG_ECOM_CMD_SENSOR_H
+#ifndef __SBG_ECOM_CMD_SENSOR_H__
+#define __SBG_ECOM_CMD_SENSOR_H__
 
-// sbgCommonLib headers
-#include <sbgCommon.h>
-
-// Local headers
 #include "sbgEComCmdCommon.h"
 
 //----------------------------------------------------------------------//
@@ -46,7 +31,6 @@
  */
 typedef enum _SbgEComModulePortAssignment
 {
-	SBG_ECOM_MODULE_PORT_A		= 0,		/*!< Module connected on PORT_A. */
 	SBG_ECOM_MODULE_PORT_B		= 1,		/*!< Module connected on PORT_B. */
 	SBG_ECOM_MODULE_PORT_C		= 2,		/*!< Module connected on PORT_C. */
 	SBG_ECOM_MODULE_PORT_D		= 3,		/*!< Module connected on PORT_D. */
@@ -81,7 +65,7 @@ typedef enum _SbgEComOdometerPinAssignment
 	SBG_ECOM_MODULE_ODO_CAN			= 3,		/*!< Vehicle odometer using CAN (OBD-II). */
 } SbgEComOdometerPinAssignment;
 
-/*!
+/*! 
  * This enum defines the different motion profile IDs available in standard
  */
 typedef enum _SbgEComMotionProfileStdIds
@@ -130,10 +114,10 @@ typedef struct _SbgEComSensorAlignmentInfo
  */
 typedef struct _SbgEComInitConditionConf
 {
-	double				latitude;					/*!< Initial latitude in Â° */
-	double				longitude;					/*!< Initial longitude in Â° */
+	double				latitude;					/*!< Initial latitude in ° */
+	double				longitude;					/*!< Initial longitude in ° */
 	double				altitude;					/*!< Initial altitude above MSL in meters */
-	uint16_t			year;						/*!< Initial Year */
+	uint16_t				year;						/*!< Initial Year */
 	uint8_t				month;						/*!< Initial month */
 	uint8_t				day;						/*!< Initial day */
 } SbgEComInitConditionConf;
@@ -143,77 +127,77 @@ typedef struct _SbgEComInitConditionConf
 //----------------------------------------------------------------------//
 
 /*!
- * Set the motion profile id used to tune the Kalman Filter to a specific application
+ *	Set a Motion profile ID.
  *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[id]	modelId						Motion profile id to set
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[id]	id							Motion profile ID to set
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
-SbgErrorCode sbgEComCmdSensorSetMotionProfileId(SbgEComHandle *pHandle, SbgEComMotionProfileStdIds modelId);
+SbgErrorCode sbgEComCmdSensorSetMotionProfileId(SbgEComHandle *pHandle, uint32_t id);
 
 /*!
- * Retrieve the motion profile id.
+ *	Retrieve Motion profile information.
  *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[out]	pModelId					Retrieved motion profile id
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[out]	pMotionProfileInfo			Pointer to a SbgEComModelInfo to contain the current motion profile info.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
-SbgErrorCode sbgEComCmdSensorGetMotionProfileId(SbgEComHandle *pHandle, SbgEComMotionProfileStdIds *pModelId);
+SbgErrorCode sbgEComCmdSensorGetMotionProfileInfo(SbgEComHandle *pHandle, SbgEComModelInfo *pMotionProfileInfo);
 
 /*!
- * Retrieve the initial conditions settings.
+ *	Retrieve the initial conditions settings.
  *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[out]	pConf						Pointer to a SbgEComInitConditionConf to contain the current initial conditions settings.
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[out]	pConf						Pointer to a SbgEComInitConditionConf to contain the current initial conditions settings.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
 SbgErrorCode sbgEComCmdSensorGetInitCondition(SbgEComHandle *pHandle, SbgEComInitConditionConf *pConf);
 
 /*!
- * Set the initial condition configuration.
+ *	Set the initial condition configuration.
  *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[in]	pConf						Pointer to a SbgEComInitConditionConf containing the new initial condition configuration.
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[in]	pConf						Pointer to a SbgEComInitConditionConf containing the new initial condition configuration.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
 SbgErrorCode sbgEComCmdSensorSetInitCondition(SbgEComHandle *pHandle, const SbgEComInitConditionConf *pConf);
 
 /*!
- * Retrieve the assignment of the aiding sensors.
+ *	Retrieve the assignment of the aiding sensors.
  *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[out]	pConf						Pointer to a SbgEComAidingAssignConf to contain the current assignment of the aiding sensors.
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[out]	pConf						Pointer to a SbgEComAidingAssignConf to contain the current assignment of the aiding sensors.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
 SbgErrorCode sbgEComCmdSensorGetAidingAssignment(SbgEComHandle *pHandle, SbgEComAidingAssignConf *pConf);
 
 /*!
- * Set the assignment of the aiding sensors.
+ *	Set the assignment of the aiding sensors.
  *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[out]	pConf						Pointer to a SbgEComAidingAssignConf containing the new assignment of the aiding sensors.
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[out]	pConf						Pointer to a SbgEComAidingAssignConf containing the new assignment of the aiding sensors.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
 SbgErrorCode sbgEComCmdSensorSetAidingAssignment(SbgEComHandle *pHandle, const SbgEComAidingAssignConf *pConf);
 
 /*!
- * Retrieve the alignment and lever arm configuration of the sensor.
+ *	Retrieve the alignment and lever arm configuration of the sensor.
  *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[out]	pAlignConf					Pointer to a SbgEComSensorAlignmentInfo struct to hold alignment configuration of the sensor.
- * \param[out]	pLeverArm					Pointer to a table to contain lever arm X, Y, Z components in meters.
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[out]	pAlignConf					Pointer to a SbgEComSensorAlignmentInfo struct to hold alignment configuration of the sensor.
+ *	\param[out] leverArm					Pointer to a table to contain lever arm X, Y, Z components in meters.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
-SbgErrorCode sbgEComCmdSensorGetAlignmentAndLeverArm(SbgEComHandle *pHandle, SbgEComSensorAlignmentInfo *pAlignConf, float *pLeverArm);
+SbgErrorCode sbgEComCmdSensorGetAlignmentAndLeverArm(SbgEComHandle *pHandle, SbgEComSensorAlignmentInfo *pAlignConf, float leverArm[3]);
 
 /*!
- * Set the alignment and lever arm configuration of the sensor.
+ *	Set the alignment and lever arm configuration of the sensor.
  *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[in]	pAlignConf					Pointer to a SbgEComSensorAlignmentInfo struct holding alignment configuration for the sensor.
- * \param[in]	pLeverArm					Pointer to a table containing lever arm X, Y, Z components in meters.
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[in]	pAlignConf					Pointer to a SbgEComSensorAlignmentInfo struct holding alignment configuration for the sensor.
+ *	\param[in]  leverArm					Pointer to a table containing lever arm X, Y, Z components in meters.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
-SbgErrorCode sbgEComCmdSensorSetAlignmentAndLeverArm(SbgEComHandle *pHandle, const SbgEComSensorAlignmentInfo *pAlignConf, const float *pLeverArm);
+SbgErrorCode sbgEComCmdSensorSetAlignmentAndLeverArm(SbgEComHandle *pHandle, const SbgEComSensorAlignmentInfo *pAlignConf, const float leverArm[3]);
 
-#endif // SBG_ECOM_CMD_SENSOR_H
+#endif

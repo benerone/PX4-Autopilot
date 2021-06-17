@@ -1,6 +1,6 @@
 ﻿#include "sbgEComCmdSettings.h"
 #include "transfer/sbgEComTransfer.h"
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
 //----------------------------------------------------------------------//
 //- Settings commands                                                  -//

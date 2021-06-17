@@ -1,32 +1,21 @@
 ﻿/*!
- * \file           sbgECom.h
- * \author         SBG Systems
- * \date           05 February 2013
+ *	\file		sbgECom.h
+ *  \author		SBG Systems (Raphael Siryani)
+ *	\date		05 February 2013
  *
- * \brief          Contains main sbgECom methods.
+ *	\brief		Contains main sbgECom methods.
  *
- * \section CodeCopyright Copyright Notice
- * The MIT license
- *
- * Copyright (C) 2007-2020, SBG Systems SAS. All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ *	\section CodeCopyright Copyright Notice 
+ *	Copyright (C) 2007-2013, SBG Systems SAS. All rights reserved.
+ *	
+ *	This source code is intended for use only by SBG Systems SAS and
+ *	those that have explicit written permission to use it from
+ *	SBG Systems SAS.
+ *	
+ *	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ *	KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ *	IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ *	PARTICULAR PURPOSE.
  */
 
 /*!
@@ -42,7 +31,7 @@
 extern "C" {
 #endif
 
-#include <sbgCommon.h>
+#include <sbgECom/common/sbgCommon.h>
 #include "sbgEComIds.h"
 #include "protocol/sbgEComProtocol.h"
 #include "binaryLogs/sbgEComBinaryLogs.h"
@@ -61,14 +50,13 @@ typedef struct _SbgEComHandle SbgEComHandle;
 //----------------------------------------------------------------------//
 
 /*!
- * Callback definition called each time a new log is received.
- *
- * \param[in]	pHandle									Valid handle on the sbgECom instance that has called this callback.
- * \param[in]	msgClass								Class of the message we have received
- * \param[in]	msg										Message ID of the log received.
- * \param[in]	pLogData								Contains the received log data as an union.
- * \param[in]	pUserArg								Optional user supplied argument.
- * \return												SBG_NO_ERROR if the received log has been used successfully.
+ *	Callback definition called each time a new log is received.
+ *	\param[in]	pHandle									Valid handle on the sbgECom instance that has called this callback.
+ *	\param[in]	msgClass								Class of the message we have received
+ *	\param[in]	msg										Message ID of the log received.
+ *	\param[in]	pLogData								Contains the received log data as an union.
+ *	\param[in]	pUserArg								Optional user supplied argument.
+ *	\return												SBG_NO_ERROR if the received log has been used successfully.
  */
 typedef SbgErrorCode (*SbgEComReceiveLogFunc)(SbgEComHandle *pHandle, SbgEComClass msgClass, SbgEComMsgId msg, const SbgBinaryLogData *pLogData, void *pUserArg);
 
@@ -82,10 +70,10 @@ typedef SbgErrorCode (*SbgEComReceiveLogFunc)(SbgEComHandle *pHandle, SbgEComCla
 struct _SbgEComHandle
 {
 	SbgEComProtocol				 protocolHandle;			/*!< Handle on the protocol system. */
-
+	
 	SbgEComReceiveLogFunc		 pReceiveLogCallback;		/*!< Pointer on the method called each time a new binary log is received. */
 	void						*pUserArg;					/*!< Optional user supplied argument for callbacks. */
-
+	
 	uint32_t					 numTrials;					/*!< Number of trials when a command is sent (default is 3). */
 	uint32_t					 cmdDefaultTimeOut;			/*!< Default time out in ms to get an answer from the device (default 500 ms). */
 };
@@ -150,6 +138,7 @@ void sbgEComErrorToString(SbgErrorCode errorCode, char errorMsg[256]);
 //----------------------------------------------------------------------//
 //- Footer (close extern C block)                                      -//
 //----------------------------------------------------------------------//
+
 #ifdef __cplusplus
 }
 #endif

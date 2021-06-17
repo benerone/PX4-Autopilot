@@ -1,41 +1,25 @@
-ï»¿/*!
- * \file           sbgEComCmdMag.h
- * \author         SBG Systems
- * \date           11 June 2014
+/*!
+ *	\file		sbgEComCmdMag.h
+ *  \author		SBG Systems (Maxime Renaudet)
+ *	\date		11 June 2014
  *
- * \brief          This file implements SbgECom commands related to Magnetometer module.
+ *	\brief		This file implements SbgECom commands related to Magnetometer module.
  *
- * \section CodeCopyright Copyright Notice
- * The MIT license
- *
- * Copyright (C) 2007-2020, SBG Systems SAS. All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ *	\section CodeCopyright Copyright Notice 
+ *	Copyright (C) 2007-2013, SBG Systems SAS. All rights reserved.
+ *	
+ *	This source code is intended for use only by SBG Systems SAS and
+ *	those that have explicit written permission to use it from
+ *	SBG Systems SAS.
+ *	
+ *	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ *	KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ *	IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ *	PARTICULAR PURPOSE.
  */
+#ifndef __SBG_ECOM_CMD_MAG_H__
+#define __SBG_ECOM_CMD_MAG_H__
 
-#ifndef SBG_ECOM_CMD_MAG_H
-#define SBG_ECOM_CMD_MAG_H
-
-// sbgCommonLib headers
-#include <sbgCommon.h>
-
-// Local headers
 #include "sbgEComCmdCommon.h"
 
 //----------------------------------------------------------------------//
@@ -48,10 +32,10 @@
 typedef enum _SbgEComMagCalibMode
 {
 	SBG_ECOM_MAG_CALIB_MODE_2D			= 1,				/*!< Tell the device that the magnetic calibration will be performed with limited motions.
-																 This calibration mode is only designed to be used when roll and pitch motions are less than Â± 5Â°.
+																 This calibration mode is only designed to be used when roll and pitch motions are less than ± 5°.
 																 To work correctly, the device should be rotated through at least a full circle. */
 	SBG_ECOM_MAG_CALIB_MODE_3D			= 2					/*!< Tell the device to start a full 3D magnetic calibration procedure.
-																 The 3D magnetic calibration offers the best accuracy but needs at least motion of Â± 30Â° on the roll and pitch angles. */
+																 The 3D magnetic calibration offers the best accuracy but needs at least motion of ± 30° on the roll and pitch angles. */
 } SbgEComMagCalibMode;
 
 
@@ -96,9 +80,9 @@ typedef enum _SbgEComMagCalibConfidence
 #define SBG_ECOM_MAG_CALIB_X_MOTION_ISSUE		(0x0004u)	/*!< For a 3D calibration: not enough motion on X axis. For a 2D calibration; too much motion on X axis. */
 #define SBG_ECOM_MAG_CALIB_Y_MOTION_ISSUE		(0x0008u)	/*!< For a 3D calibration: not enough motion on Y axis. For a 2D calibration; too much motion on Y axis. */
 #define SBG_ECOM_MAG_CALIB_Z_MOTION_ISSUE		(0x0010u)	/*!< For a 3D or 2D calibration: not enough motion on Z axis. */
-#define SBG_ECOM_MAG_CALIB_ALIGNMENT_ISSUE		(0x0020u)	/*!< For a 3D calibration: the alignment between the magnetometers and the inertial frame seems to be invalid. */
+#define SBG_ECOM_MAG_CALIB_ALIGNMENT_ISSUE		(0x0020u)	/*!< For a 3D calibration: the alignment between the magnetometers and the inertial frame seems to be invalid. */ 
 
-/*!
+/*! 
  * This enum defines the different magnetometer model IDs available in standard
  */
 typedef enum _SbgEComMagModelsStdIds
@@ -106,6 +90,7 @@ typedef enum _SbgEComMagModelsStdIds
 	SBG_ECOM_MAG_MODEL_NORMAL					= 201,		/*!< Should be used in most applications */
 	SBG_ECOM_MAG_MODEL_NOISY_MAG_TOLERANT		= 202,		/*!< Should be used in disturbed magnetic environment */
 } SbgEComMagModelsStdId;
+
 
 //----------------------------------------------------------------------//
 //- Magnetometer configuration										   -//
@@ -126,7 +111,7 @@ typedef struct _SbgEComMagCalibResults
 {
 	SbgEComMagCalibQuality		quality;					/*!< General magnetic calibration quality indicator. */
 	SbgEComMagCalibConfidence	confidence;					/*!< Confidence indicator that should be read to interpret the quality indicator. */
-	uint16_t					advancedStatus;				/*!< Set of bit masks used to report advanced information on the magnetic calibration status.*/
+	uint16_t						advancedStatus;				/*!< Set of bit masks used to report advanced information on the magnetic calibration status.*/
 
 	float						beforeMeanError;			/*!< Mean magnetic field norm error observed before calibration. */
 	float						beforeStdError;				/*!< Standard deviation of the magnetic field norm error observed before calibration. */
@@ -140,8 +125,8 @@ typedef struct _SbgEComMagCalibResults
 	float						stdAccuracy;				/*!< Standard deviation of the expected heading accuracy in radians. */
 	float						maxAccuracy;				/*!< Maximum expected heading accuracy in radians. */
 
-	uint16_t					numPoints;					/*!< Number of magnetic field points stored internally and used to compute the magnetic calibration. */
-	uint16_t					maxNumPoints;				/*!< Maximum number of magnetic field points that can be stored internally. */
+	uint16_t						numPoints;					/*!< Number of magnetic field points stored internally and used to compute the magnetic calibration. */
+	uint16_t						maxNumPoints;				/*!< Maximum number of magnetic field points that can be stored internally. */
 	float						offset[3];					/*!< Computed Hard Iron correction vector offset. */
 	float						matrix[9];					/*!< Computed Hard & Soft Iron correction matrix. */
 } SbgEComMagCalibResults;
@@ -151,77 +136,68 @@ typedef struct _SbgEComMagCalibResults
 //----------------------------------------------------------------------//
 
 /*!
- * Set magnetometer error model id.
- *
- * \param[in]	pHandle						A valid sbgECom handle
- * \param[in]	id							Magnetometer model id to set
- * \return									SBG_NO_ERROR if the command has been executed successfully
+ *	Set magnetometer error model ID.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[in]	id							Magnetometer model ID to set
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
-SbgErrorCode sbgEComCmdMagSetModelId(SbgEComHandle *pHandle, SbgEComMagModelsStdId modelId);
+SbgErrorCode sbgEComCmdMagSetModelId(SbgEComHandle *pHandle, uint32_t id);
 
 /*!
- * Retrieve magnetometer error model id
- *
- * \param[in]	pHandle						A valid sbgECom handle
- * \param[out]	pModelId					Retrieved magnetometer model id
- * \return									SBG_NO_ERROR if the command has been executed successfully
+ *	Retrieve magnetometer error model information.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[out]	pMotionProfileInfo			Pointer to a SbgEComModelInfo to contain the current magnetometer error model info.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
-SbgErrorCode sbgEComCmdMagGetModelId(SbgEComHandle *pHandle, SbgEComMagModelsStdId *pModelId);
+SbgErrorCode sbgEComCmdMagGetModelInfo(SbgEComHandle *pHandle, SbgEComModelInfo *pModelInfo);
 
 /*!
- * Retrieve the rejection configuration of the magnetometer module.
- *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[out]	pRejectConf					Pointer to a SbgEComMagRejectionConf struct to hold rejection configuration of the magnetometer module.
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ *	Retrieve the rejection configuration of the magnetometer module.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[out]	pRejectConf					Pointer to a SbgEComMagRejectionConf struct to hold rejection configuration of the magnetometer module.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
 SbgErrorCode sbgEComCmdMagGetRejection(SbgEComHandle *pHandle, SbgEComMagRejectionConf *pRejectConf);
 
 /*!
- * Set the rejection configuration of the magnetometer module.
- *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[in]	pRejectConf					Pointer to a SbgEComMagRejectionConf struct holding rejection configuration for the magnetometer module.
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ *	Set the rejection configuration of the magnetometer module.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[in]	pRejectConf					Pointer to a SbgEComMagRejectionConf struct holding rejection configuration for the magnetometer module.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
 SbgErrorCode sbgEComCmdMagSetRejection(SbgEComHandle *pHandle, const SbgEComMagRejectionConf *pRejectConf);
 
 /*!
- * Send a command that set the magnetometers calibration parameters.
- *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[in]	pOffset						Magnetometers calibration offset vector.
- * \param[in]	pMatrix						Magnetometers calibration 3x3 matrix.
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ *	Send a command that set the magnetometers calibration parameters.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[in]	offset						Magnetometers calibration offset vector.
+ *	\param[in]	matix						Magnetometers calibration 3x3 matrix.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
-SbgErrorCode sbgEComCmdMagSetCalibData(SbgEComHandle *pHandle, const float *pOffset, const float *pMatrix);
+SbgErrorCode sbgEComCmdMagSetCalibData(SbgEComHandle *pHandle, const float offset[3], const float matrix[9]);
 
 //----------------------------------------------------------------------//
 //- Magnetometer onboard calibration commands	                       -//
 //----------------------------------------------------------------------//
 
 /*!
- * Start the magnetic calibration process.
- *
- * As soon as this command is sent, the device will start logging magnetic field data internally.
- * This set of data will be used later by the magnetic calibration algorithms to map the surrounding magnetic field.
- *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[in]	mode						Define which magnetic calibration type to perform. It could be 3D or 2D.
- * \param[in]	bandwidth					Tell the device that we should have low, medium or high dynamics during the magnetic calibration process.
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ *	Start the magnetic calibration process.
+ *	As soon as this command is sent, the device will start logging magnetic field data internally.
+ *	This set of data will be used later by the magnetic calibration algorithms to map the surrounding magnetic field.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[in]	mode						Define which magnetic calibration type to perform. It could be 3D or 2D.
+ *	\param[in]	bandwidth					Tell the device that we should have low, medium or high dynamics during the magnetic calibration process.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
 SbgErrorCode sbgEComCmdMagStartCalib(SbgEComHandle *pHandle, SbgEComMagCalibMode mode, SbgEComMagCalibBandwidth bandwidth);
 
 /*!
- * This command computes a magnetic calibration solution based on the magnetic field logged since the last call to the command SBG_ECOM_CMD_START_MAG_CALIB (15).
- *
- * As soon as the computations are done, the device will answer with quality indicators, status flags and if possible a valid magnetic calibration matrix and offset.
- *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[out]	pCalibResults				Pointer on a SbgEComMagCalibResults structure that can hold onboard magnetic calibration results and status.
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ *	This command computes a magnetic calibration solution based on the magnetic field logged since the last call to the command SBG_ECOM_CMD_START_MAG_CALIB (15).
+ *	As soon as the computations are done, the device will answer with quality indicators, status flags and if possible a valid magnetic calibration matrix and offset.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[out]	pCalibResults				Pointer on a SbgEComMagCalibResults structure that can hold onboard magnetic calibration results and status.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
 SbgErrorCode sbgEComCmdMagComputeCalib(SbgEComHandle *pHandle, SbgEComMagCalibResults *pCalibResults);
 
-#endif // SBG_ECOM_CMD_MAG_H
+#endif

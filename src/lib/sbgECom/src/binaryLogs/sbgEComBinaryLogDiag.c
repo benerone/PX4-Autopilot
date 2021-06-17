@@ -1,6 +1,6 @@
 // sbgCommonLib headers
-#include <sbgCommon.h>
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/sbgCommon.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
 // Local headers
 #include "sbgEComBinaryLogDiag.h"
@@ -11,12 +11,13 @@
 
 SbgErrorCode sbgEComBinaryLogParseDiagData(SbgStreamBuffer *pInputStream, SbgLogDiagData *pOutputData)
 {
+	uint8_t cast;
 	assert(pInputStream);
 	assert(pOutputData);
 
 	pOutputData->timestamp		= sbgStreamBufferReadUint32LE(pInputStream);
-	pOutputData->type			= (SbgDebugLogType)sbgStreamBufferReadUint8(pInputStream);
-	pOutputData->errorCode		= (SbgErrorCode)sbgStreamBufferReadUint8(pInputStream);
+	pOutputData->type			= (SbgDebugLogType) (cast = sbgStreamBufferReadUint8(pInputStream));
+	pOutputData->errorCode		= (SbgErrorCode)    (cast = sbgStreamBufferReadUint8(pInputStream));
 
 	sbgStreamBufferReadBuffer(pInputStream, pOutputData->string, sbgStreamBufferGetSpace(pInputStream));
 	pOutputData->string[sizeof(pOutputData->string) - 1] = '\0';

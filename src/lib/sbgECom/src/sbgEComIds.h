@@ -1,32 +1,21 @@
 ﻿/*!
- * \file           sbgEComIds.h
- * \author         SBG Systems
- * \date           25 February 2013
+ *	\file		sbgEComIds.h
+ *  \author		SBG Systems (Raphael Siryani)
+ *	\date		25 February 2013
  *
- * \brief          Defines all sbgECom commands identifiers.
+ *	\brief		Defines all sbgECom commands identifiers.
  *
- * \section CodeCopyright Copyright Notice
- * The MIT license
- *
- * Copyright (C) 2007-2020, SBG Systems SAS. All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ *	\section CodeCopyright Copyright Notice 
+ *	Copyright (C) 2007-2013, SBG Systems SAS. All rights reserved.
+ *	
+ *	This source code is intended for use only by SBG Systems SAS and
+ *	those that have explicit written permission to use it from
+ *	SBG Systems SAS.
+ *	
+ *	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ *	KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ *	IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ *	PARTICULAR PURPOSE.
  */
 
 /*!
@@ -37,6 +26,15 @@
 
 #ifndef __SBG_ECOM_IDS_H__
 #define __SBG_ECOM_IDS_H__
+
+//----------------------------------------------------------------------//
+//- Macro definitions						                           -//
+//----------------------------------------------------------------------//
+
+/*!
+ * Helper macro to build an id with its class
+ */
+#define SBG_ECOM_BUILD_ID(classId, logId)			(((uint16_t)classId << 8) | (uint8_t)logId)
 
 //----------------------------------------------------------------------//
 //- Definition of all class id for sbgECom                             -//
@@ -59,9 +57,6 @@ typedef enum _SbgEComClass
 															Note: This class is only used for identification purpose and does not contain any sbgECom message. */
 
 	SBG_ECOM_CLASS_LOG_CMD_0			= 0x10,			/*!< Class that contains sbgECom protocol commands. */
-
-	SBG_ECOM_CLASS_LOG_ECOM_PRIVATE		= 0xFE,			/*!< Private output logs - internal use only */
-	SBG_ECOM_CLASS_CMD_PRIVATE			= 0xFF			/*!< Private commands - internal use only */
 } SbgEComClass;
 
 //----------------------------------------------------------------------//
@@ -110,12 +105,16 @@ typedef enum _SbgEComLog
 	SBG_ECOM_LOG_DVL_WATER_TRACK			= 30,		/*!< Doppler Velocity log for water layer data. */
 
 	SBG_ECOM_LOG_SHIP_MOTION_HP				= 32,		/*!< Return delayed ship motion such as surge, sway, heave. */
-
+	
 	SBG_ECOM_LOG_AIR_DATA					= 36,		/*!< Air Data aiding such as barometric altimeter and true air speed. */
 
 	SBG_ECOM_LOG_USBL						= 37,		/*!< Raw USBL position data for subsea navigation. */
-
-	SBG_ECOM_LOG_IMU_RAW_DATA				= 40,		/*!< DEPRECATED: Private only log. */
+	
+	SBG_ECOM_LOG_DEBUG_0					= 39,		/*!< Debug Log. */
+	SBG_ECOM_LOG_IMU_RAW_DATA				= 40,		/*!< Factory only log. */
+	SBG_ECOM_LOG_DEBUG_1					= 41,		/*!< Debug Log. */
+	SBG_ECOM_LOG_DEBUG_2					= 42,		/*!< Debug Log. */
+	SBG_ECOM_LOG_DEBUG_3					= 43,		/*!< Debug Log. */
 
 	SBG_ECOM_LOG_IMU_SHORT					= 44,		/*!< Short IMU message recommended for post processing usages. */
 
@@ -169,8 +168,6 @@ typedef enum _SbgEComIdNmea1Log
 	SBG_ECOM_LOG_NMEA_1_PHOCT				= 8,		/*!< Ixblue NMEA like log used to output attitude and ship motion. */
 	SBG_ECOM_LOG_NMEA_1_INDYN				= 9,		/*!< Ixblue NMEA like log used to output position, heading, attitude, attitude rate and speed. */
 
-	SBG_ECOM_LOG_NMEA_1_GGK					= 10,		/*!< Trimble NMEA like log with Time, Latitude, Longitude, Ellipsoidal height */
-
 	SBG_ECOM_LOG_NMEA_1_NUM_MESSAGES					/*!< Helper definition to know the number of NMEA messages */
 } SbgEComIdNmea1Log;
 
@@ -185,32 +182,13 @@ typedef enum _SbgEComIdThirdParty
 	SBG_ECOM_THIRD_PARTY_PD0				= 2,		/*!< Teledyne PD0 DVL proprietary frame. */
 	SBG_ECOM_THIRD_PARTY_SIMRAD_1000		= 3,		/*!< Konsberg SimRad 1000 proprietary frame that outputs Roll, Pitch and Heading.  */
 	SBG_ECOM_THIRD_PARTY_SIMRAD_3000		= 4,		/*!< Konsberg SimRad 3000 proprietary frame that outputs Roll, Pitch and Heading. */
-
+		
 	SBG_ECOM_THIRD_PARTY_SEAPATH_B26		= 5,		/*!< Konsberg Seapth Binary Log 26 used for MBES FM mode. */
 	SBG_ECOM_THIRD_PARTY_DOLOG_HRP			= 6,		/*!< DOLOG Heading, Roll, Pitch proprietary and binary message. */
 	SBG_ECOM_THIRD_PARTY_AHRS_500			= 7,		/*!< Crossbow AHRS-500 Data Packet output with attitude, rate, acceleration and status. */
-	SBG_ECOM_THIRD_PARTY_ADA_01				= 8,		/*!< ADA specific Data Packet with IMU/INS/Status data */
-
-	SBG_ECOM_THIRD_PARTY_AT_ITINS			= 9,		/*!< Cobham Aviator UAV 200 navigation (orientation & position) data */
 
 	SBG_ECOM_LOG_THIRD_PARTY_NUM_MESSAGES				/*!< Helper definition to know the number of third party messages */
 } SbgEComIdThirdParty;
-
-/*!
- * List of SBG_ECOM_CLASS_LOG_ECOM_PRIVATE logs
- */
-typedef enum _SbgEComLogPrivate
-{
-	SBG_ECOM_LOG_PRIVATE_DEBUG_0			= 1,		/*!< Debug Log. */
-	SBG_ECOM_LOG_PRIVATE_DEBUG_1			= 2,		/*!< Debug Log. */
-	SBG_ECOM_LOG_PRIVATE_DEBUG_2			= 3,		/*!< Debug Log. */
-	SBG_ECOM_LOG_PRIVATE_DEBUG_3			= 4,		/*!< Debug Log. */
-
-	SBG_ECOM_LOG_PRIVATE_IMU_RAW			= 10,		/*!< Private only log. */
-	SBG_ECOM_LOG_PRIVATE_IMU_CLUSTER		= 11,		/*!< Private only log. */
-
-	SBG_ECOM_LOG_PRIVATE_NUM							/*!< Helper definition to know the number of sbgECom private messages */
-} SbgEComLogPrivate;
 
 /*!
  * Enum that defines all the available commands for the sbgECom library.
@@ -258,7 +236,7 @@ typedef enum _SbgEComCmd
 	SBG_ECOM_CMD_UART_CONF 					= 23,		/*!< UART interfaces configuration */
 	SBG_ECOM_CMD_CAN_BUS_CONF 				= 24,		/*!< CAN bus interface configuration */
 	SBG_ECOM_CMD_CAN_OUTPUT_CONF			= 25,		/*!< CAN identifiers configuration */
-
+		
 	/* Events configuration */
 	SBG_ECOM_CMD_SYNC_IN_CONF 				= 26,		/*!< Synchronization inputs configuration */
 	SBG_ECOM_CMD_SYNC_OUT_CONF 				= 27,		/*!< Synchronization outputs configuration */
@@ -266,6 +244,7 @@ typedef enum _SbgEComCmd
 	/* Output configuration */
 	SBG_ECOM_CMD_NMEA_TALKER_ID 			= 29,		/*!< NMEA talker ID configuration */
 	SBG_ECOM_CMD_OUTPUT_CONF 				= 30,		/*!< Output configuration */
+	SBG_ECOM_CMD_LEGACY_CONT_OUTPUT_CONF 	= 31,		/*!< Legacy serial output mode configuration */
 
 	/* Advanced configuration */
 	SBG_ECOM_CMD_ADVANCED_CONF 				= 32,		/*!< Advanced settings configuration */
@@ -275,7 +254,7 @@ typedef enum _SbgEComCmd
 
 	/* Licenses related commands */
 	SBG_ECOM_CMD_LICENSE_APPLY				= 34,		/*!< Upload and apply a new license */
-
+		
 	/* Message class output switch */
 	SBG_ECOM_CMD_OUTPUT_CLASS_ENABLE		= 35,		/*!< Enable/disable the output of an entire class */
 
@@ -324,7 +303,7 @@ SBG_INLINE bool sbgEComMsgClassIsALog(SbgEComClass msgClass)
 	//
 	// Test if this class id is part of the enum
 	//
-	if ((msgClass == SBG_ECOM_CLASS_LOG_ECOM_0) || (msgClass == SBG_ECOM_CLASS_LOG_ECOM_1) || (msgClass == SBG_ECOM_CLASS_LOG_ECOM_PRIVATE) )
+	if ((msgClass == SBG_ECOM_CLASS_LOG_ECOM_0) || (msgClass == SBG_ECOM_CLASS_LOG_ECOM_1))
 	{
 		return TRUE;
 	}

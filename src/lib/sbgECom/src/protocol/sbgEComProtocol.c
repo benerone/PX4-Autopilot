@@ -1,16 +1,16 @@
-﻿// sbgCommonLib headers
-#include <sbgCommon.h>
+﻿#include "sbgEComProtocol.h"
 #include <crc/sbgCrc.h>
-#include <interfaces/sbgInterface.h>
-#include <streamBuffer/sbgStreamBuffer.h>
-
-// Local headers
-#include "sbgEComProtocol.h"
 
 //----------------------------------------------------------------------//
-//- Public methods                                                     -//
+//- Communication protocol operations                                  -//
 //----------------------------------------------------------------------//
 
+/*!
+ * Initialize the protocol system used to communicate with the product and return the created handle.
+ * \param[in]	pHandle					Pointer on an allocated protocol structure to initialize.
+ * \param[in]	pInterface				Interface to use for read/write operations.
+ * \return								SBG_NO_ERROR if we have initialised the protocol system.
+ */
 SbgErrorCode sbgEComProtocolInit(SbgEComProtocol *pHandle, SbgInterface *pInterface)
 {
 	SbgErrorCode	errorCode = SBG_NO_ERROR;
@@ -21,12 +21,17 @@ SbgErrorCode sbgEComProtocolInit(SbgEComProtocol *pHandle, SbgInterface *pInterf
 	//
 	// Initialize the created protocol handle
 	//
-	pHandle->pLinkedInterface	= pInterface;
-	pHandle->rxBufferSize		= 0;
+	pHandle->pLinkedInterface = pInterface;
+	pHandle->rxBufferSize = 0;
 	
 	return errorCode;
 }
 
+/*!
+ * Close the protocol system.
+ * \param[in]	pHandle					A valid protocol handle to close.
+ * \return								SBG_NO_ERROR if we have closed and released the protocol system.
+ */
 SbgErrorCode sbgEComProtocolClose(SbgEComProtocol *pHandle)
 {
 	assert(pHandle);
@@ -34,8 +39,8 @@ SbgErrorCode sbgEComProtocolClose(SbgEComProtocol *pHandle)
 	//
 	// Reset all members to zero
 	//
-	pHandle->pLinkedInterface	= NULL;
-	pHandle->rxBufferSize		= 0;
+	pHandle->pLinkedInterface = NULL;
+	pHandle->rxBufferSize = 0;
 	
 	//
 	// Don't have to do anything
@@ -43,6 +48,15 @@ SbgErrorCode sbgEComProtocolClose(SbgEComProtocol *pHandle)
 	return SBG_NO_ERROR;
 }
 
+/*!
+ * Send a frame to the device (size should be less than 4086 bytes).
+ * \param[in]	pHandle					A valid protocol handle.
+ * \param[in]	msgClass				Message class (0-255)
+ * \param[in]	msg						Message id (0-255)
+ * \param[in]	pData					Pointer on the data payload to send or NULL if no payload.
+ * \param[in]	size					Size in bytes of the data payload (less than 4086).
+ * \return								SBG_NO_ERROR if the frame has been sent.
+ */
 SbgErrorCode sbgEComProtocolSend(SbgEComProtocol *pHandle, uint8_t msgClass, uint8_t msg, const void *pData, size_t size)
 {
 	SbgErrorCode		errorCode = SBG_NO_ERROR;
@@ -51,59 +65,81 @@ SbgErrorCode sbgEComProtocolSend(SbgEComProtocol *pHandle, uint8_t msgClass, uin
 	uint16_t			frameCrc;
 
 	assert(pHandle);
-	assert(size <= SBG_ECOM_MAX_PAYLOAD_SIZE);
-	assert(((size > 0) && (pData)) || (size == 0));
-	
-	//
-	// Create a stream buffer to write the frame
-	//
-	sbgStreamBufferInitForWrite(&outputStream, outputBuffer, sizeof(outputBuffer));
 
-	//
-	// Write the header
-	//
-	sbgStreamBufferWriteUint8LE(&outputStream, SBG_ECOM_SYNC_1);
-	sbgStreamBufferWriteUint8LE(&outputStream, SBG_ECOM_SYNC_2);
+	if ( (size <= SBG_ECOM_MAX_PAYLOAD_SIZE) && ( ((size > 0) && (pData)) || (size == 0) ) )
+	{
+		//
+		// Create a stream buffer to write the frame
+		//
+		sbgStreamBufferInitForWrite(&outputStream, outputBuffer, sizeof(outputBuffer));
 
-	//
-	// Write the message ID and class
-	//
-	sbgStreamBufferWriteUint8LE(&outputStream, msg);
-	sbgStreamBufferWriteUint8LE(&outputStream, msgClass);
+		//
+		// Write the header
+		//
+		sbgStreamBufferWriteUint8LE(&outputStream, SBG_ECOM_SYNC_1);
+		sbgStreamBufferWriteUint8LE(&outputStream, SBG_ECOM_SYNC_2);
 
-	//
-	// Write the length field
-	//
-	sbgStreamBufferWriteUint16LE(&outputStream, (uint16_t)size);
+		//
+		// Write the message ID and class
+		//
+		sbgStreamBufferWriteUint8LE(&outputStream, msg);
+		sbgStreamBufferWriteUint8LE(&outputStream, msgClass);
 
-	//
-	// Write the payload part
-	//
-	sbgStreamBufferWriteBuffer(&outputStream, pData, size);
+		//
+		// Write the length field
+		//
+		sbgStreamBufferWriteUint16LE(&outputStream, (uint16_t)size);
 
-	//
-	// Compute the CRC, we skip the two sync chars
-	//
-	frameCrc = sbgCrc16Compute(((uint8_t*)sbgStreamBufferGetLinkedBuffer(&outputStream)) + 2, sbgStreamBufferGetLength(&outputStream) - 2);
+		//
+		// Write the payload part
+		//
+		sbgStreamBufferWriteBuffer(&outputStream, pData, size);
 
-	//
-	// Write the CRC
-	//
-	sbgStreamBufferWriteUint16LE(&outputStream, frameCrc);
+		//
+		// Compute the CRC, we skip the two sync chars
+		//
+		frameCrc = sbgCrc16Compute(((uint8_t*)sbgStreamBufferGetLinkedBuffer(&outputStream)) + 2, sbgStreamBufferGetLength(&outputStream) - 2);
 
-	//
-	// Write ETX char
-	//
-	sbgStreamBufferWriteUint8LE(&outputStream, SBG_ECOM_ETX);
+		//
+		// Write the CRC
+		//
+		sbgStreamBufferWriteUint16LE(&outputStream, frameCrc);
 
-	//
-	// The frame has been generated so send it
-	//
-	errorCode = sbgInterfaceWrite(pHandle->pLinkedInterface, sbgStreamBufferGetLinkedBuffer(&outputStream), sbgStreamBufferGetLength(&outputStream));
-	
+		//
+		// Write ETX char
+		//
+		sbgStreamBufferWriteUint8LE(&outputStream, SBG_ECOM_ETX);
+
+		//
+		// The frame has been generated so send it
+		//
+		errorCode = sbgInterfaceWrite(pHandle->pLinkedInterface, sbgStreamBufferGetLinkedBuffer(&outputStream), sbgStreamBufferGetLength(&outputStream));
+	}
+	else
+	{
+		//
+		// Invalid input parameters
+		//
+		errorCode = SBG_INVALID_PARAMETER;
+	}
+
 	return errorCode;
 }
 
+/*!
+ *	Try to receive a frame from the device and returns the cmd, data and size of data field.
+ *	\param[in]	pHandle					A valid protocol handle.
+ *	\param[out]	pMsgClass				Pointer to hold the returned message class
+ *	\param[out]	pMsg					Pointer to hold the returned message id
+ *	\param[out]	pData					Allocated buffer used to hold received data field.
+ *	\param[out]	pSize					Pointer used to hold the received data field size.
+ *	\param[in]	maxSize					Max number of bytes that can be stored in the pData buffer.
+ *	\return								SBG_NO_ERROR if we have received a valid frame.<br>
+ *										SBG_NOT_READY if we haven't received a valid frame or if the serial buffer is empty.<br>
+ *										SBG_INVALID_CRC if the received frame has an invalid CRC.<br>
+ *										SBG_NULL_POINTER if an input parameter is NULL.<br>
+ *										SBG_BUFFER_OVERFLOW if the received frame payload couldn't fit into the pData buffer.
+ */
 SbgErrorCode sbgEComProtocolReceive(SbgEComProtocol *pHandle, uint8_t *pMsgClass, uint8_t *pMsg, void *pData, size_t *pSize, size_t maxSize)
 {
 	SbgErrorCode		errorCode = SBG_NOT_READY;
@@ -177,7 +213,7 @@ SbgErrorCode sbgEComProtocolReceive(SbgEComProtocol *pHandle, uint8_t *pMsgClass
 					if (i > 0)
 					{
 						//
-						// Remove all dumy received bytes before the begining of the frame
+						// Remove all dummy received bytes before the begining of the frame
 						//
 						memmove(pHandle->rxBuffer, pHandle->rxBuffer+i, pHandle->rxBufferSize-i);
 						pHandle->rxBufferSize = pHandle->rxBufferSize-i;
@@ -364,20 +400,6 @@ SbgErrorCode sbgEComProtocolReceive(SbgEComProtocol *pHandle, uint8_t *pMsgClass
 					//
 					return errorCode;
 				}
-				else
-				{
-					//
-					// The ETX char hasn't been found where it should be
-					//
-					errorCode = SBG_INVALID_FRAME;
-				}
-			}
-			else
-			{
-				//
-				// The payload size isn't valid
-				//
-				errorCode = SBG_INVALID_FRAME;
 			}
 				
 			//
@@ -421,6 +443,21 @@ SbgErrorCode sbgEComProtocolReceive(SbgEComProtocol *pHandle, uint8_t *pMsgClass
 	return SBG_NOT_READY;
 }
 
+//----------------------------------------------------------------------//
+//- Frame generation to stream buffer                                  -//
+//----------------------------------------------------------------------//
+
+/*!
+ * Initialize an output stream for an sbgECom frame generation.
+ * This method is helpful to avoid memory copy compared to sbgEComProtocolSend one.
+ *
+ * \param[in]	pOutputStream			Pointer to an allocated and initialized output stream.
+ * \param[in]	msgClass				Message class (0-255)
+ * \param[in]	msg						Message id (0-255)
+ * \param[out]	pStreamCursor			The initial output stream cursor that thus points to the begining of the generated message.
+ *										This value should be passed to sbgEComFinalizeFrameGeneration for correct operations.
+ * \return								SBG_NO_ERROR in case of good operation.
+ */
 SbgErrorCode sbgEComStartFrameGeneration(SbgStreamBuffer *pOutputStream, uint8_t msgClass, uint8_t msg, size_t *pStreamCursor)
 {
 	assert(pOutputStream);
@@ -449,6 +486,16 @@ SbgErrorCode sbgEComStartFrameGeneration(SbgStreamBuffer *pOutputStream, uint8_t
 	return sbgStreamBufferSeek(pOutputStream, sizeof(uint16_t), SB_SEEK_CUR_INC);
 }
 
+/*!
+ * Finalize an output stream that has been initialized with sbgEComStartFrameGeneration.
+ * At return, the output stream buffer should point at the end of the generated message.
+ * You can thus easily create consecutive SBG_ECOM_LOGS with these methods.
+ *
+ * \param[in]	pOutputStream			Pointer to an allocated and initialized output stream.
+ * \param[in]	streamCursor			Position in the stream buffer of the generated message first byte.
+ *										This value is returned by sbgEComStartFrameGeneration and is mandatory for correct operations.
+ * \return								SBG_NO_ERROR in case of good operation.
+ */
 SbgErrorCode sbgEComFinalizeFrameGeneration(SbgStreamBuffer *pOutputStream, size_t streamCursor)
 {
 	SbgErrorCode	errorCode;

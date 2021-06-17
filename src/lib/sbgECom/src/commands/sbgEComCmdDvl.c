@@ -1,5 +1,5 @@
 ﻿/* sbgCommonLib headers */
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
 /* Project headers */
 #include "transfer/sbgEComTransfer.h"
@@ -269,6 +269,7 @@ SbgErrorCode sbgEComCmdDvlGetRejection(SbgEComHandle *pHandle, SbgEComDvlRejecti
 	uint32_t			trial;
 	size_t				receivedSize;
 	uint8_t				receivedBuffer[2*sizeof(uint8_t)];
+	uint8_t 			cast;
 	SbgStreamBuffer		inputStream;
 
 	assert(pHandle);
@@ -307,8 +308,8 @@ SbgErrorCode sbgEComCmdDvlGetRejection(SbgEComHandle *pHandle, SbgEComDvlRejecti
 				//
 				// Parse the payload
 				//
-				pRejectConf->bottomLayer	= (SbgEComRejectionMode)sbgStreamBufferReadUint8LE(&inputStream);
-				pRejectConf->waterLayer		= (SbgEComRejectionMode)sbgStreamBufferReadUint8LE(&inputStream);
+				pRejectConf->bottomLayer	= (SbgEComRejectionMode) (cast = sbgStreamBufferReadUint8LE(&inputStream));
+				pRejectConf->waterLayer		= (SbgEComRejectionMode) (cast = sbgStreamBufferReadUint8LE(&inputStream));
 				
 				//
 				// The command has been executed successfully so return if an error has occurred during payload parsing

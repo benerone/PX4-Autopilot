@@ -45,11 +45,11 @@
  *	You should setup your C preprocessor to define SBG_NDEBUG in release mode.
  */
 #ifdef NDEBUG
-	#define SBG_CONFIG_ENABLE_ASSERT				(0)						/*!< Set to 1 to enable all assertion checks. */
+	#define SBG_CONFIG_ENABLE_ASSERT				(1)						/*!< Set to 1 to enable all assertion checks. */
 	#define SBG_CONFIG_ENABLE_LOG_ERROR				(1)						/*!< Set to 1 to enable log of all errors thrown using SBG_LOG_ERROR. */
 	#define SBG_CONFIG_ENABLE_LOG_WARNING			(1)						/*!< Set to 1 to enable log of all errors thrown using SBG_LOG_WARNING. */
-	#define SBG_CONFIG_ENABLE_LOG_INFO				(0)						/*!< Set to 1 to enable log of all errors thrown using SBG_LOG_INFO. */
-	#define SBG_CONFIG_ENABLE_LOG_DEBUG				(0)						/*!< Set to 1 to enable log of all errors thrown using SBG_LOG_DEBUG */
+	#define SBG_CONFIG_ENABLE_LOG_INFO				(1)						/*!< Set to 1 to enable log of all errors thrown using SBG_LOG_INFO. */
+	#define SBG_CONFIG_ENABLE_LOG_DEBUG				(1)						/*!< Set to 1 to enable log of all errors thrown using SBG_LOG_DEBUG */
 #else
 	#define SBG_CONFIG_ENABLE_ASSERT				(1)					/*!< Set to 1 to enable all assertion checks. */
 	#define SBG_CONFIG_ENABLE_LOG_ERROR				(1)					/*!< Set to 1 to enable log of all errors thrown using SBG_LOG_ERROR. */

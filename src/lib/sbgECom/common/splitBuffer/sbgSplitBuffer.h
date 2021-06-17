@@ -21,7 +21,7 @@
 #ifndef SBG_SPLIT_BUFFER_H
 #define SBG_SPLIT_BUFFER_H
 
-#include <sbgCommon.h>
+#include <sbgECom/common/sbgCommon.h>
 
 //----------------------------------------------------------------------//
 //- Header (open extern C block)                                       -//

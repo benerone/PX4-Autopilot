@@ -1,42 +1,45 @@
 /*!
- * \file           sbgEComCmdGnss.h
- * \author         SBG Systems
- * \date           11 June 2014
+ *	\file		sbgEComCmdGnss.h
+ *  \author		SBG Systems (Maxime Renaudet)
+ *	\date		11 June 2014
  *
- * \brief          This file implements SbgECom commands related to GNSS module.
+ *	\brief		This file implements SbgECom commands related to GNSS module.
  *
- * \section CodeCopyright Copyright Notice
- * The MIT license
- *
- * Copyright (C) 2007-2020, SBG Systems SAS. All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ *	\section CodeCopyright Copyright Notice 
+ *	Copyright (C) 2007-2013, SBG Systems SAS. All rights reserved.
+ *	
+ *	This source code is intended for use only by SBG Systems SAS and
+ *	those that have explicit written permission to use it from
+ *	SBG Systems SAS.
+ *	
+ *	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ *	KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ *	IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ *	PARTICULAR PURPOSE.
  */
-
 #ifndef SBG_ECOM_CMD_GNSS_H
 #define SBG_ECOM_CMD_GNSS_H
 
-// sbgCommonLib headers
-#include <sbgCommon.h>
-
-// Local headers
+/* sbgCommonLib headers */
 #include "sbgEComCmdCommon.h"
+
+//----------------------------------------------------------------------//
+//- Public definitions (DEPRECATED)                                    -//
+//----------------------------------------------------------------------//
+
+/*!
+ * DEPRECATED: Command SBG_ECOM_CMD_GNSS_1_LEVER_ARM_ALIGNMENT has been replaced by SBG_ECOM_CMD_GNSS_1_INSTALLATION
+ * Holds all necessary information for GNSS module alignment.
+ */
+typedef struct _SbgEComGnssAlignmentInfo
+{
+	float	leverArmX;						/*!< GNSS antenna lever arm in IMU X axis in meters */
+	float	leverArmY;						/*!< GNSS antenna lever arm in IMU Y axis in meters */
+	float	leverArmZ;						/*!< GNSS antenna lever arm in IMU Z axis in meters */
+	float	pitchOffset;					/*!< Pitch offset for dual antenna GNSS in rad */
+	float	yawOffset;						/*!< Yaw offset for dual antenna GNSS in rad */
+	float	antennaDistance;				/*!< Distance between two GNSS antennas in meters */
+} SbgEComGnssAlignmentInfo;
 
 //----------------------------------------------------------------------//
 //- Public definitions                                                 -//
@@ -47,16 +50,16 @@
  */
 typedef enum _SbgEComGnssModelsStdIds
 {
-	SBG_ECOM_GNSS_MODEL_INTERNAL					= 101,		/*!< Default internal GNSS for ELLIPSE-N and ELLIPSE-D */
-	SBG_ECOM_GNSS_MODEL_NMEA						= 102,		/*!< ELLIPSE-E to accept an external GNSS using NMEA protocol */
-	SBG_ECOM_GNSS_MODEL_UBLOX_GPS_BEIDOU			= 103,		/*!< Only for ELLIPSE-N hardware 1 & 2 to select GPS+BEIDOU instead of the default GPS+GLONASS */
-	SBG_ECOM_GNSS_MODEL_UBLOX_EXTERNAL				= 104,		/*!< ELLIPSE-E to accept an external Ublox GNSS (receive only - passive) */
-	SBG_ECOM_GNSS_MODEL_RESERVED_01					= 105,		/*!< Reserved, do not use */
-	SBG_ECOM_GNSS_MODEL_NOVATEL_EXTERNAL			= 106,		/*!< ELLIPSE-E to accept an external Novatel GNSS (receive only - passive) */
-	SBG_ECOM_GNSS_MODEL_RESERVED_02					= 107,		/*!< Reserved, do not use */
-	SBG_ECOM_GNSS_MODEL_RESERVED_03					= 108,		/*!< Reserved, do not use */
-	SBG_ECOM_GNSS_MODEL_SEPTENTRIO_EXTERNAL			= 109,		/*!< ELLIPSE-E to accept an external Septentrio GNSS(receive only - passive) */
-	SBG_ECOM_GNSS_MODEL_RESERVED_04					= 110		/*!< Reserved, do not use */
+	SBG_ECOM_GNSS_MODEL_UBLOX_GPS_GLONASS			= 101,		/*!< Used on Ellipse-N to setup the internal GNSS in GPS+GLONASS */
+	SBG_ECOM_GNSS_MODEL_NMEA						= 102,		/*!< Used on ELLIPSE-E to accept an external GNSS using NMEA protocol */
+	SBG_ECOM_GNSS_MODEL_UBLOX_GPS_BEIDOU			= 103,		/*!< Used on ELLIPSE-N to setup the internal GNSS in GPS+BEIDOU */
+	SBG_ECOM_GNSS_MODEL_UBLOX_EXTERNAL				= 104,		/*!< Used on ELLIPSE-E to accept an external Ublox GNSS (read only) */
+	SBG_ECOM_GNSS_MODEL_UBLOX_HIGH_DYNAMICS			= 105,		/*!< Used on ELLIPSE-N to setup the internal GNSS to high dynamic motion constraints. */
+	SBG_ECOM_GNSS_MODEL_NOVATEL_EXTERNAL			= 106,		/*!< Used on ELLIPSE-E to accept an external Novatel GNSS (read only) */
+	SBG_ECOM_GNSS_MODEL_ELLIPSE_D_INTERNAL			= 107,		/*!< Used on ELLIPSE-D to setup the internal GNSS receiver. */
+	SBG_ECOM_GNSS_MODEL_UBLOX_HIGH_SPEED			= 108,		/*!< Used on ELLIPSE-N to setup the internal GNSS for high speed applications (airborne > 200 km/h) */
+	SBG_ECOM_GNSS_MODEL_SEPTENTRIO_EXTERNAL			= 109,		/*!< Used on ELLIPSE-E to accept an external Septentrio GNSS (read only) */
+	SBG_ECOM_GNSS_MODEL_UBLOX_LOW_SPEED				= 110		/*!< Used on ELLIPSE-N to setup the internal GNSS receiver for pedestrian applications. */
 } SbgEComGnssModelsStdIds;
 
 /*!
@@ -78,7 +81,7 @@ typedef struct _SbgEComGnssInstallation
 	float						leverArmPrimary[3];				/*!< GNSS primary antenna lever arm in IMU X, Y, Z axis in meters */
 	bool						leverArmPrimaryPrecise;			/*!< If set to true, the primary lever arm has been accurately entered and doesn't need online re-estimation. */
 
-	float						leverArmSecondary[3];			/*!< GNSS secondary antenna lever arm in IMU X, Y, Z axis in meters */
+	float						leverArmSecondary[3];			/*!< GNSS secondary antenna lever arm in IMU X, Y, Z axis in meters */	
 	SbgEComGnssInstallationMode	leverArmSecondaryMode;			/*!< Define the secondary antenna (dual antenna) operating mode. */
 } SbgEComGnssInstallation;
 
@@ -100,19 +103,37 @@ typedef struct _SbgEComGnssRejectionConf
  * Set GNSS error model id.
  *
  * \param[in]	pHandle						A valid sbgECom handle.
- * \param[in]	modelId						Model ID to set
+ * \param[in]	id							Model ID to set
  * \return									SBG_NO_ERROR if the command has been executed successfully.
  */
-SbgErrorCode sbgEComCmdGnss1SetModelId(SbgEComHandle *pHandle, SbgEComGnssModelsStdIds modelId);
+SbgErrorCode sbgEComCmdGnss1SetModelId(SbgEComHandle *pHandle, uint32_t id);
 
 /*!
- * Retrieve GNSS error model id.
+ * Retrieve GNSS error model information.
  *
  * \param[in]	pHandle						A valid sbgECom handle.
- * \param[out]	pModelId					Retrieved model id.
+ * \param[out]	pMotionProfileInfo			Pointer to a SbgEComModelInfo to contain the current GNSS error model info.
  * \return									SBG_NO_ERROR if the command has been executed successfully.
  */
-SbgErrorCode sbgEComCmdGnss1GetModelId(SbgEComHandle *pHandle, SbgEComGnssModelsStdIds *pModelId);
+SbgErrorCode sbgEComCmdGnss1GetModelInfo(SbgEComHandle *pHandle, SbgEComModelInfo *pModelInfo);
+
+/*!
+ * Retrieve the lever arm and alignment configuration of the gnss 1 module.
+ *
+ * \param[in]	pHandle						A valid sbgECom handle.
+ * \param[out]	pAlignConf					Pointer to a SbgEComGnssAlignmentInfo struct to hold alignment configuration of the gnss module.
+ * \return									SBG_NO_ERROR if the command has been executed successfully.
+ */
+SBG_DEPRECATED(SbgErrorCode sbgEComCmdGnss1GetLeverArmAlignment(SbgEComHandle *pHandle, SbgEComGnssAlignmentInfo *pAlignConf));
+
+/*!
+ * Set the lever arm and alignment configuration of the gnss 1 module.
+ *
+ * \param[in]	pHandle						A valid sbgECom handle.
+ * \param[in]	pAlignConf					Pointer to a SbgEComGnssAlignmentInfo struct holding alignment configuration for the gnss module.
+ * \return									SBG_NO_ERROR if the command has been executed successfully.
+ */
+SBG_DEPRECATED(SbgErrorCode sbgEComCmdGnss1SetLeverArmAlignment(SbgEComHandle *pHandle, const SbgEComGnssAlignmentInfo *pAlignConf));
 
 /*!
  * Retrieve the mechanical installation parameters for the GNSS 1 module.

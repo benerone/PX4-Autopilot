@@ -1,5 +1,5 @@
 // sbgCommonLib headers
-#include <sbgCommon.h>
+#include <sbgECom/common/sbgCommon.h>
 #include <version/sbgVersion.h>
 
 // Project headers

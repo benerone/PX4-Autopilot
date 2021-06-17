@@ -1,5 +1,5 @@
 ﻿#include "sbgEComCmdCommon.h"
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
 //----------------------------------------------------------------------//
 //- Common command reception operations                                -//
@@ -181,7 +181,8 @@ SbgErrorCode sbgEComReceiveCmd(SbgEComHandle *pHandle, uint8_t msgClass, uint8_t
 	uint8_t				ackMsgClass;
 	uint32_t			lastValidTime;
 	SbgStreamBuffer		inputStream;
-	
+	uint16_t cast;
+
 	assert(pHandle);
 
 	//
@@ -225,7 +226,7 @@ SbgErrorCode sbgEComReceiveCmd(SbgEComHandle *pHandle, uint8_t msgClass, uint8_t
 				sbgStreamBufferInitForRead(&inputStream, pData, *pSize);
 				ackMsg			= sbgStreamBufferReadUint8LE(&inputStream);
 				ackMsgClass		= sbgStreamBufferReadUint8LE(&inputStream);
-				ackErrorCode	= (SbgErrorCode)sbgStreamBufferReadUint16LE(&inputStream);
+				ackErrorCode	= (SbgErrorCode) (cast = sbgStreamBufferReadUint16LE(&inputStream));
 
 				//
 				// Check if the ACK corresponds to the frame we expected
@@ -283,6 +284,7 @@ SbgErrorCode sbgEComWaitForAck(SbgEComHandle *pHandle, uint8_t msgClass, uint8_t
 	size_t				receivedSize;
 	uint8_t				ackClass;
 	uint8_t				ackMsg;
+	uint16_t			cast;
 
 	assert(pHandle);
 
@@ -318,7 +320,7 @@ SbgErrorCode sbgEComWaitForAck(SbgEComHandle *pHandle, uint8_t msgClass, uint8_t
 				//
 				// Parse the error code and return it
 				//
-				errorCode = (SbgErrorCode)sbgStreamBufferReadUint16LE(&inputStream);
+				errorCode = (SbgErrorCode) (cast = sbgStreamBufferReadUint16LE(&inputStream));
 			}
 			else
 			{
@@ -448,7 +450,7 @@ SbgErrorCode sbgEComCmdGenericGetModelId(SbgEComHandle *pHandle, uint8_t msgClas
 	SbgErrorCode		errorCode = SBG_NO_ERROR;
 	uint32_t			trial;
 	size_t				receivedSize;
-	uint8_t				receivedBuffer[2*sizeof(uint32_t)];
+	uint8_t				receivedBuffer[sizeof(uint32_t)];
 	SbgStreamBuffer		inputStream;
 
 	assert(pHandle);
@@ -488,6 +490,73 @@ SbgErrorCode sbgEComCmdGenericGetModelId(SbgEComHandle *pHandle, uint8_t msgClas
 				// Read parameters
 				//
 				*pModelId = sbgStreamBufferReadUint32LE(&inputStream);
+
+				//
+				// The command has been executed successfully so return
+				// We return the stream buffer error code to catch any overflow error on the payload
+				//
+				errorCode = sbgStreamBufferGetLastError(&inputStream);
+				break;
+			}
+		}
+		else
+		{
+			//
+			// We have a write error so exit the try loop
+			//
+			break;
+		}
+	}
+
+	return errorCode;
+}
+
+SbgErrorCode sbgEComCmdGenericGetModelInfo(SbgEComHandle *pHandle, uint8_t msgClass, uint8_t msg, SbgEComModelInfo *pModelInfo)
+{
+	SbgErrorCode		errorCode = SBG_NO_ERROR;
+	uint32_t			trial;
+	size_t				receivedSize;
+	uint8_t				receivedBuffer[2*sizeof(uint32_t)];
+	SbgStreamBuffer		inputStream;
+
+	assert(pHandle);
+	assert(pModelInfo);
+
+	//
+	// Send the command three times
+	//
+	for (trial = 0; trial < pHandle->numTrials; trial++)
+	{
+		//
+		// Send the command only since this is a no payload command
+		//
+		errorCode = sbgEComProtocolSend(&pHandle->protocolHandle, msgClass, msg, NULL, 0);
+
+		//
+		// Make sure that the command has been sent
+		//
+		if (errorCode == SBG_NO_ERROR)
+		{
+			//
+			// Try to read the device answer for 500 ms
+			//
+			errorCode = sbgEComReceiveCmd(pHandle, msgClass, msg, receivedBuffer, &receivedSize, sizeof(receivedBuffer), pHandle->cmdDefaultTimeOut);
+
+			//
+			// Test if we have received a the specified command
+			//
+			if (errorCode == SBG_NO_ERROR)
+			{
+				//
+				// Initialize stream buffer to read parameters
+				//
+				sbgStreamBufferInitForRead(&inputStream, receivedBuffer, receivedSize);
+
+				//
+				// Read parameters
+				//
+				pModelInfo->id			= sbgStreamBufferReadUint32LE(&inputStream);
+				pModelInfo->revision	= sbgStreamBufferReadUint32LE(&inputStream);
 
 				//
 				// The command has been executed successfully so return

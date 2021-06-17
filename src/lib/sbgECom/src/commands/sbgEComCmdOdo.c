@@ -1,35 +1,23 @@
 /*!
- * \file           sbgEComCmdOdo.c
- * \author         SBG Systems
+ *	\file		sbgEComCmdOdo.c
+ *  \author		SBG Systems
  *
- * \brief          This file implements SbgECom commands related to Odometer module.
+ *	\brief		This file implements SbgECom commands related to Odometer module.
  *
- * \section CodeCopyright Copyright Notice
- * The MIT license
- *
- * Copyright (C) 2007-2020, SBG Systems SAS. All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ *	\section CodeCopyright Copyright Notice 
+ *	Copyright (C) 2007-2019, SBG Systems SAS. All rights reserved.
+ *	
+ *	This source code is intended for use only by SBG Systems SAS and
+ *	those that have explicit written permission to use it from
+ *	SBG Systems SAS.
+ *	
+ *	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ *	KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ *	IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ *	PARTICULAR PURPOSE.
  */
-
 #include "sbgEComCmdOdo.h"
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
 //----------------------------------------------------------------------//
 //- Odometer commands                                                  -//
@@ -97,7 +85,7 @@ SbgErrorCode sbgEComCmdOdoGetConf(SbgEComHandle *pHandle, SbgEComOdoConf *pOdome
 			break;
 		}
 	}
-
+	
 	return errorCode;
 }
 
@@ -162,11 +150,11 @@ SbgErrorCode sbgEComCmdOdoSetConf(SbgEComHandle *pHandle, const SbgEComOdoConf *
 			break;
 		}
 	}
-
+	
 	return errorCode;
 }
 
-SbgErrorCode sbgEComCmdOdoGetLeverArm(SbgEComHandle *pHandle, float *pLeverArm)
+SbgErrorCode sbgEComCmdOdoGetLeverArm(SbgEComHandle *pHandle, float leverArm[3])
 {
 	SbgErrorCode		errorCode = SBG_NO_ERROR;
 	uint32_t			trial;
@@ -175,7 +163,7 @@ SbgErrorCode sbgEComCmdOdoGetLeverArm(SbgEComHandle *pHandle, float *pLeverArm)
 	SbgStreamBuffer		inputStream;
 
 	assert(pHandle);
-	assert(pLeverArm);
+	//assert(leverArm);
 
 	//
 	// Send the command three times
@@ -210,9 +198,9 @@ SbgErrorCode sbgEComCmdOdoGetLeverArm(SbgEComHandle *pHandle, float *pLeverArm)
 				//
 				// Read parameters
 				//
-				pLeverArm[0] = sbgStreamBufferReadFloatLE(&inputStream);
-				pLeverArm[1] = sbgStreamBufferReadFloatLE(&inputStream);
-				pLeverArm[2] = sbgStreamBufferReadFloatLE(&inputStream);
+				leverArm[0] = sbgStreamBufferReadFloatLE(&inputStream);
+				leverArm[1] = sbgStreamBufferReadFloatLE(&inputStream);
+				leverArm[2] = sbgStreamBufferReadFloatLE(&inputStream);
 
 				//
 				// The command has been executed successfully so return
@@ -228,11 +216,11 @@ SbgErrorCode sbgEComCmdOdoGetLeverArm(SbgEComHandle *pHandle, float *pLeverArm)
 			break;
 		}
 	}
-
+	
 	return errorCode;
 }
 
-SbgErrorCode sbgEComCmdOdoSetLeverArm(SbgEComHandle *pHandle, const float *pLeverArm)
+SbgErrorCode sbgEComCmdOdoSetLeverArm(SbgEComHandle *pHandle, const float leverArm[3])
 {
 	SbgErrorCode		errorCode = SBG_NO_ERROR;
 	uint32_t			trial;
@@ -240,7 +228,7 @@ SbgErrorCode sbgEComCmdOdoSetLeverArm(SbgEComHandle *pHandle, const float *pLeve
 	SbgStreamBuffer		outputStream;
 
 	assert(pHandle);
-	assert(pLeverArm);
+	//assert(leverArm);
 
 	//
 	// Send the command three times
@@ -255,9 +243,9 @@ SbgErrorCode sbgEComCmdOdoSetLeverArm(SbgEComHandle *pHandle, const float *pLeve
 		//
 		// Build payload
 		//
-		sbgStreamBufferWriteFloatLE(&outputStream, pLeverArm[0]);
-		sbgStreamBufferWriteFloatLE(&outputStream, pLeverArm[1]);
-		sbgStreamBufferWriteFloatLE(&outputStream, pLeverArm[2]);
+		sbgStreamBufferWriteFloatLE(&outputStream, leverArm[0]);
+		sbgStreamBufferWriteFloatLE(&outputStream, leverArm[1]);
+		sbgStreamBufferWriteFloatLE(&outputStream, leverArm[2]);
 
 		//
 		// Send the payload over ECom
@@ -293,7 +281,7 @@ SbgErrorCode sbgEComCmdOdoSetLeverArm(SbgEComHandle *pHandle, const float *pLeve
 			break;
 		}
 	}
-
+	
 	return errorCode;
 }
 
@@ -304,6 +292,7 @@ SbgErrorCode sbgEComCmdOdoGetRejection(SbgEComHandle *pHandle, SbgEComOdoRejecti
 	size_t				receivedSize;
 	uint8_t				receivedBuffer[SBG_ECOM_MAX_BUFFER_SIZE];
 	SbgStreamBuffer		inputStream;
+	uint8_t 				cast;
 
 	assert(pHandle);
 	assert(pRejectConf);
@@ -341,7 +330,7 @@ SbgErrorCode sbgEComCmdOdoGetRejection(SbgEComHandle *pHandle, SbgEComOdoRejecti
 				//
 				// Read parameters
 				//
-				pRejectConf->velocity = (SbgEComRejectionMode)sbgStreamBufferReadUint8LE(&inputStream);
+				pRejectConf->velocity = (SbgEComRejectionMode) (cast = sbgStreamBufferReadUint8LE(&inputStream));
 
 				//
 				// The command has been executed successfully so return
@@ -357,7 +346,7 @@ SbgErrorCode sbgEComCmdOdoGetRejection(SbgEComHandle *pHandle, SbgEComOdoRejecti
 			break;
 		}
 	}
-
+	
 	return errorCode;
 }
 
@@ -429,14 +418,14 @@ SbgErrorCode sbgEComCmdOdoCanGetConf(SbgEComHandle *pHandle, SbgEComCmdOdoCanCha
 	SbgErrorCode			errorCode = SBG_NO_ERROR;
 	uint32_t				trial;
 	uint8_t					cmdPayload[16];
-	size_t					receivedSize;
+	size_t					receivedSize;	
 	uint8_t					receivedBuffer[SBG_ECOM_MAX_BUFFER_SIZE];
 	SbgStreamBuffer			outputStream;
 	SbgStreamBuffer			inputStream;
 
 	assert(pHandle);
 	assert(pOdoCanConf);
-	assert(canChannel <= UCHAR_MAX);
+	//assert(canChannel <= UCHAR_MAX);
 
 	//
 	// Build the command payload used to ask the CAN odometer configuration for a specific channel
@@ -453,7 +442,7 @@ SbgErrorCode sbgEComCmdOdoCanGetConf(SbgEComHandle *pHandle, SbgEComCmdOdoCanCha
 		// Send the command only since this is a no-payload command
 		//
 		errorCode = sbgEComProtocolSend(&pHandle->protocolHandle, SBG_ECOM_CLASS_LOG_CMD_0, SBG_ECOM_CMD_ODO_CAN_CONF, sbgStreamBufferGetLinkedBuffer(&outputStream), sbgStreamBufferGetLength(&outputStream));
-
+		
 		//
 		// Make sure that the command has been sent
 		//
@@ -481,7 +470,7 @@ SbgErrorCode sbgEComCmdOdoCanGetConf(SbgEComHandle *pHandle, SbgEComCmdOdoCanCha
 
 				pOdoCanConf->options 		= sbgStreamBufferReadUint16LE(&inputStream);
 				pOdoCanConf->canId 			= sbgStreamBufferReadUint32LE(&inputStream);
-
+				
 				pOdoCanConf->startBit	 	= sbgStreamBufferReadUint8LE(&inputStream);
 				pOdoCanConf->dataSize		= sbgStreamBufferReadUint8LE(&inputStream);
 
@@ -517,7 +506,7 @@ SbgErrorCode sbgEComCmdOdoCanSetConf(SbgEComHandle *pHandle, SbgEComCmdOdoCanCha
 
 	assert(pHandle);
 	assert(pOdoCanConf);
-	assert(canChannel <= UCHAR_MAX);
+	//assert(canChannel <= UCHAR_MAX);
 
 	//
 	// A CAN message has a payload of up to 64 bits so the offset can range from 0 to 63 and size from 1 to 64
@@ -530,7 +519,7 @@ SbgErrorCode sbgEComCmdOdoCanSetConf(SbgEComHandle *pHandle, SbgEComCmdOdoCanCha
 	// Build the command payload
 	//
 	sbgStreamBufferInitForWrite(&outputStream, outputBuffer, sizeof(outputBuffer));
-
+	
 	sbgStreamBufferWriteUint8LE(&outputStream, (uint8_t)canChannel);
 
 	sbgStreamBufferWriteUint16LE(&outputStream, pOdoCanConf->options);
@@ -538,12 +527,12 @@ SbgErrorCode sbgEComCmdOdoCanSetConf(SbgEComHandle *pHandle, SbgEComCmdOdoCanCha
 
 	sbgStreamBufferWriteUint8LE(&outputStream, (uint8_t)pOdoCanConf->startBit);
 	sbgStreamBufferWriteUint8LE(&outputStream, (uint8_t)pOdoCanConf->dataSize);
-
+	
 	sbgStreamBufferWriteFloatLE(&outputStream, pOdoCanConf->scale);
 	sbgStreamBufferWriteFloatLE(&outputStream, pOdoCanConf->offset);
 	sbgStreamBufferWriteFloatLE(&outputStream, pOdoCanConf->minValue);
 	sbgStreamBufferWriteFloatLE(&outputStream, pOdoCanConf->maxValue);
-
+	
 	//
 	// Send the command three times
 	//
@@ -583,6 +572,6 @@ SbgErrorCode sbgEComCmdOdoCanSetConf(SbgEComHandle *pHandle, SbgEComCmdOdoCanCha
 			break;
 		}
 	}
-
+	
 	return errorCode;
 }

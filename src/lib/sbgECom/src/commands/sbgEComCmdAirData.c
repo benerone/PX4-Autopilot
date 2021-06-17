@@ -1,5 +1,5 @@
 ﻿/* sbgCommonLib headers */
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
 /* Project headers */
 #include "transfer/sbgEComTransfer.h"
@@ -251,6 +251,7 @@ SbgErrorCode sbgEComCmdAirDataGetRejection(SbgEComHandle *pHandle, SbgEComAirDat
 	uint32_t			trial;
 	size_t				receivedSize;
 	uint8_t				receivedBuffer[2 * sizeof(uint8_t)];
+	uint8_t				cast;
 	SbgStreamBuffer		inputStream;
 
 	assert(pHandle);
@@ -289,8 +290,8 @@ SbgErrorCode sbgEComCmdAirDataGetRejection(SbgEComHandle *pHandle, SbgEComAirDat
 				//
 				// Parse the payload
 				//
-				pRejectConf->airspeed	= (SbgEComRejectionMode)sbgStreamBufferReadUint8LE(&inputStream);
-				pRejectConf->altitude	= (SbgEComRejectionMode)sbgStreamBufferReadUint8LE(&inputStream);
+				pRejectConf->airspeed	= (SbgEComRejectionMode) (cast = sbgStreamBufferReadUint8LE(&inputStream));
+				pRejectConf->altitude	= (SbgEComRejectionMode) (cast = sbgStreamBufferReadUint8LE(&inputStream));
 
 				//
 				// The command has been executed successfully so return if an error has occurred during payload parsing

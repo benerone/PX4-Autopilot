@@ -1,39 +1,27 @@
 /*!
- * \file           sbgEComBinaryLogMag.h
- * \author         SBG Systems
- * \date           12 March 2013
+ *	\file		sbgEComBinaryLogMag.h
+ *  \author		SBG Systems (Raphael Siryani)
+ *	\date		12 March 2013
  *
- * \brief          This file is used to parse received magnetometer binary logs.
+ *	\brief		This file is used to parse received magnetometer binary logs.
  *
- * \section CodeCopyright Copyright Notice
- * The MIT license
- *
- * Copyright (C) 2007-2020, SBG Systems SAS. All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ *	\section CodeCopyright Copyright Notice 
+ *	Copyright (C) 2007-2013, SBG Systems SAS. All rights reserved.
+ *	
+ *	This source code is intended for use only by SBG Systems SAS and
+ *	those that have explicit written permission to use it from
+ *	SBG Systems SAS.
+ *	
+ *	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ *	KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ *	IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ *	PARTICULAR PURPOSE.
  */
-
 #ifndef __SBG_ECOM_BINARY_LOG_MAG_H__
 #define __SBG_ECOM_BINARY_LOG_MAG_H__
 
-#include <sbgCommon.h>
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/sbgCommon.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
 //----------------------------------------------------------------------//
 //- Log magnetometers status definitions                               -//
@@ -66,8 +54,8 @@ typedef struct _SbgLogMag
 {
 	uint32_t	timeStamp;					/*!< Time in us since the sensor power up. */
 	uint16_t	status;						/*!< Magnetometer status bitmask. */
-	float		magnetometers[3];			/*!< X, Y, Z magnetometer data in A.U. */
-	float		accelerometers[3];			/*!< X, Y, Z accelerometers in m.s^-2. */
+	float	magnetometers[3];			/*!< X, Y, Z magnetometer data in A.U. */
+	float	accelerometers[3];			/*!< X, Y, Z accelerometers in m.s^-2. */
 } SbgLogMag;
 
 /*!
@@ -77,7 +65,7 @@ typedef struct _SbgLogMagCalib
 {
 	uint32_t	timeStamp;					/*!< Time in us since the sensor power up. */
 	uint16_t	reserved;					/*!< Reserved for future use. */
-	uint8_t		magData[16];				/*!< Magnetometers calibration data. */
+	uint8_t	magData[16];				/*!< Magnetometers calibration data. */
 } SbgLogMagCalib;
 
 //----------------------------------------------------------------------//

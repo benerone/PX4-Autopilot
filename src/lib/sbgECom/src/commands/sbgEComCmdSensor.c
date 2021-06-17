@@ -1,37 +1,46 @@
 ﻿#include "sbgEComCmdSensor.h"
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 #include "transfer/sbgEComTransfer.h"
 
 //----------------------------------------------------------------------//
 //- Sensor commands		                                               -//
 //----------------------------------------------------------------------//
 
-SbgErrorCode sbgEComCmdSensorSetMotionProfileId(SbgEComHandle *pHandle, SbgEComMotionProfileStdIds modelId)
+/*!
+ *	Set a Motion profile ID
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[id]	id							Motion profile ID to set
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
+ */
+SbgErrorCode sbgEComCmdSensorSetMotionProfileId(SbgEComHandle *pHandle, uint32_t id)
 {
-	assert(pHandle);
-
-	return sbgEComCmdGenericSetModelId(pHandle, SBG_ECOM_CLASS_LOG_CMD_0, SBG_ECOM_CMD_MOTION_PROFILE_ID, modelId);
+	//
+	// Call generic function with specific command name
+	//
+	return sbgEComCmdGenericSetModelId(pHandle, SBG_ECOM_CLASS_LOG_CMD_0, SBG_ECOM_CMD_MOTION_PROFILE_ID, id);
 }
 
 
-SbgErrorCode sbgEComCmdSensorGetMotionProfileId(SbgEComHandle *pHandle, SbgEComMotionProfileStdIds *pModelId)
+/*!
+ *	Retrieve Motion profile information.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[out]	pMotionProfileInfo			Pointer to a SbgEComModelInfo to contain the current motion profile info.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
+ */
+SbgErrorCode sbgEComCmdSensorGetMotionProfileInfo(SbgEComHandle *pHandle, SbgEComModelInfo *pModelInfo)
 {
-	SbgErrorCode	errorCode = SBG_NO_ERROR;
-	uint32_t		modelIdAsUint;
-
-	assert(pHandle);
-	assert(pModelId);
-
-	errorCode = sbgEComCmdGenericGetModelId(pHandle, SBG_ECOM_CLASS_LOG_CMD_0, SBG_ECOM_CMD_MOTION_PROFILE_ID, &modelIdAsUint);
-
-	if (errorCode == SBG_NO_ERROR)
-	{
-		*pModelId = (SbgEComMotionProfileStdIds)modelIdAsUint;
-	}
-
-	return errorCode;
+	//
+	// Call generic function with specific command name
+	//
+	return sbgEComCmdGenericGetModelInfo(pHandle, SBG_ECOM_CLASS_LOG_CMD_0, SBG_ECOM_CMD_MOTION_PROFILE_ID, pModelInfo);
 }
 
+/*!
+ *	Retrieve the initial conditions settings.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[out]	pConf						Pointer to a SbgEComInitConditionConf to contain the current initial conditions settings.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
+ */
 SbgErrorCode sbgEComCmdSensorGetInitCondition(SbgEComHandle *pHandle, SbgEComInitConditionConf *pConf)
 {
 	SbgErrorCode		errorCode = SBG_NO_ERROR;
@@ -101,6 +110,12 @@ SbgErrorCode sbgEComCmdSensorGetInitCondition(SbgEComHandle *pHandle, SbgEComIni
 	return errorCode;
 }
 
+/*!
+ *	Set the initial condition configuration.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[in]	pConf						Pointer to a SbgEComInitConditionConf containing the new initial condition configuration.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
+ */
 SbgErrorCode sbgEComCmdSensorSetInitCondition(SbgEComHandle *pHandle, const SbgEComInitConditionConf *pConf)
 {
 	SbgErrorCode		errorCode = SBG_NO_ERROR;
@@ -169,6 +184,12 @@ SbgErrorCode sbgEComCmdSensorSetInitCondition(SbgEComHandle *pHandle, const SbgE
 	return errorCode;
 }
 
+/*!
+ *	Retrieve the assignment of the aiding sensors.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[out]	pConf						Pointer to a SbgEComAidingAssignConf to contain the current assignment of the aiding sensors.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
+ */
 SbgErrorCode sbgEComCmdSensorGetAidingAssignment(SbgEComHandle *pHandle, SbgEComAidingAssignConf *pConf)
 {
 	SbgErrorCode		errorCode = SBG_NO_ERROR;
@@ -176,6 +197,7 @@ SbgErrorCode sbgEComCmdSensorGetAidingAssignment(SbgEComHandle *pHandle, SbgECom
 	size_t				receivedSize;
 	uint8_t				receivedBuffer[16];
 	SbgStreamBuffer		inputStream;
+	uint8_t 			cast;
 
 	assert(pHandle);
 	assert(pConf);
@@ -213,17 +235,17 @@ SbgErrorCode sbgEComCmdSensorGetAidingAssignment(SbgEComHandle *pHandle, SbgECom
 				//
 				// Read parameters
 				//
-				pConf->gps1Port			= (SbgEComModulePortAssignment)sbgStreamBufferReadUint8LE(&inputStream);
-				pConf->gps1Sync			= (SbgEComModuleSyncAssignment)sbgStreamBufferReadUint8LE(&inputStream);
+				pConf->gps1Port			= (SbgEComModulePortAssignment) (cast = sbgStreamBufferReadUint8LE(&inputStream));
+				pConf->gps1Sync			= (SbgEComModuleSyncAssignment) (cast = sbgStreamBufferReadUint8LE(&inputStream));
 					
 				sbgStreamBufferSeek(&inputStream, 4*sizeof(uint8_t), SB_SEEK_CUR_INC);						/*!< Reserved fields to ignore */
 
-				pConf->dvlPort			= (SbgEComModulePortAssignment)sbgStreamBufferReadUint8LE(&inputStream);
-				pConf->dvlSync			= (SbgEComModuleSyncAssignment)sbgStreamBufferReadUint8LE(&inputStream);
+				pConf->dvlPort			= (SbgEComModulePortAssignment) (cast = sbgStreamBufferReadUint8LE(&inputStream));
+				pConf->dvlSync			= (SbgEComModuleSyncAssignment) (cast = sbgStreamBufferReadUint8LE(&inputStream));
 
-				pConf->rtcmPort			= (SbgEComModulePortAssignment)sbgStreamBufferReadUint8LE(&inputStream);
-				pConf->airDataPort		= (SbgEComModulePortAssignment)sbgStreamBufferReadUint8LE(&inputStream);
-				pConf->odometerPinsConf	= (SbgEComOdometerPinAssignment)sbgStreamBufferReadUint8LE(&inputStream);
+				pConf->rtcmPort			= (SbgEComModulePortAssignment) (cast = sbgStreamBufferReadUint8LE(&inputStream));
+				pConf->airDataPort		= (SbgEComModulePortAssignment) (cast = sbgStreamBufferReadUint8LE(&inputStream));
+				pConf->odometerPinsConf	= (SbgEComOdometerPinAssignment) (cast = sbgStreamBufferReadUint8LE(&inputStream));
 
 				//
 				// The command has been executed successfully so return
@@ -243,6 +265,12 @@ SbgErrorCode sbgEComCmdSensorGetAidingAssignment(SbgEComHandle *pHandle, SbgECom
 	return errorCode;
 }
 
+/*!
+ *	Set the assignment of the aiding sensors.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[out]	pConf						Pointer to a SbgEComAidingAssignConf containing the new assignment of the aiding sensors.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
+ */
 SbgErrorCode sbgEComCmdSensorSetAidingAssignment(SbgEComHandle *pHandle, const SbgEComAidingAssignConf *pConf)
 {
 	SbgErrorCode		errorCode = SBG_NO_ERROR;
@@ -321,17 +349,25 @@ SbgErrorCode sbgEComCmdSensorSetAidingAssignment(SbgEComHandle *pHandle, const S
 	return errorCode;
 }
 
-SbgErrorCode sbgEComCmdSensorGetAlignmentAndLeverArm(SbgEComHandle *pHandle, SbgEComSensorAlignmentInfo *pAlignConf, float *pLeverArm)
+/*!
+ *	Retrieve the alignment and lever arm configuration of the sensor.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[out]	pAlignConf					Pointer to a SbgEComSensorAlignmentInfo struct to hold alignment configuration of the sensor.
+ *	\param[out] leverArm					Pointer to a table to contain lever arm X, Y, Z components in meters.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
+ */
+SbgErrorCode sbgEComCmdSensorGetAlignmentAndLeverArm(SbgEComHandle *pHandle, SbgEComSensorAlignmentInfo *pAlignConf, float leverArm[3])
 {
 	SbgErrorCode		errorCode = SBG_NO_ERROR;
 	uint32_t			trial;
 	size_t				receivedSize;
 	uint8_t				receivedBuffer[32];
 	SbgStreamBuffer		inputStream;
+	uint8_t 			cast;
 
 	assert(pHandle);
 	assert(pAlignConf);
-	assert(pLeverArm);
+	//assert(leverArm);
 
 	//
 	// Send the command three times
@@ -366,14 +402,14 @@ SbgErrorCode sbgEComCmdSensorGetAlignmentAndLeverArm(SbgEComHandle *pHandle, Sbg
 				//
 				// Read parameters
 				//
-				pAlignConf->axisDirectionX = (SbgEComAxisDirection)sbgStreamBufferReadUint8LE(&inputStream);
-				pAlignConf->axisDirectionY = (SbgEComAxisDirection)sbgStreamBufferReadUint8LE(&inputStream);
+				pAlignConf->axisDirectionX = (SbgEComAxisDirection) (cast = sbgStreamBufferReadUint8LE(&inputStream));
+				pAlignConf->axisDirectionY = (SbgEComAxisDirection) (cast = sbgStreamBufferReadUint8LE(&inputStream));
 				pAlignConf->misRoll = sbgStreamBufferReadFloatLE(&inputStream);
 				pAlignConf->misPitch = sbgStreamBufferReadFloatLE(&inputStream);
 				pAlignConf->misYaw = sbgStreamBufferReadFloatLE(&inputStream);
-				pLeverArm[0] = sbgStreamBufferReadFloatLE(&inputStream);
-				pLeverArm[1] = sbgStreamBufferReadFloatLE(&inputStream);
-				pLeverArm[2] = sbgStreamBufferReadFloatLE(&inputStream);
+				leverArm[0] = sbgStreamBufferReadFloatLE(&inputStream);
+				leverArm[1] = sbgStreamBufferReadFloatLE(&inputStream);
+				leverArm[2] = sbgStreamBufferReadFloatLE(&inputStream);
 
 				//
 				// The command has been executed successfully so return
@@ -393,7 +429,14 @@ SbgErrorCode sbgEComCmdSensorGetAlignmentAndLeverArm(SbgEComHandle *pHandle, Sbg
 	return errorCode;
 }
 
-SbgErrorCode sbgEComCmdSensorSetAlignmentAndLeverArm(SbgEComHandle *pHandle, const SbgEComSensorAlignmentInfo *pAlignConf, const float *pLeverArm)
+/*!
+ *	Set the alignment and lever arm configuration of the sensor.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[in]	pAlignConf					Pointer to a SbgEComSensorAlignmentInfo struct holding alignment configuration for the sensor.
+ *	\param[in]  leverArm					Pointer to a table containing lever arm X, Y, Z components in meters.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
+ */
+SbgErrorCode sbgEComCmdSensorSetAlignmentAndLeverArm(SbgEComHandle *pHandle, const SbgEComSensorAlignmentInfo *pAlignConf, const float leverArm[3])
 {
 	SbgErrorCode		errorCode = SBG_NO_ERROR;
 	uint32_t			trial;
@@ -402,7 +445,7 @@ SbgErrorCode sbgEComCmdSensorSetAlignmentAndLeverArm(SbgEComHandle *pHandle, con
 
 	assert(pHandle);
 	assert(pAlignConf);
-	assert(pLeverArm);
+	//assert(leverArm);
 	
 	//
 	// Send the command three times
@@ -422,9 +465,9 @@ SbgErrorCode sbgEComCmdSensorSetAlignmentAndLeverArm(SbgEComHandle *pHandle, con
 		sbgStreamBufferWriteFloatLE(&outputStream, pAlignConf->misRoll);
 		sbgStreamBufferWriteFloatLE(&outputStream, pAlignConf->misPitch);
 		sbgStreamBufferWriteFloatLE(&outputStream, pAlignConf->misYaw);
-		sbgStreamBufferWriteFloatLE(&outputStream, pLeverArm[0]);
-		sbgStreamBufferWriteFloatLE(&outputStream, pLeverArm[1]);
-		sbgStreamBufferWriteFloatLE(&outputStream, pLeverArm[2]);
+		sbgStreamBufferWriteFloatLE(&outputStream, leverArm[0]);
+		sbgStreamBufferWriteFloatLE(&outputStream, leverArm[1]);
+		sbgStreamBufferWriteFloatLE(&outputStream, leverArm[2]);
 
 		//
 		// Send the payload over ECom

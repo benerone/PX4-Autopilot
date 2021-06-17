@@ -1,38 +1,27 @@
 /*!
- * \file           sbgEComBinaryLogShipMotion.h
- * \author         SBG Systems
- * \date           30 March 2013
+ *	\file		sbgEComBinaryLogShipMotion.h
+ *  \author		SBG Systems (Raphael Siryani)
+ *	\date		30 March 2013
  *
- * \brief          This file is used to parse received ship motion binary logs.
+ *	\brief		This file is used to parse received ship motion binary logs.
  *
- * \section CodeCopyright Copyright Notice
- * The MIT license
- *
- * Copyright (C) 2007-2020, SBG Systems SAS. All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ *	\section CodeCopyright Copyright Notice 
+ *	Copyright (C) 2007-2013, SBG Systems SAS. All rights reserved.
+ *	
+ *	This source code is intended for use only by SBG Systems SAS and
+ *	those that have explicit written permission to use it from
+ *	SBG Systems SAS.
+ *	
+ *	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ *	KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ *	IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ *	PARTICULAR PURPOSE.
  */
 #ifndef __SBG_ECOM_BINARY_LOG_SHIP_MOTION_H__
 #define __SBG_ECOM_BINARY_LOG_SHIP_MOTION_H__
 
-#include <sbgCommon.h>
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/sbgCommon.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
 //----------------------------------------------------------------------//
 //- Heave status definitions                                           -//
@@ -51,7 +40,7 @@
 
 /*!
  * Structure that stores data for the SBG_ECOM_LOG_SHIP_MOTION or SBG_ECOM_LOG_SHIP_MOTION_HP message. <br>
- * The data are expressed in the standard NED Ekinox coordiante frame.
+ * The data are expressed in the standard NED Ekinox coordiante frame. 
  * Surge is positive forward, sway is positive right and heave is positive down. <br>
  * Note that status flag should be read before using the different parameters because it will provide validity information
  * about all included outputs. Some frames may not provide the heave period or surge/sway axes for example
@@ -60,10 +49,10 @@ typedef struct _SbgLogShipMotionData
 {
 	uint32_t	timeStamp;					/*!< Time in us since the sensor power up. */
 	uint16_t	status;						/*!< Ship Motion data status bitmask */
-	float		mainHeavePeriod;			/*!< Main heave period in seconds. */
-	float		shipMotion[3];				/*!< Surge, sway and heave in meters. */
-	float		shipAccel[3];				/*!< Surge, sway and heave ship Acceleration in m.s^-2. */
-	float		shipVel[3];					/*!< Surge, sway and heave velocities */
+	float	mainHeavePeriod;			/*!< Main heave period in seconds. */
+	float	shipMotion[3];				/*!< Surge, sway and heave in meters. */
+	float	shipAccel[3];				/*!< Surge, sway and heave ship Acceleration in m.s^-2. */
+	float	shipVel[3];					/*!< Surge, sway and heave velocities */
 } SbgLogShipMotionData;
 
 //----------------------------------------------------------------------//

@@ -1,34 +1,22 @@
 /*!
- * \file           sbgEComCmdInterface.h
- * \author         SBG Systems
- * \date           11 June 2014
+ *	\file		sbgEComCmdInterface.h
+ *  \author		SBG Systems (Maxime Renaudet)
+ *	\date		11 June 2014
  *
- * \brief          This file implements SbgECom commands related to interfaces.
+ *	\brief		This file implements SbgECom commands related to interfaces.
  *
- * \section CodeCopyright Copyright Notice
- * The MIT license
- *
- * Copyright (C) 2007-2020, SBG Systems SAS. All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ *	\section CodeCopyright Copyright Notice 
+ *	Copyright (C) 2007-2013, SBG Systems SAS. All rights reserved.
+ *	
+ *	This source code is intended for use only by SBG Systems SAS and
+ *	those that have explicit written permission to use it from
+ *	SBG Systems SAS.
+ *	
+ *	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ *	KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ *	IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ *	PARTICULAR PURPOSE.
  */
-
 #ifndef __SBG_ECOM_CMD_INTERFACE_H__
 #define __SBG_ECOM_CMD_INTERFACE_H__
 
@@ -48,7 +36,7 @@ typedef enum _SbgEComPortId
 	SBG_ECOM_IF_COM_C = 2,			/*!< Auxiliary communication interface. Full duplex. */
 	SBG_ECOM_IF_COM_D = 3,			/*!< Auxiliary input interface. */
 	SBG_ECOM_IF_COM_E = 4,			/*!< Auxiliary output interface. */
-
+	
 	SBG_ECOM_IF_ETH_0 = 10,			/*!< Ethernet interface 0. */
 	SBG_ECOM_IF_ETH_1 = 11,			/*!< Ethernet interface 1. */
 	SBG_ECOM_IF_ETH_2 = 12,			/*!< Ethernet interface 2. */
@@ -77,7 +65,7 @@ typedef enum _SbgEComPortMode
  */
 typedef struct _SbgEComInterfaceConf
 {
-	uint32_t			baudRate;	/*!< The baud rate of the interface. */
+	uint32_t				baudRate;	/*!< The baud rate of the interface. */
 	SbgEComPortMode		mode;		/*!< The mode of the interface. */
 } SbgEComInterfaceConf;
 

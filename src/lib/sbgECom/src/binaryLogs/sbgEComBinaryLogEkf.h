@@ -1,39 +1,27 @@
-ï»¿/*!
- * \file           sbgEComBinaryLogEkf.h
- * \author         SBG Systems
- * \date           25 February 2013
+/*!
+ *	\file		sbgEComBinaryLogEkf.h
+ *  \author		SBG Systems (Raphael Siryani)
+ *	\date		25 February 2013
  *
- * \brief          This file is used to parse received EKF compued data binary logs.
+ *	\brief		This file is used to parse received EKF compued data binary logs.
  *
- * \section CodeCopyright Copyright Notice
- * The MIT license
- *
- * Copyright (C) 2007-2020, SBG Systems SAS. All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ *	\section CodeCopyright Copyright Notice 
+ *	Copyright (C) 2007-2013, SBG Systems SAS. All rights reserved.
+ *	
+ *	This source code is intended for use only by SBG Systems SAS and
+ *	those that have explicit written permission to use it from
+ *	SBG Systems SAS.
+ *	
+ *	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ *	KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ *	IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ *	PARTICULAR PURPOSE.
  */
-
 #ifndef __SBG_ECOM_BINARY_LOG_EKF_H__
 #define __SBG_ECOM_BINARY_LOG_EKF_H__
 
-#include <sbgCommon.h>
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/sbgCommon.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
 //----------------------------------------------------------------------//
 //- Solution status definitions                                        -//
@@ -48,8 +36,8 @@
 /*!
  * Solution bit masks definitions.
  */
-#define SBG_ECOM_SOL_ATTITUDE_VALID			(0x00000001u << 4)		/*!< Set to 1 if attitude data is reliable (Roll/Pitch error < 0,5Â°). */
-#define SBG_ECOM_SOL_HEADING_VALID			(0x00000001u << 5)		/*!< Set to 1 if geading data is reliable (Heading error < 1Â°). */
+#define SBG_ECOM_SOL_ATTITUDE_VALID			(0x00000001u << 4)		/*!< Set to 1 if attitude data is reliable (Roll/Pitch error < 0,5°). */
+#define SBG_ECOM_SOL_HEADING_VALID			(0x00000001u << 5)		/*!< Set to 1 if geading data is reliable (Heading error < 1°). */
 #define SBG_ECOM_SOL_VELOCITY_VALID			(0x00000001u << 6)		/*!< Set to 1 if velocity data is reliable (velocity error < 1.5 m/s). */
 #define SBG_ECOM_SOL_POSITION_VALID			(0x00000001u << 7)		/*!< Set to 1 if position data is reliable (Position error < 10m). */
 #define SBG_ECOM_SOL_VERT_REF_USED			(0x00000001u << 8)		/*!< Set to 1 if vertical reference is used in solution (data used and valid since 3s). */
@@ -123,8 +111,8 @@ SBG_INLINE uint32_t sbgEComLogEkfBuildSolutionStatus(SbgEComSolutionMode solutio
 typedef struct _SbgLogEkfEulerData
 {
 	uint32_t	timeStamp;				/*!< Time in us since the sensor power up. */
-	float		euler[3];				/*!< Roll, Pitch and Yaw angles in rad. */
-	float		eulerStdDev[3];			/*!< Roll, Pitch and Yaw angles 1 sigma standard deviation in rad. */
+	float	euler[3];				/*!< Roll, Pitch and Yaw angles in rad. */
+	float	eulerStdDev[3];			/*!< Roll, Pitch and Yaw angles 1 sigma standard deviation in rad. */
 	uint32_t	status;					/*!< EKF solution status bitmask and enum. */
 } SbgLogEkfEulerData;
 
@@ -134,8 +122,8 @@ typedef struct _SbgLogEkfEulerData
 typedef struct _SbgLogEkfQuatData
 {
 	uint32_t	timeStamp;				/*!< Time in us since the sensor power up. */
-	float		quaternion[4];			/*!< Orientation quaternion stored in W, X, Y, Z form. */
-	float		eulerStdDev[3];			/*!< Roll, Pitch and Yaw angles 1 sigma standard deviation in rad. */
+	float	quaternion[4];			/*!< Orientation quaternion stored in W, X, Y, Z form. */
+	float	eulerStdDev[3];			/*!< Roll, Pitch and Yaw angles 1 sigma standard deviation in rad. */
 	uint32_t	status;					/*!< EKF solution status bitmask and enum. */
 } SbgLogEkfQuatData;
 
@@ -145,12 +133,12 @@ typedef struct _SbgLogEkfQuatData
 typedef struct _SbgLogEkfNavData
 {
 	uint32_t	timeStamp;				/*!< Time in us since the sensor power up. */
-	float		velocity[3];			/*!< North, East, Down velocity in m.s^-1. */
-	float		velocityStdDev[3];		/*!< North, East, Down velocity 1 sigma standard deviation in m.s^-1. */
-	double		position[3];			/*!< Latitude, Longitude in degrees positive North and East.
+	float	velocity[3];			/*!< North, East, Down velocity in m.s^-1. */
+	float	velocityStdDev[3];		/*!< North, East, Down velocity 1 sigma standard deviation in m.s^-1. */
+	double	position[3];			/*!< Latitude, Longitude in degrees positive North and East.
 										 Altitude above Mean Sea Level in meters. */
-	float		undulation;				/*!< Altitude difference between the geoid and the Ellipsoid in meters (Height above Ellipsoid = altitude + undulation). */
-	float		positionStdDev[3];		/*!< Latitude, longitude and altitude 1 sigma standard deviation in meters. */
+	float	undulation;				/*!< Altitude difference between the geoid and the Ellipsoid in meters (Height above Ellipsoid = altitude + undulation). */
+	float	positionStdDev[3];		/*!< Latitude, longitude and altitude 1 sigma standard deviation in meters. */
 	uint32_t	status;					/*!< EKF solution status bitmask and enum. */
 } SbgLogEkfNavData;
 

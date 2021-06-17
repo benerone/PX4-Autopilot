@@ -1,5 +1,5 @@
 ﻿#include "sbgEComCmdFeatures.h"
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
 //----------------------------------------------------------------------//
 //- Features commands	                                               -//
@@ -18,7 +18,7 @@ SbgErrorCode sbgEComCmdGetFeatures(SbgEComHandle *pHandle, SbgEComFeatures *pFea
 	size_t				receivedSize;
 	uint8_t				receivedBuffer[SBG_ECOM_MAX_BUFFER_SIZE];
 	SbgStreamBuffer		inputStream;
-
+	uint8_t				cast;
 	assert(pHandle);
 	assert(pFeatures);
 
@@ -56,25 +56,13 @@ SbgErrorCode sbgEComCmdGetFeatures(SbgEComHandle *pHandle, SbgEComFeatures *pFea
 				// Read parameters
 				//
 				pFeatures->sensorFeaturesMask	=  sbgStreamBufferReadUint32LE(&inputStream);
-				pFeatures->gnssType				= (SbgEComGnssType)sbgStreamBufferReadUint8LE(&inputStream);
+				pFeatures->gnssType				= (SbgEComGnssType) (cast = sbgStreamBufferReadUint8LE(&inputStream));
 				pFeatures->gnssUpdateRate		= sbgStreamBufferReadUint8LE(&inputStream);
 				pFeatures->gnssSignalsMask		= sbgStreamBufferReadUint32LE(&inputStream);
 				pFeatures->gnssFeaturesMask		= sbgStreamBufferReadUint32LE(&inputStream);
 				sbgStreamBufferReadBuffer(&inputStream, pFeatures->gnssProductCode, 32*sizeof(char));
 				sbgStreamBufferReadBuffer(&inputStream, pFeatures->gnssSerialNumber, 32*sizeof(char));
-				
-				//
-				// Only parse the GNSS firmware version if available
-				//
-				if (sbgStreamBufferGetSpace(&inputStream) > 0)
-				{
-					sbgStreamBufferReadBuffer(&inputStream, pFeatures->gnssFirmwareVersion, 32 * sizeof(char));
-				}
-				else
-				{
-					strcpy(pFeatures->gnssFirmwareVersion, "");
-				}
-				
+
 				//
 				// The command has been executed successfully so return
 				//

@@ -207,19 +207,21 @@ SbgErrorCode sbgEComBinaryLogParseFastImuData(SbgStreamBuffer *pInputStream, Sbg
 	assert(pInputStream);
 	assert(pOutputData);
 
+	int16_t f;
+
 	//
 	// Read the frame payload
 	//
 	pOutputData->timeStamp			= sbgStreamBufferReadUint32LE(pInputStream);
 	pOutputData->status				= sbgStreamBufferReadUint16LE(pInputStream);
 				
-	pOutputData->accelerometers[0]	= (float)sbgStreamBufferReadInt16LE(pInputStream) * 0.01f;
-	pOutputData->accelerometers[1]	= (float)sbgStreamBufferReadInt16LE(pInputStream) * 0.01f;
-	pOutputData->accelerometers[2]	= (float)sbgStreamBufferReadInt16LE(pInputStream) * 0.01f;
+	pOutputData->accelerometers[0]	= (float)(f = sbgStreamBufferReadInt16LE(pInputStream)) * 0.01f;
+	pOutputData->accelerometers[1]	= (float)(f = sbgStreamBufferReadInt16LE(pInputStream)) * 0.01f;
+	pOutputData->accelerometers[2]	= (float)(f = sbgStreamBufferReadInt16LE(pInputStream)) * 0.01f;
 
-	pOutputData->gyroscopes[0]		= (float)sbgStreamBufferReadInt16LE(pInputStream) * 0.001f;
-	pOutputData->gyroscopes[1]		= (float)sbgStreamBufferReadInt16LE(pInputStream) * 0.001f;
-	pOutputData->gyroscopes[2]		= (float)sbgStreamBufferReadInt16LE(pInputStream) * 0.001f;
+	pOutputData->gyroscopes[0]		= (float)(f = sbgStreamBufferReadInt16LE(pInputStream)) * 0.001f;
+	pOutputData->gyroscopes[1]		= (float)(f = sbgStreamBufferReadInt16LE(pInputStream)) * 0.001f;
+	pOutputData->gyroscopes[2]		= (float)(f = sbgStreamBufferReadInt16LE(pInputStream)) * 0.001f;
 
 	//
 	// Return if any error has occurred while parsing the frame

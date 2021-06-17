@@ -1,39 +1,27 @@
-﻿/*!
- * \file           sbgEComBinaryLogUtc.h
- * \author         SBG Systems
- * \date           20 February 2013
+/*!
+ *	\file		sbgEComBinaryLogUtc.h
+ *  \author		SBG Systems (Raphael Siryani)
+ *	\date		20 February 2013
  *
- * \brief          This file is used to parse received UTC binary logs.
+ *	\brief		This file is used to parse received UTC binary logs.
  *
- * \section CodeCopyright Copyright Notice
- * The MIT license
- *
- * Copyright (C) 2007-2020, SBG Systems SAS. All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ *	\section CodeCopyright Copyright Notice 
+ *	Copyright (C) 2007-2013, SBG Systems SAS. All rights reserved.
+ *	
+ *	This source code is intended for use only by SBG Systems SAS and
+ *	those that have explicit written permission to use it from
+ *	SBG Systems SAS.
+ *	
+ *	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ *	KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ *	IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ *	PARTICULAR PURPOSE.
  */
-
 #ifndef __SBG_ECOM_BINARY_LOG_UTC_H__
 #define __SBG_ECOM_BINARY_LOG_UTC_H__
 
-#include <sbgCommon.h>
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/sbgCommon.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
 //----------------------------------------------------------------------//
 //- Clock status definitions                                           -//
@@ -126,39 +114,21 @@ typedef struct _SbgLogUtcData
 	uint32_t	timeStamp;					/*!< Time in us since the sensor power up. */
 	uint16_t	status;						/*!< UTC time and clock status information */
 	uint16_t	year;						/*!< Year for example: 2013. */
-	int8_t		month;						/*!< Month in year [1 .. 12]. */
-	int8_t		day;						/*!< Day in month [1 .. 31]. */
-	int8_t		hour;						/*!< Hour in day [0 .. 23]. */
-	int8_t		minute;						/*!< Minute in hour [0 .. 59]. */
-	int8_t		second;						/*!< Second in minute [0 .. 60]. (60 is used only when a leap second is added) */
-	int32_t		nanoSecond;					/*!< Nanosecond of current second in ns. */
+	int8_t	month;						/*!< Month in year [1 .. 12]. */
+	int8_t	day;						/*!< Day in month [1 .. 31]. */
+	int8_t	hour;						/*!< Hour in day [0 .. 23]. */
+	int8_t	minute;						/*!< Minute in hour [0 .. 59]. */
+	int8_t	second;						/*!< Second in minute [0 .. 60]. (60 is used only when a leap second is added) */
+	int32_t	nanoSecond;					/*!< Nanosecond of current second in ns. */
 	uint32_t	gpsTimeOfWeek;				/*!< GPS time of week in ms. */
 } SbgLogUtcData;
 
 //----------------------------------------------------------------------//
-//- Public methods                                                     -//
+//- Operations                                                         -//
 //----------------------------------------------------------------------//
 
 /*!
- * Returns the clock status as a NULL terminated C string.
- *
- * \param[in]	pLogUtc				UTC log instance.
- * \return							The clock status as a C string.
- */
-const char *sbgEcomLogUtcGetClockStatusAsString(const SbgLogUtcData *pLogUtc);
-
-
-/*!
- * Returns the UTC status as a NULL terminated C string.
- *
- * \param[in]	pLogUtc				UTC log instance.
- * \return							The UTC status as a C string.
- */
-const char *sbgEcomLogUtcGetUtcStatusAsString(const SbgLogUtcData *pLogUtc);
-
-/*!
  * Parse data for the SBG_ECOM_LOG_UTC_DATA message and fill the corresponding structure.
- *
  * \param[in]	pInputStream				Input stream buffer to read the payload from.
  * \param[out]	pOutputData					Pointer on the output structure that stores parsed data.
  * \return									SBG_NO_ERROR if the payload has been parsed.
@@ -167,7 +137,6 @@ SbgErrorCode sbgEComBinaryLogParseUtcData(SbgStreamBuffer *pInputStream, SbgLogU
 
 /*!
  * Write data for the SBG_ECOM_LOG_UTC_DATA message to the output stream buffer from the provided structure.
- *
  * \param[out]	pOutputStream				Output stream buffer to write the payload to.
  * \param[in]	pInputData					Pointer on the input structure that stores data to write.
  * \return									SBG_NO_ERROR if the message has been generated in the provided buffer.

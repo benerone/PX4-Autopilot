@@ -1,42 +1,30 @@
 /*!
- * \file                sbgEComBinaryLogAirData.h
- * \author              SBG Systems
- * \date                20 February 2019
+ * \file		sbgEComBinaryLogAirData.h
+ *  \author		SBG Systems
+ * \date		20 February 2019
  *
- * \brief               This file is used to parse & received Air Data logs.
+ * \brief		This file is used to parse & received Air Data logs.
  *
  * Air Data logs are used to inject / return barometric altitude
  * as well as true air speed.
  *
- * \section CodeCopyright Copyright Notice
- * The MIT license
- *
- * Copyright (C) 2007-2020, SBG Systems SAS. All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * \section CodeCopyright Copyright Notice 
+ * Copyright (C) 2007-2019, SBG Systems SAS. All rights reserved.
+ *	
+ * This source code is intended for use only by SBG Systems SAS and
+ * those that have explicit written permission to use it from
+ * SBG Systems SAS.
+ *	
+ * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ * KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ * PARTICULAR PURPOSE.
  */
-
 #ifndef SBG_ECOM_BINARY_LOG_AIR_DATA_H
 #define SBG_ECOM_BINARY_LOG_AIR_DATA_H
 
-#include <sbgCommon.h>
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/sbgCommon.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
 //----------------------------------------------------------------------//
 //- Log Air Data status definitions                                    -//
@@ -63,11 +51,11 @@ typedef struct _SbgLogAirData
 {
 	uint32_t	timeStamp;						/*!< Time in us since the sensor power up OR measurement delay in us. */
 	uint16_t	status;							/*!< Airdata sensor status bitmask. */
-	float		pressureAbs;					/*!< Raw absolute pressure measured by the barometer sensor in Pascals. */
-	float		altitude;						/*!< Altitude computed from barometric altimeter in meters and positive upward. */
-	float		pressureDiff;					/*!< Raw differential pressure measured by the pitot tube in Pascal. */
-	float		trueAirspeed;					/*!< True airspeed measured by a pitot tube in m.s^-1 and positive forward. */
-	float		airTemperature;					/*!< Outside air temperature in °C that could be used to compute true airspeed from differential pressure. */
+	float	pressureAbs;					/*!< Raw absolute pressure measured by the barometer sensor in Pascals. */
+	float	altitude;						/*!< Altitude computed from barometric altimeter in meters and positive upward. */
+	float	pressureDiff;					/*!< Raw differential pressure measured by the pitot tube in Pascal. */
+	float	trueAirspeed;					/*!< True airspeed measured by a pitot tube in m.s^-1 and positive forward. */
+	float	airTemperature;					/*!< Outside air temperature in °C that could be used to compute true airspeed from differential pressure. */
 } SbgLogAirData;
 
 //----------------------------------------------------------------------//

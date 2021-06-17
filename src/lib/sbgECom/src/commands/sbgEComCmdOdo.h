@@ -1,32 +1,21 @@
 /*!
- * \file           sbgEComCmdOdo.h
- * \author         SBG Systems
- * \date           11 June 2014
+ * \file		sbgEComCmdOdo.h
+ * \author		SBG Systems
+ * \date		11 June 2014
  *
- * \brief          This file implements SbgECom commands related to Odometer module.
+ * \brief		This file implements SbgECom commands related to Odometer module.
  *
- * \section CodeCopyright Copyright Notice
- * The MIT license
- *
- * Copyright (C) 2007-2020, SBG Systems SAS. All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * \section CodeCopyright Copyright Notice 
+ * Copyright (C) 2007-2019, SBG Systems SAS. All rights reserved.
+ *	
+ * This source code is intended for use only by SBG Systems SAS and
+ * those that have explicit written permission to use it from
+ * SBG Systems SAS.
+ *	
+ * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ * KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ * PARTICULAR PURPOSE.
  */
 #ifndef SBG_ECOM_CMD_ODO_H
 #define SBG_ECOM_CMD_ODO_H
@@ -81,7 +70,7 @@ typedef struct _SbgEComCmdOdoCanConf
 {
 	uint16_t	options;				/*!< Set of options bit masks such as CAN extended. */
 	uint32_t	canId;					/*!< CAN message ID from which the odometer velocity will be parsed. */
-
+	
 	size_t		startBit;				/*!< Index of field MSB in big endian or LSB in little endian within the payload (any value from 0 to 63). */
 	size_t		dataSize; 				/*!< Length in bits of the odometer velocity field (any value from 1 to 64 minus dataOffset). */
 
@@ -117,19 +106,19 @@ SbgErrorCode sbgEComCmdOdoSetConf(SbgEComHandle *pHandle, const SbgEComOdoConf *
  * Retrieve the lever arm applicable for both quadrature or CAN based odometer.
  *
  * \param[in]	pHandle						A valid sbgECom handle.
- * \param[out]	pLeverArm					Array of three values, one for each axis.
+ * \param[out]	leverArm					Array of three values, one for each axis.
  * \return									SBG_NO_ERROR if the command has been executed successfully.
  */
-SbgErrorCode sbgEComCmdOdoGetLeverArm(SbgEComHandle *pHandle, float *pLeverArm);
+SbgErrorCode sbgEComCmdOdoGetLeverArm(SbgEComHandle *pHandle, float leverArm[3]);
 
 /*!
  * Set the lever arm applicable for both quadrature or CAN based odometer.
  *
  * \param[in]	pHandle						A valid sbgECom handle.
- * \param[in]	pLeverArm					Array of three values, one for each axis.
+ * \param[in]	leverArm					Array of three values, one for each axis.
  * \return									SBG_NO_ERROR if the command has been executed successfully.
  */
-SbgErrorCode sbgEComCmdOdoSetLeverArm(SbgEComHandle *pHandle, const float *pLeverArm);
+SbgErrorCode sbgEComCmdOdoSetLeverArm(SbgEComHandle *pHandle, const float leverArm[3]);
 
 /*!
  * Retrieve the velocity rejection configuration for both quadrature or CAN based odometer.

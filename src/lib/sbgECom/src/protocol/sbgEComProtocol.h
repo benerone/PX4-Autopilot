@@ -1,6 +1,6 @@
 /*!
  *	\file		sbgEComProtocol.h
- *  \author		SBG-Systems
+ *  \author		SBG-Systems (Raphael Siryani)
  *	\date		06/02/13
  *
  *	\brief		Implementation of the Ekinox binary communication protocol.<br>
@@ -22,24 +22,27 @@
  *	The CRC is calculated on the whole frame without:<br>
  *	SYNC STX CRC and ETX fields.<br>
  */
-#ifndef SBG_ECOM_PROTOCOL_H
-#define SBG_ECOM_PROTOCOL_H
+#ifndef __SBG_ECOM_PROTOCOL_H__
+#define __SBG_ECOM_PROTOCOL_H__
 
-// sbgCommonLib headers
-#include <sbgCommon.h>
-#include <interfaces/sbgInterface.h>
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/sbgCommon.h>
+#include <sbgECom/common/interfaces/sbgInterface.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
- //----------------------------------------------------------------------//
- //- Public definitions                                                 -//
- //----------------------------------------------------------------------//
-#define SBG_ECOM_MAX_BUFFER_SIZE				(4096)					/*!< Maximum reception buffer size in bytes. */
-#define SBG_ECOM_MAX_PAYLOAD_SIZE				(4086)					/*!< Maximum payload size in bytes. */
-#define SBG_ECOM_SYNC_1							(0xFF)					/*!< First synchronization char of the frame. */
-#define SBG_ECOM_SYNC_2							(0x5A)					/*!< Second synchronization char of the frame. */
-#define SBG_ECOM_ETX							(0x33)					/*!< End of frame byte. */
+//----------------------------------------------------------------------//
+//- Global definitions                                                 -//
+//----------------------------------------------------------------------//
+#define SBG_ECOM_MAX_BUFFER_SIZE			    (4096)							/*!< Maximum reception buffer size in bytes. */
+#define SBG_ECOM_MAX_PAYLOAD_SIZE			    (4086)							/*!< Maximum payload size in bytes. */
+#define SBG_ECOM_SYNC_1							(0xFF)							/*!< First synchronization char of the frame. */
+#define SBG_ECOM_SYNC_2							(0x5A)							/*!< Second synchronization char of the frame. */
+#define SBG_ECOM_ETX							(0x33)							/*!< End of frame byte. */
 
-#define SBG_ECOM_RX_TIME_OUT					(450)					/*!< Default time out for new frame reception. */
+#define SBG_ECOM_RX_TIME_OUT					(450)							/*!< Default time out for new frame reception. */
+
+//----------------------------------------------------------------------//
+//- Communication protocol structs and definitions                     -//
+//----------------------------------------------------------------------//
 
 /*!
  * Struct containing all protocol related data.
@@ -52,12 +55,11 @@ typedef struct _SbgEComProtocol
 } SbgEComProtocol;
 
 //----------------------------------------------------------------------//
-//- Public methods                                                     -//
+//- Communication protocol operations                                  -//
 //----------------------------------------------------------------------//
 
 /*!
  * Initialize the protocol system used to communicate with the product and return the created handle.
- *
  * \param[in]	pHandle					Pointer on an allocated protocol structure to initialize.
  * \param[in]	pInterface				Interface to use for read/write operations.
  * \return								SBG_NO_ERROR if we have initialised the protocol system.
@@ -66,7 +68,6 @@ SbgErrorCode sbgEComProtocolInit(SbgEComProtocol *pHandle, SbgInterface *pInterf
 
 /*!
  * Close the protocol system.
- *
  * \param[in]	pHandle					A valid protocol handle to close.
  * \return								SBG_NO_ERROR if we have closed and released the protocol system.
  */
@@ -74,7 +75,6 @@ SbgErrorCode sbgEComProtocolClose(SbgEComProtocol *pHandle);
 
 /*!
  * Send a frame to the device (size should be less than 4086 bytes).
- *
  * \param[in]	pHandle					A valid protocol handle.
  * \param[in]	msgClass				Message class (0-255)
  * \param[in]	msg						Message id (0-255)
@@ -86,7 +86,6 @@ SbgErrorCode sbgEComProtocolSend(SbgEComProtocol *pHandle, uint8_t msgClass, uin
 
 /*!
  * Try to receive a frame from the device and returns the cmd, data and size of data field.
- -
  * \param[in]	pHandle					A valid protocol handle.
  * \param[out]	pMsgClass				Pointer to hold the returned message class
  * \param[out]	pMsg					Pointer to hold the returned message id
@@ -101,9 +100,12 @@ SbgErrorCode sbgEComProtocolSend(SbgEComProtocol *pHandle, uint8_t msgClass, uin
  */
 SbgErrorCode sbgEComProtocolReceive(SbgEComProtocol *pHandle, uint8_t *pMsgClass, uint8_t *pMsg, void *pData, size_t *pSize, size_t maxSize);
 
+//----------------------------------------------------------------------//
+//- Frame generation to stream buffer                                  -//
+//----------------------------------------------------------------------//
+
 /*!
  * Initialize an output stream for an sbgECom frame generation.
- *
  * This method is helpful to avoid memory copy compared to sbgEComProtocolSend one.
  *
  * \param[in]	pOutputStream			Pointer to an allocated and initialized output stream.
@@ -117,7 +119,6 @@ SbgErrorCode sbgEComStartFrameGeneration(SbgStreamBuffer *pOutputStream, uint8_t
 
 /*!
  * Finalize an output stream that has been initialized with sbgEComStartFrameGeneration.
- *
  * At return, the output stream buffer should point at the end of the generated message.
  * You can thus easily create consecutive SBG_ECOM_LOGS with these methods.
  *
@@ -128,4 +129,4 @@ SbgErrorCode sbgEComStartFrameGeneration(SbgStreamBuffer *pOutputStream, uint8_t
  */
 SbgErrorCode sbgEComFinalizeFrameGeneration(SbgStreamBuffer *pOutputStream, size_t streamCursor);
 
-#endif // SBG_ECOM_PROTOCOL_H
+#endif

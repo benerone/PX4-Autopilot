@@ -28,7 +28,7 @@
 extern "C" {
 #endif
 	
-#include <sbgCommon.h>
+#include <sbgECom/common/sbgCommon.h>
 
 //----------------------------------------------------------------------//
 //- Internal swap functions                                            -//

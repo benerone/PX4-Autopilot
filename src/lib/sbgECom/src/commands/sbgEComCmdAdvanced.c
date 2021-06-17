@@ -1,5 +1,5 @@
 ﻿#include "sbgEComCmdAdvanced.h"
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
 //----------------------------------------------------------------------//
 //- Event commands		                                               -//
@@ -18,6 +18,7 @@ SbgErrorCode sbgEComCmdAdvancedGetConf(SbgEComHandle *pHandle, SbgEComAdvancedCo
 	size_t				receivedSize;
 	uint8_t				receivedBuffer[SBG_ECOM_MAX_BUFFER_SIZE];
 	SbgStreamBuffer		inputStream;
+	uint8_t 			cast;
 
 	assert(pHandle);
 	assert(pConf);
@@ -55,7 +56,7 @@ SbgErrorCode sbgEComCmdAdvancedGetConf(SbgEComHandle *pHandle, SbgEComAdvancedCo
 				//
 				// Read parameters
 				//
-				pConf->timeReference = (SbgEComTimeReferenceSrc)sbgStreamBufferReadUint8LE(&inputStream);
+				pConf->timeReference = (SbgEComTimeReferenceSrc) (cast = sbgStreamBufferReadUint8LE(&inputStream));
 
 				//
 				// The command has been executed successfully so return

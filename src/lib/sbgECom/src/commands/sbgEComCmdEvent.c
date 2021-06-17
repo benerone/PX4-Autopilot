@@ -1,5 +1,5 @@
 ﻿#include "sbgEComCmdEvent.h"
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
 //----------------------------------------------------------------------//
 //- Event commands		                                               -//
@@ -19,6 +19,7 @@ SbgErrorCode sbgEComCmdSyncInGetConf(SbgEComHandle *pHandle, SbgEComSyncInId syn
 	size_t				receivedSize;
 	uint8_t				outputBuffer;
 	uint8_t				receivedBuffer[SBG_ECOM_MAX_BUFFER_SIZE];
+	uint8_t 			cast;
 	SbgStreamBuffer		inputStream;
 
 	assert(pHandle);
@@ -59,8 +60,8 @@ SbgErrorCode sbgEComCmdSyncInGetConf(SbgEComHandle *pHandle, SbgEComSyncInId syn
 				// Read parameters
 				// First is returned the id of the sync, then the sensitivity and the delay at last.
 				//
-				syncInId = (SbgEComSyncInId)sbgStreamBufferReadUint8LE(&inputStream);					
-				pConf->sensitivity = (SbgEComSyncInSensitivity)sbgStreamBufferReadUint8LE(&inputStream);
+				syncInId = (SbgEComSyncInId) (cast = sbgStreamBufferReadUint8LE(&inputStream));					
+				pConf->sensitivity = (SbgEComSyncInSensitivity) (cast = sbgStreamBufferReadUint8LE(&inputStream));
 				pConf->delay = sbgStreamBufferReadInt32LE(&inputStream);
 
 				//
@@ -168,6 +169,8 @@ SbgErrorCode sbgEComCmdSyncOutGetConf(SbgEComHandle *pHandle, SbgEComSyncOutId s
 	uint8_t				receivedBuffer[SBG_ECOM_MAX_BUFFER_SIZE];
 	SbgStreamBuffer		inputStream;
 	uint8_t				outputBuffer;
+	uint8_t 			castu8;
+	uint16_t 			castu16;
 
 	assert(pHandle);
 	assert(pConf);
@@ -207,10 +210,10 @@ SbgErrorCode sbgEComCmdSyncOutGetConf(SbgEComHandle *pHandle, SbgEComSyncOutId s
 				// Read parameters
 				// First is returned the id of the sync, then a reserved field, the output function, polarity and the duration at last.
 				//
-				syncOutId = (SbgEComSyncOutId)sbgStreamBufferReadUint8LE(&inputStream);
+				syncOutId = (SbgEComSyncOutId) (castu8 = sbgStreamBufferReadUint8LE(&inputStream));
 				sbgStreamBufferReadUint8LE(&inputStream);
-				pConf->outputFunction = (SbgEComSyncOutFunction)sbgStreamBufferReadUint16LE(&inputStream);
-				pConf->polarity = (SbgEComSyncOutPolarity)sbgStreamBufferReadUint8LE(&inputStream);
+				pConf->outputFunction = (SbgEComSyncOutFunction) (castu16 = sbgStreamBufferReadUint16LE(&inputStream));
+				pConf->polarity = (SbgEComSyncOutPolarity) (castu8 = sbgStreamBufferReadUint8LE(&inputStream));
 				pConf->duration = sbgStreamBufferReadUint32LE(&inputStream);
 
 				//

@@ -59,7 +59,7 @@ typedef enum _SbgDebugLogType
 #if SBG_CONFIG_ENABLE_LOG_ERROR == 1
 	#define	SBG_LOG_ERROR								SBG_LOG_ERROR_CALL
 #else
-	#define SBG_LOG_ERROR(format, ...)					((void)sizeof(SBG_LOG_ERROR_CALL(format, ## __VA_ARGS__)))
+	#define SBG_LOG_ERROR(format, ...)					((void)sizeof(SBG_LOG_ERROR_CALL(format, ## __VA_ARGS__), 0))
 #endif
 
 /*!
@@ -72,7 +72,7 @@ typedef enum _SbgDebugLogType
 #if SBG_CONFIG_ENABLE_LOG_WARNING == 1
 	#define	SBG_LOG_WARNING								SBG_LOG_WARNING_CALL
 #else
-	#define SBG_LOG_WARNING(format, ...)				((void)sizeof(SBG_LOG_WARNING_CALL(format, ## __VA_ARGS__)))
+	#define SBG_LOG_WARNING(format, ...)				((void)sizeof(SBG_LOG_WARNING_CALL(format, ## __VA_ARGS__), 0))
 #endif
 
 /*!
@@ -84,7 +84,7 @@ typedef enum _SbgDebugLogType
 #if SBG_CONFIG_ENABLE_LOG_INFO == 1
 	#define	SBG_LOG_INFO								SBG_LOG_INFO_CALL
 #else
-	#define SBG_LOG_INFO(format, ...)					((void)sizeof(SBG_LOG_INFO_CALL(format, ## __VA_ARGS__)))
+	#define SBG_LOG_INFO(format, ...)					((void)sizeof(SBG_LOG_INFO_CALL(format, ## __VA_ARGS__), 0))
 #endif
 
 /*!
@@ -96,7 +96,7 @@ typedef enum _SbgDebugLogType
 #if SBG_CONFIG_ENABLE_LOG_DEBUG == 1
 	#define	SBG_LOG_DEBUG								SBG_LOG_DEBUG_CALL
 #else
-	#define SBG_LOG_DEBUG(format, ...)					((void)sizeof(SBG_LOG_DEBUG_CALL(format, ## __VA_ARGS__)))
+	#define SBG_LOG_DEBUG(format, ...)					((void)sizeof(SBG_LOG_DEBUG_CALL(format, ## __VA_ARGS__), 0))
 #endif
 
 //----------------------------------------------------------------------//

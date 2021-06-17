@@ -1,28 +1,18 @@
-﻿// sbgCommonLib headers
-#include <sbgCommon.h>
-#include <streamBuffer/sbgStreamBuffer.h>
-
-// Local headers
-#include "sbgEComBinaryLogAirData.h"
-#include "sbgEComBinaryLogDepth.h"
-#include "sbgEComBinaryLogDiag.h"
-#include "sbgEComBinaryLogDvl.h"
-#include "sbgEComBinaryLogEkf.h"
-#include "sbgEComBinaryLogEvent.h"
-#include "sbgEComBinaryLogGps.h"
-#include "sbgEComBinaryLogImu.h"
-#include "sbgEComBinaryLogMag.h"
-#include "sbgEComBinaryLogOdometer.h"
-#include "sbgEComBinaryLogShipMotion.h"
-#include "sbgEComBinaryLogStatus.h"
-#include "sbgEComBinaryLogUsbl.h"
-#include "sbgEComBinaryLogUtc.h"
-#include "sbgEComBinaryLogs.h"
+﻿#include "sbgEComBinaryLogs.h"
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
 //----------------------------------------------------------------------//
-//- Public methods                                                     -//
+//- Communication protocol operations                                  -//
 //----------------------------------------------------------------------//
 
+/*!
+ *	Parse an incoming log and fill the output union.
+ *	\param[in]	msgClass					Received message class
+ *	\param[in]	msg							Received message ID
+ *	\param[in]	pPayload					Read only pointer on the payload buffer.
+ *	\param[in]	payloadSize					Payload size in bytes.
+ *	\param[out]	pOutputData					Pointer on the output union that stores parsed data.
+ */
 SbgErrorCode sbgEComBinaryLogParse(SbgEComClass msgClass, SbgEComMsgId msg, const void *pPayload, size_t payloadSize, SbgBinaryLogData *pOutputData)
 {
 	SbgErrorCode		errorCode = SBG_NO_ERROR;
@@ -33,15 +23,15 @@ SbgErrorCode sbgEComBinaryLogParse(SbgEComClass msgClass, SbgEComMsgId msg, cons
 	assert(pOutputData);
 
 	//
-	// Create an input stream buffer that points to the frame payload so we can easily parse it's content
-	//
-	sbgStreamBufferInitForRead(&inputStream, pPayload, payloadSize);
-
-	//
 	// Handle the different classes of messages differently
 	//
 	if (msgClass == SBG_ECOM_CLASS_LOG_ECOM_0)
 	{
+		//
+		// Create an input stream buffer that points to the frame payload so we can easily parse it's content
+		//
+		sbgStreamBufferInitForRead(&inputStream, pPayload, payloadSize);
+
 		//
 		// Parse the incoming log according to its type
 		//
@@ -121,25 +111,47 @@ SbgErrorCode sbgEComBinaryLogParse(SbgEComClass msgClass, SbgEComMsgId msg, cons
 		case SBG_ECOM_LOG_EVENT_OUT_B:
 			errorCode = sbgEComBinaryLogParseEvent(&inputStream, &pOutputData->eventMarker);
 			break;
+		case SBG_ECOM_LOG_DEBUG_0:
+		case SBG_ECOM_LOG_DEBUG_1:
+		case SBG_ECOM_LOG_DEBUG_2:
+		case SBG_ECOM_LOG_DEBUG_3:
+			errorCode = sbgEComBinaryLogParseDebugData(&inputStream, &pOutputData->debugData);
+			break;
+		case SBG_ECOM_LOG_IMU_RAW_DATA:
+			errorCode = sbgEComBinaryLogParseImuRawData(&inputStream, &pOutputData->imuRawData);
+			break;
 		case SBG_ECOM_LOG_DIAG:
 			errorCode = sbgEComBinaryLogParseDiagData(&inputStream, &pOutputData->diagData);
 			break;
-
 		default:
+			//
+			// This log isn't handled
+			//
 			errorCode = SBG_ERROR;
 		}
 	}
 	else if (msgClass == SBG_ECOM_CLASS_LOG_ECOM_1)
 	{
 		//
+		// Create an input stream buffer that points to the frame payload so we can easily parse it's content
+		//
+		sbgStreamBufferInitForRead(&inputStream, pPayload, payloadSize);
+
+		//
 		// Parse the message depending on the message ID
 		//
 		switch ((SbgEComLog1)msg)
 		{
 		case SBG_ECOM_LOG_FAST_IMU_DATA:
+			//
+			// Parse this binary log
+			//
 			errorCode = sbgEComBinaryLogParseFastImuData(&inputStream, &pOutputData->fastImuData);
 			break;
 		default:
+			//
+			// This log isn't handled
+			//
 			errorCode = SBG_ERROR;
 		}
 	}

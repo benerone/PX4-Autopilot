@@ -1,5 +1,5 @@
 ﻿#include "sbgEComCmdEthernet.h"
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
 //----------------------------------------------------------------------//
 //- Private methods declarations                                       -//
@@ -40,13 +40,14 @@ static SbgErrorCode sbgEComEthernetConfWrite(SbgStreamBuffer *pOutputStream, con
  */
 static SbgErrorCode sbgEComEthernetConfParse(SbgStreamBuffer *pInputStream, SbgEComEthernetConf *pEthernetConf)
 {
+	uint8_t cast;
 	assert(pInputStream);
 	assert(pEthernetConf);
 
 	//
 	// Read all parameters from the payload
 	//
-	pEthernetConf->mode = (SbgEComEthernetMode)sbgStreamBufferReadUint8LE(pInputStream);
+	pEthernetConf->mode = (SbgEComEthernetMode) (cast = sbgStreamBufferReadUint8LE(pInputStream));
 	pEthernetConf->ipAddress = (sbgIpAddress)sbgStreamBufferReadUint32LE(pInputStream);
 	pEthernetConf->netmask = (sbgIpAddress)sbgStreamBufferReadUint32LE(pInputStream);
 	pEthernetConf->gateway = (sbgIpAddress)sbgStreamBufferReadUint32LE(pInputStream);

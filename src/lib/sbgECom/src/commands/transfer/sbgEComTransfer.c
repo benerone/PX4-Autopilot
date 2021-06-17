@@ -1,7 +1,7 @@
 ﻿#include "sbgEComTransfer.h"
 #include "../sbgEComCmdCommon.h"
 #include <streamBuffer/sbgStreamBuffer.h>
-#include <splitBuffer/sbgSplitBuffer.h>
+#include <sbgECom/common/splitBuffer/sbgSplitBuffer.h>
 
 //----------------------------------------------------------------------//
 //- Internal transfer method definitions			                   -//

@@ -1,45 +1,30 @@
 /*!
- * \file           sbgEComCmdOutput.h
- * \author         SBG Systems
- * \date           11 June 2014
+ *	\file		sbgEComCmdOutput.h
+ *  \author		SBG Systems (Maxime Renaudet)
+ *	\date		11 June 2014
  *
- * \brief          This file implements SbgECom commands related to outputs.
+ *	\brief		This file implements SbgECom commands related to outputs.
  *
- * \section CodeCopyright Copyright Notice
- * The MIT license
- *
- * Copyright (C) 2007-2020, SBG Systems SAS. All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ *	\section CodeCopyright Copyright Notice 
+ *	Copyright (C) 2007-2013, SBG Systems SAS. All rights reserved.
+ *	
+ *	This source code is intended for use only by SBG Systems SAS and
+ *	those that have explicit written permission to use it from
+ *	SBG Systems SAS.
+ *	
+ *	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ *	KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ *	IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ *	PARTICULAR PURPOSE.
  */
-#ifndef SBG_ECOM_CMD_OUTPUT_H
-#define SBG_ECOM_CMD_OUTPUT_H
+#ifndef __SBG_ECOM_CMD_OUTPUT_H__
+#define __SBG_ECOM_CMD_OUTPUT_H__
 
-// sbgCommonLib heaaders
-#include <sbgCommon.h>
-
-// Project headers
+#include "sbgEComCmdCommon.h"
 #include "../sbgECanId.h"
-#include "../sbgEComIds.h"
 
 //----------------------------------------------------------------------//
-//- Public definitions												   -//
+//- Output definitions												   -//
 //----------------------------------------------------------------------//
 
 /*!
@@ -51,6 +36,24 @@ typedef enum _SbgEComOutputPort
 	SBG_ECOM_OUTPUT_PORT_C = 2,				/*!< Secondary output port only available on Ellipse-E devices */
 	SBG_ECOM_OUTPUT_PORT_E = 4				/*!< Secondary output port only available on B1 devices */
 } SbgEComOutputPort;
+
+/*!
+ * List of available legacy output format.
+ */
+typedef enum _SbgEComLegacyFormat
+{
+	SBG_ECOM_LEGACY_FORMAT_FLOAT = 0,		/*!< Data is output in floating point. */
+	SBG_ECOM_LEGACY_FORMAT_FIXED			/*!< Data is output in fixed point. */
+} SbgEComLegacyFormat;
+
+/*!
+ * List of available legacy output endiannesses.
+ */
+typedef enum _SbgEComLegacyEndian
+{
+	SBG_ECOM_LEGACY_LITTLE_ENDIAN = 0,		/*!< Data is output in little endian format. */
+	SBG_ECOM_LEGACY_BIG_ENDIAN				/*!< Data is output in big endian format. */
+} SbgEComLegacyEndian;		
 
 /*!
  * List of output modes available.
@@ -92,97 +95,122 @@ typedef enum _SbgEComOutputMonitoringPoint
 } SbgEComOutputMonitoringPoint;
 
 //----------------------------------------------------------------------//
-//- Public methods                                                     -//
+//- Helper structure definitions									   -//
 //----------------------------------------------------------------------//
 
 /*!
- * Retrieve the configuration of one the message on one of the output interfaces.
- *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[in]	outputPort					The output port of the device for the log concerned.
- * \param[in]	classId						The class of the concerned log.
- * \param[in]	msgId						The id of the concerned log.
- * \param[out]	pMode						Pointer to a SbgEComOutputMode to contain the current output mode of the message.
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ * Helper structure to configure legacy output.
+ */
+typedef struct _SbgEComLegacyConf
+{
+	uint32_t					mask;		/*!< Legacy output bit mask. */
+	SbgEComLegacyFormat		format;		/*!< Format of the output. */
+	SbgEComLegacyEndian		endian;		/*!< Endianness of the output. */
+	SbgEComOutputMode		mode;		/*!< Mode of output. */
+} SbgEComLegacyConf;
+
+//----------------------------------------------------------------------//
+//- Output commands                                                    -//
+//----------------------------------------------------------------------//
+
+/*!
+ *	Retrieve the configuration of one the message on one of the output interfaces.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[in]	outputPort					The output port of the device for the log concerned.
+ *	\param[in]	classId						The class of the concerned log.
+ *	\param[in]	msgId						The id of the concerned log.
+ *	\param[out]	pMode						Pointer to a SbgEComOutputMode to contain the current output mode of the message.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
 SbgErrorCode sbgEComCmdOutputGetConf(SbgEComHandle *pHandle, SbgEComOutputPort outputPort, SbgEComClass classId, SbgEComMsgId msgId, SbgEComOutputMode *pMode);
 
 /*!
- * Set the configuration of one the message on one of the output interfaces.
- *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[in]	outputPort					The output port of the device for the log concerned.
- * \param[in]	classId						The class of the concerned log.
- * \param[in]	msgId						The id of the concerned log.
- * \param[in]	mode						New output mode to set.
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ *	Set the configuration of one the message on one of the output interfaces.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[in]	outputPort					The output port of the device for the log concerned.
+ *	\param[in]	classId						The class of the concerned log.
+ *	\param[in]	msgId						The id of the concerned log.
+ *	\param[in]	mode						New output mode to set.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
 SbgErrorCode sbgEComCmdOutputSetConf(SbgEComHandle *pHandle, SbgEComOutputPort outputPort, SbgEComClass classId, SbgEComMsgId msgId, SbgEComOutputMode mode);
 
 /*!
- * Retrieve the enable of one of the output class message on one of the output interfaces.
- *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[in]	outputPort					The output port.
- * \param[in]	classId						The class to enable or disable.
- * \param[out]	pEnable						TRUE to enable message output of this class, FALSE to disable it.
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ *	Retrieve the enable of one of the output class message on one of the output interfaces.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[in]	outputPort					The output port.
+ *	\param[in]	classId						The class to enable or disable.
+ *	\param[out]	pEnable						TRUE to enable message output of this class, FALSE to disable it.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
 SbgErrorCode sbgEComCmdOutputClassGetEnable(SbgEComHandle *pHandle, SbgEComOutputPort outputPort, SbgEComClass classId, bool *pEnable);
 
 /*!
- * Set the enable of one of the output class message on one of the output interfaces.
- *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[in]	outputPort					The output port.
- * \param[in]	classId						The class to enable or disable.
- * \param[in]	enable						TRUE to enable message output of this class, FALSE to disable it.
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ *	Set the enable of one of the output class message on one of the output interfaces.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[in]	outputPort					The output port.
+ *	\param[in]	classId						The class to enable or disable.
+ *	\param[in]	enable						TRUE to enable message output of this class, FALSE to disable it.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
 SbgErrorCode sbgEComCmdOutputClassSetEnable(SbgEComHandle *pHandle, SbgEComOutputPort outputPort, SbgEComClass classId, bool enable);
 
 /*!
- * Retrieve the configuration of one the message on the CAN interface.
- *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[in]	internalId					The internal message id.
- * \param[out]	pMode						Pointer to a SbgEComOutputMode to contain the current output mode of the message.
- * \param[out]	pUserId						The user defined message id.
- * \param[out]	pExtended					TRUE if the user id uses the extended format.
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ *	Retrieve the configuration of one the message on the CAN interface.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[in]	internalId					The internal message id.
+ *	\param[out]	pMode						Pointer to a SbgEComOutputMode to contain the current output mode of the message.
+ *	\param[out]	pUserId						The user defined message id.
+ *	\param[out]	pExtended					TRUE if the user id uses the extended format.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
 SbgErrorCode sbgEComCmdCanOutputGetConf(SbgEComHandle *pHandle, SbgECanMessageId internalId, SbgEComOutputMode *pMode, uint32_t *pUserId, bool *pExtended);
 
 /*!
- * Set the configuration of one the message on the CAN interface
- *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[in]	internalId					The internal message id.
- * \param[in]	mode						Pointer to a SbgEComOutputMode containing the new output mode of the message.
- * \param[in]	userId						The user defined message id.
- * \param[in]	extended					TRUE if the user id uses the extended format.
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ *	Set the configuration of one the message on the CAN interface
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[in]	internalId					The internal message id.
+ *	\param[in]	mode						Pointer to a SbgEComOutputMode containing the new output mode of the message.
+ *	\param[in]	userId						The user defined message id.
+ *	\param[in]	extended					TRUE if the user id uses the extended format.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
 SbgErrorCode sbgEComCmdCanOutputSetConf(SbgEComHandle *pHandle, SbgECanMessageId internalId, SbgEComOutputMode mode, uint32_t userId, bool extended);
 
 /*!
- * Retrieve the NMEA talker id of one of the output interfaces.
- *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[in]	outputPort					The output port of the device for the log concerned.
- * \param[out]	pNmeaTalkerId				A 2-char array to contain the nmea talker id.
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ *	Retrieve the configuration of one the message on one of the output interfaces.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[in]	outputPort					The output port of the device for the log concerned.
+ *  \param[out] pConf						Pointer to a SbgEComLegacyConf structure to contain legacy configuration.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
-SbgErrorCode sbgEComCmdOutputGetNmeaTalkerId(SbgEComHandle *pHandle, SbgEComOutputPort outputPort, char *pNmeaTalkerId);
+SbgErrorCode sbgEComCmdOutputGetLegacyConf(SbgEComHandle *pHandle, SbgEComOutputPort outputPort, SbgEComLegacyConf *pConf);
 
 /*!
- * Set the NMEA talker id of one of the output interfaces.
- *
- * \param[in]	pHandle						A valid sbgECom handle.
- * \param[in]	outputPort					The output port of the device for the log concerned.
- * \param[out]	pNmeaTalkerId				A 2-char array containint the new nmea talker id.
- * \return									SBG_NO_ERROR if the command has been executed successfully.
+ *	Set the configuration of one the message on one of the output interfaces.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[in]	outputPort					The output port of the device for the log concerned.
+ *  \param[in]  pConf						Pointer to a SbgEComLegacyConf structure containing new legacy configuration.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
  */
-SbgErrorCode sbgEComCmdOutputSetNmeaTalkerId(SbgEComHandle *pHandle, SbgEComOutputPort outputPort, const char *pNmeaTalkerId);
+SbgErrorCode sbgEComCmdOutputSetLegacyConf(SbgEComHandle *pHandle, SbgEComOutputPort outputPort, const SbgEComLegacyConf *pConf);
 
-#endif // SBG_ECOM_CMD_OUTPUT_H
+/*!
+ *	Retrieve the NMEA talker id of one of the output interfaces.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[in]	outputPort					The output port of the device for the log concerned.
+ *	\param[out]	nmeaTalkerId				A 2-char array to contain the nmea talker id.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
+ */
+SbgErrorCode sbgEComCmdOutputGetNmeaTalkerId(SbgEComHandle *pHandle, SbgEComOutputPort outputPort, char nmeaTalkerId[2]);
+
+/*!
+ *	Set the NMEA talker id of one of the output interfaces.
+ *	\param[in]	pHandle						A valid sbgECom handle.
+ *	\param[in]	outputPort					The output port of the device for the log concerned.
+ *	\param[out]	nmeaTalkerId				A 2-char array containint the new nmea talker id.
+ *	\return									SBG_NO_ERROR if the command has been executed successfully.
+ */
+SbgErrorCode sbgEComCmdOutputSetNmeaTalkerId(SbgEComHandle *pHandle, SbgEComOutputPort outputPort, const char nmeaTalkerId[2]);
+
+#endif

@@ -1,39 +1,27 @@
 ﻿/*!
- * \file           sbgEComBinaryLogImu.h
- * \author         SBG Systems
- * \date           25 February 2013
+ *	\file		sbgEComBinaryLogImu.h
+ *  \author		SBG Systems (Raphael Siryani)
+ *	\date		25 February 2013
  *
- * \brief          This file is used to parse received IMU binary logs.
+ *	\brief		This file is used to parse received IMU binary logs.
  *
- * \section CodeCopyright Copyright Notice
- * The MIT license
- *
- * Copyright (C) 2007-2020, SBG Systems SAS. All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ *	\section CodeCopyright Copyright Notice 
+ *	Copyright (C) 2007-2013, SBG Systems SAS. All rights reserved.
+ *	
+ *	This source code is intended for use only by SBG Systems SAS and
+ *	those that have explicit written permission to use it from
+ *	SBG Systems SAS.
+ *	
+ *	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ *	KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ *	IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ *	PARTICULAR PURPOSE.
  */
-
 #ifndef __SBG_ECOM_BINARY_LOG_IMU_H__
 #define __SBG_ECOM_BINARY_LOG_IMU_H__
 
-#include <sbgCommon.h>
-#include <streamBuffer/sbgStreamBuffer.h>
+#include <sbgECom/common/sbgCommon.h>
+#include <sbgECom/common/streamBuffer/sbgStreamBuffer.h>
 
 //----------------------------------------------------------------------//
 //- Log Inertial Data definitions                                      -//
@@ -67,11 +55,11 @@ typedef struct _SbgLogImuData
 {
 	uint32_t	timeStamp;					/*!< Time in us since the sensor power up. */
 	uint16_t	status;						/*!< IMU status bitmask. */
-	float		accelerometers[3];			/*!< X, Y, Z accelerometers in m.s^-2. */
-	float		gyroscopes[3];				/*!< X, Y, Z gyroscopes in rad.s^-1. */
-	float		temperature;				/*!< Internal temperature in °C. */
-	float		deltaVelocity[3];			/*!< X, Y, Z delta velocity in m.s^-2. */
-	float		deltaAngle[3];				/*!< X, Y, Z delta angle in rad.s^-1. */
+	float	accelerometers[3];			/*!< X, Y, Z accelerometers in m.s^-2. */
+	float	gyroscopes[3];				/*!< X, Y, Z gyroscopes in rad.s^-1. */
+	float	temperature;				/*!< Internal temperature in °C. */	
+	float	deltaVelocity[3];			/*!< X, Y, Z delta velocity in m.s^-2. */
+	float	deltaAngle[3];				/*!< X, Y, Z delta angle in rad.s^-1. */
 } SbgLogImuData;
 
 /*!
@@ -82,9 +70,9 @@ typedef struct _SbgLogImuShort
 {
 	uint32_t	timeStamp;					/*!< Time in us since the sensor power up. */
 	uint16_t	status;						/*!< IMU status bitmask. */
-	int32_t		deltaVelocity[3];			/*!< X, Y, Z delta velocity. Unit is 1048576 LSB for 1 m.s^-2. */
-	int32_t		deltaAngle[3];				/*!< X, Y, Z delta angle. Unit is 67108864 LSB for 1 rad.s^-1. */
-	int16_t		temperature;				/*!< IMU average temperature. Unit is 256 LSB for 1°C. */
+	int32_t	deltaVelocity[3];			/*!< X, Y, Z delta velocity. Unit is 1048576 LSB for 1 m.s^-2. */
+	int32_t	deltaAngle[3];				/*!< X, Y, Z delta angle. Unit is 67108864 LSB for 1 rad.s^-1. */
+	int16_t	temperature;				/*!< IMU average temperature. Unit is 256 LSB for 1°C. */
 } SbgLogImuShort;
 
 /*!
@@ -94,8 +82,8 @@ typedef struct _SbgLogFastImuData
 {
 	uint32_t	timeStamp;					/*!< Time in us since the sensor power up. */
 	uint16_t	status;						/*!< IMU status bitmask. */
-	float		accelerometers[3];			/*!< X, Y, Z accelerometers in m.s^-2. */
-	float		gyroscopes[3];				/*!< X, Y, Z gyroscopes in rad.s^-1. */
+	float	accelerometers[3];			/*!< X, Y, Z accelerometers in m.s^-2. */
+	float	gyroscopes[3];				/*!< X, Y, Z gyroscopes in rad.s^-1. */
 } SbgLogFastImuData;
 
 //----------------------------------------------------------------------//

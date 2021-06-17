@@ -1,54 +1,15 @@
 ﻿#include "sbgEComBinaryLogUtc.h"
 
 //----------------------------------------------------------------------//
-//- Private global definitions                                         -//
+//- Operations                                                         -//
 //----------------------------------------------------------------------//
 
-/*!< Lookup table for clock status enum */
-static const char *gClockStatusStr[] =
-{
-	[SBG_ECOM_CLOCK_ERROR]			= "SBG_ECOM_CLOCK_ERROR",
-	[SBG_ECOM_CLOCK_FREE_RUNNING]	= "SBG_ECOM_CLOCK_FREE_RUNNING",
-	[SBG_ECOM_CLOCK_STEERING]		= "SBG_ECOM_CLOCK_STEERING",
-	[SBG_ECOM_CLOCK_VALID]			= "SBG_ECOM_CLOCK_VALID"
-};
-
-/*!< Lookup table for UTC status enum */
-static const char *gUtcStatusStr[] =
-{
-	[SBG_ECOM_UTC_INVALID]			= "SBG_ECOM_UTC_INVALID",
-	[SBG_ECOM_UTC_NO_LEAP_SEC]		= "SBG_ECOM_UTC_NO_LEAP_SEC",
-	[SBG_ECOM_UTC_VALID]			= "SBG_ECOM_UTC_VALID",
-};
-
-//----------------------------------------------------------------------//
-//- Public methods                                                     -//
-//----------------------------------------------------------------------//
-
-const char *sbgEcomLogUtcGetClockStatusAsString(const SbgLogUtcData *pLogUtc)
-{
-	SbgEComClockStatus		clockStatus;
-	
-	assert(pLogUtc);
-
-	clockStatus = sbgEComLogUtcGetClockStatus(pLogUtc->status);
-	assert(clockStatus < SBG_ARRAY_SIZE(gClockStatusStr));
-
-	return gClockStatusStr[clockStatus];
-}
-
-const char *sbgEcomLogUtcGetUtcStatusAsString(const SbgLogUtcData *pLogUtc)
-{
-	SbgEComClockUtcStatus	utcStatus;
-	
-	assert(pLogUtc);
-
-	utcStatus = sbgEComLogUtcGetClockUtcStatus(pLogUtc->status);
-	assert(utcStatus < SBG_ARRAY_SIZE(gUtcStatusStr));
-
-	return gUtcStatusStr[utcStatus];
-}
-
+/*!
+ * Parse data for the SBG_ECOM_LOG_UTC_DATA message and fill the corresponding structure.
+ * \param[in]	pInputStream				Input stream buffer to read the payload from.
+ * \param[out]	pOutputData					Pointer on the output structure that stores parsed data.
+ * \return									SBG_NO_ERROR if the payload has been parsed.
+ */
 SbgErrorCode sbgEComBinaryLogParseUtcData(SbgStreamBuffer *pInputStream, SbgLogUtcData *pOutputData)
 {
 	assert(pInputStream);
@@ -74,6 +35,12 @@ SbgErrorCode sbgEComBinaryLogParseUtcData(SbgStreamBuffer *pInputStream, SbgLogU
 	return sbgStreamBufferGetLastError(pInputStream);
 }
 
+/*!
+ * Write data for the SBG_ECOM_LOG_UTC_DATA message to the output stream buffer from the provided structure.
+ * \param[out]	pOutputStream				Output stream buffer to write the payload to.
+ * \param[in]	pInputData					Pointer on the input structure that stores data to write.
+ * \return									SBG_NO_ERROR if the message has been generated in the provided buffer.
+ */
 SbgErrorCode sbgEComBinaryLogWriteUtcData(SbgStreamBuffer *pOutputStream, const SbgLogUtcData *pInputData)
 {
 	assert(pOutputStream);
