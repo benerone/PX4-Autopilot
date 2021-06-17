@@ -478,7 +478,7 @@ void ModuleSBG::processHIL() {
 			}
 
 			//FOR TEST ONLY
-			executeSBG();
+
 			usleep(100);
 	}
 }
@@ -569,20 +569,20 @@ void ModuleSBG::run()
 	hil_mode=(_param_sys_hitl.get()!=0);
 
 
-	prepareSBG();
+
 
 	if (hil_mode) {
 		processHIL();
 	} else {
-
+		prepareSBG();
 		while(!should_exit()) {
 			//SBG impl
 			executeSBG();
 			usleep(100);
 		}
-
+		terminateSBG();
 	}
-	terminateSBG();
+
 
 
 }
