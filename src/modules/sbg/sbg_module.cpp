@@ -265,10 +265,11 @@ void ModuleSBG::processSBG_EKF_QUAT(const SbgBinaryLogData *pLogData) {
 
 void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	vehicle_global_position_s global_pos{};
+	sbg_status_s sbg_status;
 
 	nbEKF_NAV++;
 
-	global_pos.timestamp = hrt_absolute_time();;
+	global_pos.timestamp = hrt_absolute_time();
 	global_pos.lat = pLogData->ekfNavData.position[0];
 	global_pos.lon = pLogData->ekfNavData.position[1];
 	global_pos.alt = pLogData->ekfNavData.position[2];
@@ -283,6 +284,10 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	global_lat=lat;
 	global_lon=lon;
 	solutions=pLogData->ekfNavData.status;
+
+	sbg_status.timestamp=global_pos.timestamp;
+	sbg_status.solution_status=pLogData->ekfNavData.status;
+	_sbg_status_pub.publish(sbg_status);
 
 	if (!_local_proj_inited) {
 		_local_proj_inited = true;

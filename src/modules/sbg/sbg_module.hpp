@@ -26,6 +26,7 @@
 #include <uORB/topics/hil_state_quaternion.h>
 #include <uORB/topics/pipepos_correction.h>
 #include <uORB/topics/vehicle_share_position.h>
+#include <uORB/topics/sbg_status.h>
 
 
 #include <sbgECom/src/sbgEComLib.h>
@@ -74,6 +75,7 @@ private:
 	uORB::Publication<vehicle_angular_velocity_s> _vehicle_angular_velocity_pub{ORB_ID(vehicle_angular_velocity)};
 	uORB::PublicationData<vehicle_share_position_s>		_vehicle_share_position_pub{ORB_ID(vehicle_share_position)};
 	uORB::Publication<pipepos_correction_s> 		_pipepos_correction_pub{ORB_ID(pipepos_correction)};
+	uORB::Publication<sbg_status_s> 		_sbg_status_pub{ORB_ID(sbg_status)};
 
 
 
@@ -142,7 +144,7 @@ private:
 	int nbIMU_DATA;
 
 	double global_lat,global_lon;
-	int32_t solutions;
+	uint32_t solutions;
 
 
 };
