@@ -2,6 +2,7 @@
 #define CAN_INFO_HPP
 
 #include <uORB/topics/can_status.h>
+#include <uORB/topics/sbg_status.h>
 
 class MavlinkStreamCanStatus : public MavlinkStream
 {
@@ -24,6 +25,7 @@ private:
 	explicit MavlinkStreamCanStatus(Mavlink *mavlink) : MavlinkStream(mavlink) {}
 
 	uORB::Subscription _can_status_sub{ORB_ID(can_status)};
+	uORB::Subscription _sbg_status_sub{ORB_ID(sbg_status)};
 
 protected:
 	bool send(const hrt_abstime t) override
@@ -35,6 +37,12 @@ protected:
 			mavlink_extra_status_t msg{};
 			msg.can1_state=can_status.can_error_1?0:1;
 			msg.can2_state=can_status.can_error_2?0:1;
+			sbg_status_s sbg_status;
+			if (_sbg_status_sub.update(&sbg_status)) {
+				msg.sbg_solution=sbg_status.solution_status;
+			} else {
+				msg.sbg_solution=0;
+			}
 			mavlink_msg_extra_status_send_struct(_mavlink->get_channel(), &msg);
 			return true;
 		}
