@@ -1,5 +1,15 @@
 #pragma once
 
+#ifdef __PX4_NUTTX
+#include <nuttx/clock.h>
+#include <nuttx/arch.h>
+#endif
+
+#include <termios.h>
+
+#include <px4_platform_common/atomic.h>
+#include <px4_platform_common/cli.h>
+#include <px4_platform_common/getopt.h>
 #include <px4_platform_common/module.h>
 #include <px4_platform_common/module_params.h>
 #include <parameters/param.h>
@@ -16,6 +26,12 @@
 #include <uORB/topics/hil_state_quaternion.h>
 #include <uORB/topics/pipepos_correction.h>
 #include <uORB/topics/vehicle_share_position.h>
+
+
+#include <sbgECom/src/sbgEComLib.h>
+#include <sbgECom/common/interfaces/sbgInterface.h>
+#include <sbgECom/common/interfaces/sbgInterfacePx4Serial.h>
+
 
 extern "C" __EXPORT int sbg_main(int argc, char *argv[]);
 
@@ -44,6 +60,10 @@ public:
 	/** @see ModuleBase::print_status() */
 	int print_status() override;
 
+	void processSBG_EKF_QUAT(const SbgBinaryLogData *pLogData);
+	void processSBG_EKF_NAV(const SbgBinaryLogData *pLogData);
+	void processSBG_IMU_DATA(const SbgBinaryLogData *pLogData);
+
 private:
 
 	uORB::Publication<airspeed_s>				_airspeed_pub{ORB_ID(airspeed)};
@@ -67,6 +87,11 @@ private:
 
 	void processLocalPosition(vehicle_local_position_s &lpos);
 	void pipeFuseData(vehicle_local_position_s &lpos,vehicle_share_position_s &spos);
+
+	void prepareSBG();
+	void executeSBG();
+
+	void terminateSBG();
 
 
 	DEFINE_PARAMETERS(
@@ -96,6 +121,21 @@ private:
 	map_projection_reference_s	_hil_local_proj_ref{};
 	float				_hil_local_alt0{0.0f};
 	bool				_hil_local_proj_inited{false};
+
+	//SBG
+	int				_serial_fd{-1};
+
+	SbgEComHandle			comHandle;
+	bool 					comHandleInit;
+	SbgInterface			sbgInterface;
+	bool 					sbgInterfaceInit;
+	SbgEComDeviceInfo		deviceInfo;
+
+	map_projection_reference_s	_local_proj_ref{};
+	float				_local_alt0{0.0f};
+	bool				_local_proj_inited{false};
+	vehicle_attitude_s  g_attitude{};
+
 
 };
 

@@ -3,10 +3,57 @@
 #include <math.h>
 
 
+
+
 #include "sbg_module.hpp"
 #include "pipetools.h"
 
+#define PORT "/dev/ttyS2"
+
 using namespace zapata;
+
+/*!
+ *	Callback definition called each time a new log is received.
+ *	\param[in]	pHandle									Valid handle on the sbgECom instance that has called this callback.
+ *	\param[in]	msgClass								Class of the message we have received
+ *	\param[in]	msg										Message ID of the log received.
+ *	\param[in]	pLogData								Contains the received log data as an union.
+ *	\param[in]	pUserArg								Optional user supplied argument.
+ *	\return												SBG_NO_ERROR if the received log has been used successfully.
+ */
+SbgErrorCode onLogReceived(SbgEComHandle *pHandle, SbgEComClass msgClass, SbgEComMsgId msg, const SbgBinaryLogData *pLogData, void *pUserArg)
+{
+	//
+	// Handle separately each received data according to the log ID
+	//
+	switch (msg)
+	{
+	case SBG_ECOM_LOG_IMU_DATA:
+		((ModuleSBG*)pUserArg)->processSBG_IMU_DATA(pLogData);
+		break;
+	case SBG_ECOM_LOG_EKF_EULER:
+		//
+		// Simply display euler angles in real time
+		//
+		PX4_INFO("Euler Angles: %3.1f\t%3.1f\t%3.1f\tStd Dev:%3.1f\t%3.1f\t%3.1f   \r",
+				(double)sbgRadToDegF(pLogData->ekfEulerData.euler[0]), (double)sbgRadToDegF(pLogData->ekfEulerData.euler[1]), (double)sbgRadToDegF(pLogData->ekfEulerData.euler[2]),
+				(double)sbgRadToDegF(pLogData->ekfEulerData.eulerStdDev[0]), (double)sbgRadToDegF(pLogData->ekfEulerData.eulerStdDev[1]), (double)sbgRadToDegF(pLogData->ekfEulerData.eulerStdDev[2]));
+		break;
+	case SBG_ECOM_LOG_EKF_QUAT:
+		((ModuleSBG*)pUserArg)->processSBG_EKF_QUAT(pLogData);
+		break;
+	case SBG_ECOM_LOG_EKF_NAV:
+		((ModuleSBG*)pUserArg)->processSBG_EKF_NAV(pLogData);
+		break;
+	default:
+		PX4_INFO("SBG:Handle %d",msg);
+		break;
+	}
+
+	return SBG_NO_ERROR;
+}
+
+
 
 int ModuleSBG::print_status()
 {
@@ -15,6 +62,19 @@ int ModuleSBG::print_status()
 	} else {
 		PX4_INFO("Running");
 	}
+	if (sbgInterfaceInit) {
+		PX4_INFO("SBG:Interface Ok");
+	} else {
+		PX4_INFO("SBG:Interface Fail");
+	}
+
+	if (comHandleInit) {
+		PX4_INFO("SBG:Init Ok");
+		PX4_INFO("SBG:Device : %u found", deviceInfo.serialNumber);
+	} else {
+		PX4_INFO("SBG:Init Fail");
+	}
+
 
 	return 0;
 }
@@ -43,7 +103,7 @@ int ModuleSBG::task_spawn(int argc, char *argv[])
 	_task_id = px4_task_spawn_cmd("sbg",
 				      SCHED_DEFAULT,
 				      SCHED_PRIORITY_DEFAULT,
-				      4096,
+				      10000,
 				      (px4_main_t)&run_trampoline,
 				      (char *const *)argv);
 
@@ -70,8 +130,105 @@ ModuleSBG::ModuleSBG()
 	: ModuleParams(nullptr)
 {
 	hil_mode=false;
+	sbgInterfaceInit=false;
+	comHandleInit=false;
+}
+
+void ModuleSBG::processSBG_EKF_QUAT(const SbgBinaryLogData *pLogData) {
+
+	g_attitude.timestamp = hrt_absolute_time();
+
+	matrix::Quatf q(pLogData->ekfQuatData.quaternion);
+	q.copyTo(g_attitude.q);
+
+	_attitude_pub.publish(g_attitude);
+}
+
+void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
+	vehicle_global_position_s global_pos{};
+
+	global_pos.timestamp = hrt_absolute_time();;
+	global_pos.lat = pLogData->ekfNavData.position[0];
+	global_pos.lon = pLogData->ekfNavData.position[1];
+	global_pos.alt = pLogData->ekfNavData.position[2];
+	global_pos.eph = 2.0f;
+	global_pos.epv = 4.0f;
+
+	_global_pos_pub.publish(global_pos);
+
+	double lat =global_pos.lat;
+	double lon =global_pos.lon;
+
+	if (!_local_proj_inited) {
+		_local_proj_inited = true;
+		_local_alt0 = global_pos.alt;
+
+		map_projection_init(&_hil_local_proj_ref, lat, lon);
+	}
+
+	float x = 0.0f;
+	float y = 0.0f;
+	map_projection_project(&_local_proj_ref, lat, lon, &x, &y);
+
+	vehicle_local_position_s local_pos{};
+	local_pos.timestamp = global_pos.timestamp;
+
+	local_pos.ref_timestamp = _local_proj_ref.timestamp;
+	local_pos.ref_lat = math::radians(_local_proj_ref.lat_rad);
+	local_pos.ref_lon = math::radians(_local_proj_ref.lon_rad);
+	local_pos.ref_alt = _local_alt0;
+	local_pos.xy_valid = true;
+	local_pos.z_valid = true;
+	local_pos.v_xy_valid = true;
+	local_pos.v_z_valid = true;
+	local_pos.x = x;
+	local_pos.y = y;
+	local_pos.z = _local_alt0 - global_pos.alt;
+	local_pos.vx = pLogData->ekfNavData.velocity[0];
+	local_pos.vy = pLogData->ekfNavData.velocity[1];
+	local_pos.vz = pLogData->ekfNavData.velocity[2];
+
+	matrix::Eulerf euler{matrix::Quatf(g_attitude.q)};
+	local_pos.heading = euler.psi();
+	local_pos.xy_global = true;
+	local_pos.z_global = true;
+	local_pos.vxy_max = INFINITY;
+	local_pos.vz_max = INFINITY;
+	local_pos.hagl_min = INFINITY;
+	local_pos.hagl_max = INFINITY;
+
+	processLocalPosition(local_pos);
+
+	_local_pos_pub.publish(local_pos);
 
 }
+
+void ModuleSBG::processSBG_IMU_DATA(const SbgBinaryLogData *pLogData) {
+	const uint64_t timestamp = hrt_absolute_time();
+
+	/* accelerometer */
+
+	vehicle_acceleration_s va{};
+	va.timestamp = timestamp;
+	va.timestamp_sample = timestamp;
+	va.xyz[0]= pLogData->imuData.accelerometers[0];
+	va.xyz[1]= pLogData->imuData.accelerometers[1];
+	va.xyz[2]= pLogData->imuData.accelerometers[2];
+	_vehicle_acceleration_pub.publish(va);
+
+
+	/* gyroscope */
+
+	vehicle_angular_velocity_s vav{};
+	vav.timestamp = timestamp;
+	vav.timestamp_sample = timestamp;
+	vav.xyz[0]= pLogData->imuData.gyroscopes[0];
+	vav.xyz[1]= pLogData->imuData.gyroscopes[1];
+	vav.xyz[2]= pLogData->imuData.gyroscopes[2];
+	_vehicle_angular_velocity_pub.publish(vav);
+
+}
+
 
 void ModuleSBG::processHIL() {
 	_hil_local_proj_inited=false;
@@ -189,7 +346,82 @@ void ModuleSBG::processHIL() {
 				}
 			}
 
+			//FOR TEST ONLY
+			executeSBG();
 			usleep(100);
+	}
+}
+
+
+void ModuleSBG::prepareSBG() {
+	_serial_fd = ::open(PORT, O_RDWR | O_NOCTTY);
+
+		if (_serial_fd < 0) {
+			PX4_ERR("GPS: failed to open serial port: %s err: %d", PORT, errno);
+			return;
+		}
+
+	SbgErrorCode			errorCode;
+	errorCode = sbgInterfacePx4SerialCreate(&sbgInterface, _serial_fd, 115200);
+
+	if (errorCode == SBG_NO_ERROR) {
+		sbgInterfaceInit=true;
+		errorCode = sbgEComInit(&comHandle, &sbgInterface);
+		if (errorCode == SBG_NO_ERROR) {
+			comHandleInit=true;
+
+			errorCode = sbgEComCmdGetInfo(&comHandle, &deviceInfo);
+			//
+			// Display device information if no error
+			//
+			if (errorCode == SBG_NO_ERROR)
+			{
+				PX4_INFO("Device : %u found", deviceInfo.serialNumber);
+			}
+			else
+			{
+				PX4_ERR("SBG: Unable to get device information.");
+			}
+
+			sbgEComSetReceiveLogCallback(&comHandle, onLogReceived, this);
+
+		} else {
+			PX4_ERR("SBG:Unable to Unable to initialize the sbgECom library");
+			return;
+		}
+	} else {
+		PX4_ERR("SBG:Unable to create the SBG PX4 interface");
+		return;
+	}
+}
+
+void ModuleSBG::terminateSBG() {
+	if (comHandleInit) {
+		sbgEComClose(&comHandle);
+		comHandleInit=false;
+	}
+
+	if (sbgInterfaceInit) {
+		sbgInterfaceSerialDestroy(&sbgInterface);
+		sbgInterfaceInit=false;
+	}
+
+	if (_serial_fd >= 0) {
+		::close(_serial_fd);
+		_serial_fd = -1;
+	}
+}
+
+void ModuleSBG::executeSBG() {
+	SbgErrorCode			errorCode;
+
+	if(comHandleInit) {
+		errorCode = sbgEComHandle(&comHandle);
+		if (errorCode == SBG_NOT_READY) {
+			//PX4_ERR("SBG: Not Ready");
+		} else {
+			PX4_INFO("SBG*");
+		}
 	}
 }
 
@@ -201,16 +433,21 @@ void ModuleSBG::run()
 	sys_id=_param_mav_sys_id.get();
 	hil_mode=(_param_sys_hitl.get()!=0);
 
+
+	prepareSBG();
+
 	if (hil_mode) {
 		processHIL();
 	} else {
 
 		while(!should_exit()) {
 			//SBG impl
+			executeSBG();
 			usleep(100);
 		}
 
 	}
+	terminateSBG();
 
 
 }
