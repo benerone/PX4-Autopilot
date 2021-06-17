@@ -1,4 +1,6 @@
-﻿#include <sbgECom/common/sbgCommon.h>
+﻿#include <px4_platform_common/defines.h>
+#include <px4_platform_common/log.h>
+#include <sbgECom/common/sbgCommon.h>
 #include <stdarg.h>
 #include <time.h>
 
@@ -106,20 +108,25 @@ SBG_COMMON_LIB_API void sbgPlatformDebugLogMsg(const char *pFileName, const char
 	switch (logType)
 	{
 	case SBG_DEBUG_LOG_TYPE_ERROR:
-		fprintf(stderr, "*ERR * [%s]%s: %s\n\r", sbgErrorCodeToString(errorCode), pFunctionName, errorMsg);
+		PX4_ERR("*ERR * [%s]%s: %s", sbgErrorCodeToString(errorCode), pFunctionName, errorMsg);
+		//fprintf(stderr, "*ERR * [%s]%s: %s\n\r", sbgErrorCodeToString(errorCode), pFunctionName, errorMsg);
 		break;
 	case SBG_DEBUG_LOG_TYPE_WARNING:
-		fprintf(stderr, "*WARN* [%s]%s: %s\n\r", sbgErrorCodeToString(errorCode), pFunctionName, errorMsg);
+		//fprintf(stderr, "*WARN* [%s]%s: %s\n\r", sbgErrorCodeToString(errorCode), pFunctionName, errorMsg);
+		PX4_WARN( "*WARN* [%s]%s: %s", sbgErrorCodeToString(errorCode), pFunctionName, errorMsg);
 		break;
 	case SBG_DEBUG_LOG_TYPE_INFO:
-		fprintf(stderr, "*INFO* %s\n\r", errorMsg);
+		//fprintf(stderr, "*INFO* %s\n\r", errorMsg);
+		PX4_INFO( "*INFO* %s", errorMsg);
 		break;
 	case SBG_DEBUG_LOG_TYPE_DEBUG:
-		fprintf(stderr, "*DBG * [timestamp: %u]: %s\n\r",timestamp, errorMsg);
+		//fprintf(stderr, "*DBG * [timestamp: %u]: %s\n\r",timestamp, errorMsg);
+		PX4_INFO("*DBG * [timestamp: %u]: %s",timestamp, errorMsg);
 		break;
 	default:
-		fprintf(stderr, "*UKNW*\t[%s]%s(%u): %s\n\r", sbgErrorCodeToString(errorCode), pFunctionName, line, errorMsg);
+		//fprintf(stderr, "*UKNW*\t[%s]%s(%u): %s\n\r", sbgErrorCodeToString(errorCode), pFunctionName, line, errorMsg);
+		PX4_INFO("*UKNW*\t[%s]%s(%u): %s", sbgErrorCodeToString(errorCode), pFunctionName, line, errorMsg);
 	}
 
-	fflush(stderr);
+	//fflush(stderr);
 }

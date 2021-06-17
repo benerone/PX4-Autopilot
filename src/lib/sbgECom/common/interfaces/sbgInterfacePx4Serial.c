@@ -1,3 +1,5 @@
+#include <px4_platform_common/defines.h>
+#include <px4_platform_common/log.h>
 #include "sbgInterfacePx4Serial.h"
 #include <stdio.h>
 #include <termios.h>
@@ -84,14 +86,14 @@ SbgErrorCode sbgInterfacePx4SerialCreate(SbgInterface *pSbgInterface, int serial
 				if (tcgetattr((pPx4Interface->serialHandle), &config) != -1)
 				{
 
-					// Control Modes 
+					// Control Modes
 					config.c_cflag &= ~PARENB;	// Disable parity
 					config.c_cflag &= ~CRTSCTS;	// Disable RTS/CTS hardware flow control
-					config.c_cflag &= ~CSTOPB;	// Only one stop bit 
+					config.c_cflag &= ~CSTOPB;	// Only one stop bit
 					config.c_cflag |= CS8;		// 8 bits per byte
 					config.c_cflag |= CLOCAL;	// Ignore control lines
 					config.c_cflag |= CREAD;	// Turn on READ
-					
+
 					// Local Modes
 					config.c_lflag &= ~ICANON;	// Disable canonical mode
 					config.c_lflag &= ~ECHO;	// Disable echo
@@ -172,12 +174,15 @@ SbgErrorCode sbgInterfacePx4SerialRead(SbgInterface *pSbgInterface, void *pBuffe
 
 	pPx4Interface = (SbgInterfacePx4Serial*)pSbgInterface->handle;
 
+	//PX4_INFO("SBG: read serial");
+
 	bytesRead = read(pPx4Interface->serialHandle, pBuffer, bytesToRead);
 
 	if (bytesRead >= 0)
 	{
 		*pBytesRead = (size_t)bytesRead;
 		errorCode = SBG_NO_ERROR;
+		//PX4_INFO("SBG: read serial ok %d",bytesRead);
 	}
 	else
 	{

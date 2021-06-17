@@ -29,24 +29,27 @@ SbgErrorCode onLogReceived(SbgEComHandle *pHandle, SbgEComClass msgClass, SbgECo
 	switch (msg)
 	{
 	case SBG_ECOM_LOG_IMU_DATA:
+		//PX4_INFO("SBG_ECOM_LOG_IMU_DATA");
 		((ModuleSBG*)pUserArg)->processSBG_IMU_DATA(pLogData);
 		break;
 	case SBG_ECOM_LOG_EKF_EULER:
 		//
 		// Simply display euler angles in real time
 		//
-		PX4_INFO("Euler Angles: %3.1f\t%3.1f\t%3.1f\tStd Dev:%3.1f\t%3.1f\t%3.1f   \r",
+		/*PX4_INFO("Euler Angles: %3.1f\t%3.1f\t%3.1f\tStd Dev:%3.1f\t%3.1f\t%3.1f   \r",
 				(double)sbgRadToDegF(pLogData->ekfEulerData.euler[0]), (double)sbgRadToDegF(pLogData->ekfEulerData.euler[1]), (double)sbgRadToDegF(pLogData->ekfEulerData.euler[2]),
 				(double)sbgRadToDegF(pLogData->ekfEulerData.eulerStdDev[0]), (double)sbgRadToDegF(pLogData->ekfEulerData.eulerStdDev[1]), (double)sbgRadToDegF(pLogData->ekfEulerData.eulerStdDev[2]));
+		*/
 		break;
 	case SBG_ECOM_LOG_EKF_QUAT:
+		//PX4_INFO("SBG_ECOM_LOG_EKF_QUAT");
 		((ModuleSBG*)pUserArg)->processSBG_EKF_QUAT(pLogData);
 		break;
 	case SBG_ECOM_LOG_EKF_NAV:
+		//PX4_INFO("SBG_ECOM_LOG_EKF_NAV");
 		((ModuleSBG*)pUserArg)->processSBG_EKF_NAV(pLogData);
 		break;
 	default:
-		PX4_INFO("SBG:Handle %d",msg);
 		break;
 	}
 
@@ -74,8 +77,119 @@ int ModuleSBG::print_status()
 	} else {
 		PX4_INFO("SBG:Init Fail");
 	}
+	PX4_INFO("nbEKF_QUAT: %d",nbEKF_QUAT);
+	PX4_INFO("nbEKF_NAV: %d",nbEKF_NAV);
+	PX4_INFO("nbIMU_DATA: %d",nbIMU_DATA);
+	PX4_INFO("lat: %f",global_lat);
+	PX4_INFO("lon: %f",global_lon);
 
+	int smode=solutions & 0b1111;
 
+	switch(smode) {
+		case SBG_ECOM_SOL_MODE_UNINITIALIZED:
+			PX4_INFO("MODE: NOT INITIALISED: Kalman filter is not initialized, all data invalid");
+			break;
+		case SBG_ECOM_SOL_MODE_VERTICAL_GYRO:
+			PX4_INFO("MODE: VERTICAL_GYRO : The Kalman filter only rely on a vertical reference to compute roll and pitch angles. Heading and navigation data drift freely");
+			break;
+		case SBG_ECOM_SOL_MODE_AHRS:
+			PX4_INFO("MODE: AHRS : A heading reference is available, the Kalman filter provides full orientation but navigation data drift freely");
+			break;
+		case SBG_ECOM_SOL_MODE_NAV_VELOCITY:
+			PX4_INFO("MODE: NAV_VELOCITY : The Kalman filter computes orientation and velocity. Position is freely integrated from velocity estimation");
+			break;
+		case SBG_ECOM_SOL_MODE_NAV_POSITION:
+			PX4_INFO("MODE: NOMINAL : Nominal mode, the Kalman filter computes all parameters (attitude, velocity, position). Absolute position is provided");
+			break;
+		default:
+			PX4_INFO("MODE: Unknown mode !!!!");
+	}
+
+	if ((solutions & SBG_ECOM_SOL_MODE_VERTICAL_GYRO)==SBG_ECOM_SOL_MODE_VERTICAL_GYRO) {
+		PX4_INFO("The Kalman filter only rely on a vertical reference to compute roll and pitch angles. Heading and navigation data drift freely");
+	} else {
+		//PX4_INFO("Kalman filter ok");
+	}
+	if ((solutions & SBG_ECOM_SOL_MODE_AHRS)==SBG_ECOM_SOL_MODE_AHRS) {
+		PX4_INFO("A heading reference is available, the Kalman filter provides full orientation but navigation data drift freely");
+	} else {
+		//PX4_INFO("Kalman filter ok");
+	}
+	if ((solutions & SBG_ECOM_SOL_MODE_NAV_VELOCITY)==SBG_ECOM_SOL_MODE_NAV_VELOCITY) {
+		PX4_INFO("The Kalman filter computes orientation and velocity. Position is freely integrated from velocity estimation");
+	} else {
+		//PX4_INFO("Kalman filter ok");
+	}
+	if ((solutions & SBG_ECOM_SOL_MODE_NAV_POSITION)==SBG_ECOM_SOL_MODE_NAV_POSITION) {
+		PX4_INFO("Nominal mode, the Kalman filter computes all parameters (attitude, velocity, position). Absolute position is provided");
+	} else {
+		//PX4_INFO("Kalman filter ok");
+	}
+	if ((solutions & SBG_ECOM_SOL_ATTITUDE_VALID)==SBG_ECOM_SOL_ATTITUDE_VALID) {
+		PX4_INFO("Attitude valid");
+	} else {
+		PX4_INFO("Attitude invalid");
+	}
+	if ((solutions & SBG_ECOM_SOL_HEADING_VALID)==SBG_ECOM_SOL_HEADING_VALID) {
+		PX4_INFO("Heading valid");
+	} else {
+		PX4_INFO("Heading invalid");
+	}
+	if ((solutions & SBG_ECOM_SOL_VELOCITY_VALID)==SBG_ECOM_SOL_VELOCITY_VALID) {
+		PX4_INFO("Velocity valid");
+	} else {
+		PX4_INFO("Velocity invalid");
+	}
+	if ((solutions & SBG_ECOM_SOL_POSITION_VALID)==SBG_ECOM_SOL_POSITION_VALID) {
+		PX4_INFO("Position valid");
+	} else {
+		PX4_INFO("Position invalid");
+	}
+	if ((solutions & SBG_ECOM_SOL_VERT_REF_USED)==SBG_ECOM_SOL_VERT_REF_USED) {
+		PX4_INFO("Vertical reference used");
+	} else {
+		PX4_INFO("Vertical reference not used");
+	}
+	if ((solutions & SBG_ECOM_SOL_MAG_REF_USED)==SBG_ECOM_SOL_MAG_REF_USED) {
+		PX4_INFO("Magneto used");
+	} else {
+		PX4_INFO("Magneto not used");
+	}
+	if ((solutions & SBG_ECOM_SOL_GPS1_VEL_USED)==SBG_ECOM_SOL_GPS1_VEL_USED) {
+		PX4_INFO("GPS1 vel used");
+	} else {
+		PX4_INFO("GPS1 vel not used");
+	}
+	if ((solutions & SBG_ECOM_SOL_GPS1_POS_USED)==SBG_ECOM_SOL_GPS1_POS_USED) {
+		PX4_INFO("GPS1 pos used");
+	} else {
+		PX4_INFO("GPS1 pos not used");
+	}
+	if ((solutions & SBG_ECOM_SOL_GPS1_HDT_USED)==SBG_ECOM_SOL_GPS1_HDT_USED) {
+		PX4_INFO("GPS1 heading used");
+	} else {
+		PX4_INFO("GPS1 heading not used");
+	}
+	if ((solutions & SBG_ECOM_SOL_GPS2_VEL_USED)==SBG_ECOM_SOL_GPS2_VEL_USED) {
+		PX4_INFO("GPS2 vel used");
+	} else {
+		PX4_INFO("GPS2 vel not used");
+	}
+	if ((solutions & SBG_ECOM_SOL_GPS2_POS_USED)==SBG_ECOM_SOL_GPS2_POS_USED) {
+		PX4_INFO("GPS2 pos used");
+	} else {
+		PX4_INFO("GPS2 pos not used");
+	}
+	if ((solutions & SBG_ECOM_SOL_GPS2_HDT_USED)==SBG_ECOM_SOL_GPS2_HDT_USED) {
+		PX4_INFO("GPS2 heading used");
+	} else {
+		PX4_INFO("GPS2 heading not used");
+	}
+	if ((solutions & SBG_ECOM_SOL_ALIGN_VALID)==SBG_ECOM_SOL_ALIGN_VALID) {
+		PX4_INFO("sensor align valid");
+	} else {
+		PX4_INFO("sensor align not valid");
+	}
 	return 0;
 }
 
@@ -132,9 +246,14 @@ ModuleSBG::ModuleSBG()
 	hil_mode=false;
 	sbgInterfaceInit=false;
 	comHandleInit=false;
+	nbEKF_QUAT=0;
+	nbEKF_NAV=0;
+	nbIMU_DATA=0;
+	solutions=0;
 }
 
 void ModuleSBG::processSBG_EKF_QUAT(const SbgBinaryLogData *pLogData) {
+	nbEKF_QUAT++;
 
 	g_attitude.timestamp = hrt_absolute_time();
 
@@ -147,6 +266,8 @@ void ModuleSBG::processSBG_EKF_QUAT(const SbgBinaryLogData *pLogData) {
 void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	vehicle_global_position_s global_pos{};
 
+	nbEKF_NAV++;
+
 	global_pos.timestamp = hrt_absolute_time();;
 	global_pos.lat = pLogData->ekfNavData.position[0];
 	global_pos.lon = pLogData->ekfNavData.position[1];
@@ -158,6 +279,10 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 
 	double lat =global_pos.lat;
 	double lon =global_pos.lon;
+
+	global_lat=lat;
+	global_lon=lon;
+	solutions=pLogData->ekfNavData.status;
 
 	if (!_local_proj_inited) {
 		_local_proj_inited = true;
@@ -204,6 +329,7 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 }
 
 void ModuleSBG::processSBG_IMU_DATA(const SbgBinaryLogData *pLogData) {
+	nbIMU_DATA++;
 	const uint64_t timestamp = hrt_absolute_time();
 
 	/* accelerometer */
@@ -354,6 +480,10 @@ void ModuleSBG::processHIL() {
 
 
 void ModuleSBG::prepareSBG() {
+	nbEKF_QUAT=0;
+	nbEKF_NAV=0;
+	nbIMU_DATA=0;
+	solutions=0;
 	_serial_fd = ::open(PORT, O_RDWR | O_NOCTTY);
 
 		if (_serial_fd < 0) {

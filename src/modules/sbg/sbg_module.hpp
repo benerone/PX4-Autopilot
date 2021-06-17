@@ -136,6 +136,14 @@ private:
 	bool				_local_proj_inited{false};
 	vehicle_attitude_s  g_attitude{};
 
+	//Stat
+	int nbEKF_QUAT;
+	int nbEKF_NAV;
+	int nbIMU_DATA;
+
+	double global_lat,global_lon;
+	int32_t solutions;
+
 
 };
 
