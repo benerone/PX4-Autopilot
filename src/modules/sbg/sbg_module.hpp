@@ -64,6 +64,7 @@ public:
 	void processSBG_EKF_QUAT(const SbgBinaryLogData *pLogData);
 	void processSBG_EKF_NAV(const SbgBinaryLogData *pLogData);
 	void processSBG_IMU_DATA(const SbgBinaryLogData *pLogData);
+	void processSBG_LOG_STATUS(const SbgBinaryLogData *pLogData);
 
 private:
 
@@ -114,7 +115,8 @@ private:
 		(ParamFloat<px4::params::EKF2_PI_LIM_VZ>) _param_ekf2_pi_lim_vz,
 
 		(ParamFloat<px4::params::EKF2_PI_MUL_HE>) _param_ekf2_pi_mul_he,
-		(ParamFloat<px4::params::EKF2_PI_LIM_HE>) _param_ekf2_pi_lim_he
+		(ParamFloat<px4::params::EKF2_PI_LIM_HE>) _param_ekf2_pi_lim_he,
+		(ParamInt<px4::params::SBG_ENABLE_HIL>) _param_sbg_enable_hil
 	)
 
 	int32_t sys_id;
@@ -125,6 +127,7 @@ private:
 	bool				_hil_local_proj_inited{false};
 
 	//SBG
+	bool 			enable_sbg_in_hil;
 	int				_serial_fd{-1};
 
 	SbgEComHandle			comHandle;
@@ -145,6 +148,7 @@ private:
 
 	double global_lat,global_lon;
 	uint32_t solutions;
+	sbg_status_s sbg_status;
 
 
 };

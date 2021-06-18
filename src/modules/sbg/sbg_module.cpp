@@ -28,6 +28,9 @@ SbgErrorCode onLogReceived(SbgEComHandle *pHandle, SbgEComClass msgClass, SbgECo
 	//
 	switch (msg)
 	{
+	case SBG_ECOM_LOG_STATUS:
+		((ModuleSBG*)pUserArg)->processSBG_LOG_STATUS(pLogData);
+		break;
 	case SBG_ECOM_LOG_IMU_DATA:
 		//PX4_INFO("SBG_ECOM_LOG_IMU_DATA");
 		((ModuleSBG*)pUserArg)->processSBG_IMU_DATA(pLogData);
@@ -82,7 +85,191 @@ int ModuleSBG::print_status()
 	PX4_INFO("nbIMU_DATA: %d",nbIMU_DATA);
 	PX4_INFO("lat: %f",global_lat);
 	PX4_INFO("lon: %f",global_lon);
+	PX4_INFO("************** SBG GENERAL *************");
+	if ((sbg_status.general_status & SBG_ECOM_GENERAL_MAIN_POWER_OK)==SBG_ECOM_GENERAL_MAIN_POWER_OK) {
+		PX4_INFO("Main Power:Ok");
+	} else {
+		PX4_INFO("Main Power:Fail");
+	}
+	if ((sbg_status.general_status & SBG_ECOM_GENERAL_IMU_POWER_OK)==SBG_ECOM_GENERAL_IMU_POWER_OK) {
+		PX4_INFO("Imu Power:Ok");
+	} else {
+		PX4_INFO("Imu Power:Fail");
+	}
+	if ((sbg_status.general_status & SBG_ECOM_GENERAL_GPS_POWER_OK)==SBG_ECOM_GENERAL_GPS_POWER_OK) {
+		PX4_INFO("Gps Power:Ok");
+	} else {
+		PX4_INFO("Gps Power:Fail");
+	}
+	if ((sbg_status.general_status & SBG_ECOM_GENERAL_SETTINGS_OK)==SBG_ECOM_GENERAL_SETTINGS_OK) {
+		PX4_INFO("Setting:Ok");
+	} else {
+		PX4_INFO("Setting:Fail");
+	}
+	if ((sbg_status.general_status & SBG_ECOM_GENERAL_TEMPERATURE_OK)==SBG_ECOM_GENERAL_TEMPERATURE_OK) {
+		PX4_INFO("Temperature:Ok");
+	} else {
+		PX4_INFO("Temperature:Fail");
+	}
+	if ((sbg_status.general_status & SBG_ECOM_GENERAL_DATALOGGER_OK)==SBG_ECOM_GENERAL_DATALOGGER_OK) {
+		PX4_INFO("DataLogger:Ok");
+	} else {
+		PX4_INFO("DataLogger:Fail");
+	}
+	if ((sbg_status.general_status & SBG_ECOM_GENERAL_CPU_OK)==SBG_ECOM_GENERAL_CPU_OK) {
+		PX4_INFO("CPU:Ok");
+	} else {
+		PX4_INFO("CPU:Fail");
+	}
+	PX4_INFO("************** SBG COM *************");
+	if ((sbg_status.com_status & SBG_ECOM_PORTA_VALID)==SBG_ECOM_PORTA_VALID) {
+		PX4_INFO("PortA:Ok");
+	} else {
+		PX4_INFO("PortA:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTA_RX_OK)==SBG_ECOM_PORTA_RX_OK) {
+		PX4_INFO("PortA RX:Ok");
+	} else {
+		PX4_INFO("PortA RX:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTA_TX_OK)==SBG_ECOM_PORTA_TX_OK) {
+		PX4_INFO("PortA TX:Ok");
+	} else {
+		PX4_INFO("PortA TX:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTB_VALID)==SBG_ECOM_PORTB_VALID) {
+		PX4_INFO("PortB:Ok");
+	} else {
+		PX4_INFO("PortB:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTB_RX_OK)==SBG_ECOM_PORTB_RX_OK) {
+		PX4_INFO("PortB RX:Ok");
+	} else {
+		PX4_INFO("PortB RX:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTB_TX_OK)==SBG_ECOM_PORTB_TX_OK) {
+		PX4_INFO("PortB TX:Ok");
+	} else {
+		PX4_INFO("PortB TX:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTC_VALID)==SBG_ECOM_PORTC_VALID) {
+		PX4_INFO("PortC:Ok");
+	} else {
+		PX4_INFO("PortC:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTC_RX_OK)==SBG_ECOM_PORTC_RX_OK) {
+		PX4_INFO("PortC RX:Ok");
+	} else {
+		PX4_INFO("PortC RX:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTC_TX_OK)==SBG_ECOM_PORTC_TX_OK) {
+		PX4_INFO("PortC TX:Ok");
+	} else {
+		PX4_INFO("PortC TX:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTD_VALID)==SBG_ECOM_PORTD_VALID) {
+		PX4_INFO("PortD:Ok");
+	} else {
+		PX4_INFO("PortD:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTD_RX_OK)==SBG_ECOM_PORTD_RX_OK) {
+		PX4_INFO("PortD RX:Ok");
+	} else {
+		PX4_INFO("PortD RX:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTD_TX_OK)==SBG_ECOM_PORTC_TX_OK) {
+		PX4_INFO("PortD TX:Ok");
+	} else {
+		PX4_INFO("PortD TX:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTE_VALID)==SBG_ECOM_PORTE_VALID) {
+		PX4_INFO("PortE:Ok");
+	} else {
+		PX4_INFO("PortE:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTE_RX_OK)==SBG_ECOM_PORTE_RX_OK) {
+		PX4_INFO("PortE RX:Ok");
+	} else {
+		PX4_INFO("PortE RX:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTE_TX_OK)==SBG_ECOM_PORTE_TX_OK) {
+		PX4_INFO("PortE TX:Ok");
+	} else {
+		PX4_INFO("PortE TX:Fail");
+	}
+	PX4_INFO("************** SBG AIDING *************");
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_GPS1_POS_RECV)==SBG_ECOM_AIDING_GPS1_POS_RECV) {
+		PX4_INFO("GPS1 Position:Ok");
+	} else {
+		PX4_INFO("GPS1 Position:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_GPS1_VEL_RECV)==SBG_ECOM_AIDING_GPS1_VEL_RECV) {
+		PX4_INFO("GPS1 Velocity:Ok");
+	} else {
+		PX4_INFO("GPS1 Velocity:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_GPS1_HDT_RECV)==SBG_ECOM_AIDING_GPS1_HDT_RECV) {
+		PX4_INFO("GPS1 True Heading:Ok");
+	} else {
+		PX4_INFO("GPS1 True Heading:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_GPS1_UTC_RECV)==SBG_ECOM_AIDING_GPS1_UTC_RECV) {
+		PX4_INFO("GPS1 UTC Time:Ok");
+	} else {
+		PX4_INFO("GPS1 UTC Time:Fail");
+	}
 
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_GPS2_POS_RECV)==SBG_ECOM_AIDING_GPS2_POS_RECV) {
+		PX4_INFO("GPS2 Position:Ok");
+	} else {
+		PX4_INFO("GPS2 Position:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_GPS2_VEL_RECV)==SBG_ECOM_AIDING_GPS2_VEL_RECV) {
+		PX4_INFO("GPS2 Velocity:Ok");
+	} else {
+		PX4_INFO("GPS2 Velocity:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_GPS2_HDT_RECV)==SBG_ECOM_AIDING_GPS2_HDT_RECV) {
+		PX4_INFO("GPS2 True Heading:Ok");
+	} else {
+		PX4_INFO("GPS2 True Heading:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_GPS2_UTC_RECV)==SBG_ECOM_AIDING_GPS2_UTC_RECV) {
+		PX4_INFO("GPS2 UTC Time:Ok");
+	} else {
+		PX4_INFO("GPS2 UTC Time:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_MAG_RECV)==SBG_ECOM_AIDING_MAG_RECV) {
+		PX4_INFO("Magneto:Ok");
+	} else {
+		PX4_INFO("Magneto:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_ODO_RECV)==SBG_ECOM_AIDING_ODO_RECV) {
+		PX4_INFO("Odo:Ok");
+	} else {
+		PX4_INFO("Odo:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_DVL_RECV)==SBG_ECOM_AIDING_DVL_RECV) {
+		PX4_INFO("Dvl:Ok");
+	} else {
+		PX4_INFO("Dvl:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_USBL_RECV)==SBG_ECOM_AIDING_USBL_RECV) {
+		PX4_INFO("Usbl:Ok");
+	} else {
+		PX4_INFO("Usbl:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_DEPTH_RECV)==SBG_ECOM_AIDING_DEPTH_RECV) {
+		PX4_INFO("Depth sensor:Ok");
+	} else {
+		PX4_INFO("Depth sensor:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_AIR_DATA_RECV)==SBG_ECOM_AIDING_AIR_DATA_RECV) {
+		PX4_INFO("Air data:Ok");
+	} else {
+		PX4_INFO("Air data:Fail");
+	}
+	PX4_INFO("************** SBG SOLUTION *************");
 	int smode=solutions & 0b1111;
 
 	switch(smode) {
@@ -190,6 +377,7 @@ int ModuleSBG::print_status()
 	} else {
 		PX4_INFO("sensor align not valid");
 	}
+
 	return 0;
 }
 
@@ -265,7 +453,7 @@ void ModuleSBG::processSBG_EKF_QUAT(const SbgBinaryLogData *pLogData) {
 
 void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	vehicle_global_position_s global_pos{};
-	sbg_status_s sbg_status;
+
 
 	nbEKF_NAV++;
 
@@ -360,6 +548,13 @@ void ModuleSBG::processSBG_IMU_DATA(const SbgBinaryLogData *pLogData) {
 
 }
 
+void ModuleSBG::processSBG_LOG_STATUS(const SbgBinaryLogData *pLogData) {
+	sbg_status.timestamp=hrt_absolute_time();
+	sbg_status.general_status=pLogData->statusData.generalStatus;
+	sbg_status.com_status=pLogData->statusData.comStatus;
+	sbg_status.aiding_status=pLogData->statusData.aidingStatus;
+	_sbg_status_pub.publish(sbg_status);
+}
 
 void ModuleSBG::processHIL() {
 	_hil_local_proj_inited=false;
@@ -478,7 +673,9 @@ void ModuleSBG::processHIL() {
 			}
 
 			//FOR TEST ONLY
-
+			if (enable_sbg_in_hil) {
+				executeSBG();
+			}
 			usleep(100);
 	}
 }
@@ -567,12 +764,18 @@ void ModuleSBG::run()
 	//Mavlink id serve as id
 	sys_id=_param_mav_sys_id.get();
 	hil_mode=(_param_sys_hitl.get()!=0);
-
+	enable_sbg_in_hil=(_param_sbg_enable_hil.get()!=0);
 
 
 
 	if (hil_mode) {
+		if (enable_sbg_in_hil) {
+			prepareSBG();
+		}
 		processHIL();
+		if (enable_sbg_in_hil) {
+			terminateSBG();
+		}
 	} else {
 		prepareSBG();
 		while(!should_exit()) {
