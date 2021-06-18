@@ -83,6 +83,7 @@ int ModuleSBG::print_status()
 	PX4_INFO("nbEKF_QUAT: %d",nbEKF_QUAT);
 	PX4_INFO("nbEKF_NAV: %d",nbEKF_NAV);
 	PX4_INFO("nbIMU_DATA: %d",nbIMU_DATA);
+	PX4_INFO("nbLOG_STATUS: %d",nbLOG_STATUS);
 	PX4_INFO("lat: %f",global_lat);
 	PX4_INFO("lon: %f",global_lon);
 	PX4_INFO("************** SBG GENERAL *************");
@@ -270,7 +271,7 @@ int ModuleSBG::print_status()
 		PX4_INFO("Air data:Fail");
 	}
 	PX4_INFO("************** SBG SOLUTION *************");
-	int smode=solutions & 0b1111;
+	int smode=sbg_status.solution_status & 0b1111;
 
 	switch(smode) {
 		case SBG_ECOM_SOL_MODE_UNINITIALIZED:
@@ -292,87 +293,87 @@ int ModuleSBG::print_status()
 			PX4_INFO("MODE: Unknown mode !!!!");
 	}
 
-	if ((solutions & SBG_ECOM_SOL_MODE_VERTICAL_GYRO)==SBG_ECOM_SOL_MODE_VERTICAL_GYRO) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_MODE_VERTICAL_GYRO)==SBG_ECOM_SOL_MODE_VERTICAL_GYRO) {
 		PX4_INFO("The Kalman filter only rely on a vertical reference to compute roll and pitch angles. Heading and navigation data drift freely");
 	} else {
 		//PX4_INFO("Kalman filter ok");
 	}
-	if ((solutions & SBG_ECOM_SOL_MODE_AHRS)==SBG_ECOM_SOL_MODE_AHRS) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_MODE_AHRS)==SBG_ECOM_SOL_MODE_AHRS) {
 		PX4_INFO("A heading reference is available, the Kalman filter provides full orientation but navigation data drift freely");
 	} else {
 		//PX4_INFO("Kalman filter ok");
 	}
-	if ((solutions & SBG_ECOM_SOL_MODE_NAV_VELOCITY)==SBG_ECOM_SOL_MODE_NAV_VELOCITY) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_MODE_NAV_VELOCITY)==SBG_ECOM_SOL_MODE_NAV_VELOCITY) {
 		PX4_INFO("The Kalman filter computes orientation and velocity. Position is freely integrated from velocity estimation");
 	} else {
 		//PX4_INFO("Kalman filter ok");
 	}
-	if ((solutions & SBG_ECOM_SOL_MODE_NAV_POSITION)==SBG_ECOM_SOL_MODE_NAV_POSITION) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_MODE_NAV_POSITION)==SBG_ECOM_SOL_MODE_NAV_POSITION) {
 		PX4_INFO("Nominal mode, the Kalman filter computes all parameters (attitude, velocity, position). Absolute position is provided");
 	} else {
 		//PX4_INFO("Kalman filter ok");
 	}
-	if ((solutions & SBG_ECOM_SOL_ATTITUDE_VALID)==SBG_ECOM_SOL_ATTITUDE_VALID) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_ATTITUDE_VALID)==SBG_ECOM_SOL_ATTITUDE_VALID) {
 		PX4_INFO("Attitude valid");
 	} else {
 		PX4_INFO("Attitude invalid");
 	}
-	if ((solutions & SBG_ECOM_SOL_HEADING_VALID)==SBG_ECOM_SOL_HEADING_VALID) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_HEADING_VALID)==SBG_ECOM_SOL_HEADING_VALID) {
 		PX4_INFO("Heading valid");
 	} else {
 		PX4_INFO("Heading invalid");
 	}
-	if ((solutions & SBG_ECOM_SOL_VELOCITY_VALID)==SBG_ECOM_SOL_VELOCITY_VALID) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_VELOCITY_VALID)==SBG_ECOM_SOL_VELOCITY_VALID) {
 		PX4_INFO("Velocity valid");
 	} else {
 		PX4_INFO("Velocity invalid");
 	}
-	if ((solutions & SBG_ECOM_SOL_POSITION_VALID)==SBG_ECOM_SOL_POSITION_VALID) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_POSITION_VALID)==SBG_ECOM_SOL_POSITION_VALID) {
 		PX4_INFO("Position valid");
 	} else {
 		PX4_INFO("Position invalid");
 	}
-	if ((solutions & SBG_ECOM_SOL_VERT_REF_USED)==SBG_ECOM_SOL_VERT_REF_USED) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_VERT_REF_USED)==SBG_ECOM_SOL_VERT_REF_USED) {
 		PX4_INFO("Vertical reference used");
 	} else {
 		PX4_INFO("Vertical reference not used");
 	}
-	if ((solutions & SBG_ECOM_SOL_MAG_REF_USED)==SBG_ECOM_SOL_MAG_REF_USED) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_MAG_REF_USED)==SBG_ECOM_SOL_MAG_REF_USED) {
 		PX4_INFO("Magneto used");
 	} else {
 		PX4_INFO("Magneto not used");
 	}
-	if ((solutions & SBG_ECOM_SOL_GPS1_VEL_USED)==SBG_ECOM_SOL_GPS1_VEL_USED) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_GPS1_VEL_USED)==SBG_ECOM_SOL_GPS1_VEL_USED) {
 		PX4_INFO("GPS1 vel used");
 	} else {
 		PX4_INFO("GPS1 vel not used");
 	}
-	if ((solutions & SBG_ECOM_SOL_GPS1_POS_USED)==SBG_ECOM_SOL_GPS1_POS_USED) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_GPS1_POS_USED)==SBG_ECOM_SOL_GPS1_POS_USED) {
 		PX4_INFO("GPS1 pos used");
 	} else {
 		PX4_INFO("GPS1 pos not used");
 	}
-	if ((solutions & SBG_ECOM_SOL_GPS1_HDT_USED)==SBG_ECOM_SOL_GPS1_HDT_USED) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_GPS1_HDT_USED)==SBG_ECOM_SOL_GPS1_HDT_USED) {
 		PX4_INFO("GPS1 heading used");
 	} else {
 		PX4_INFO("GPS1 heading not used");
 	}
-	if ((solutions & SBG_ECOM_SOL_GPS2_VEL_USED)==SBG_ECOM_SOL_GPS2_VEL_USED) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_GPS2_VEL_USED)==SBG_ECOM_SOL_GPS2_VEL_USED) {
 		PX4_INFO("GPS2 vel used");
 	} else {
 		PX4_INFO("GPS2 vel not used");
 	}
-	if ((solutions & SBG_ECOM_SOL_GPS2_POS_USED)==SBG_ECOM_SOL_GPS2_POS_USED) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_GPS2_POS_USED)==SBG_ECOM_SOL_GPS2_POS_USED) {
 		PX4_INFO("GPS2 pos used");
 	} else {
 		PX4_INFO("GPS2 pos not used");
 	}
-	if ((solutions & SBG_ECOM_SOL_GPS2_HDT_USED)==SBG_ECOM_SOL_GPS2_HDT_USED) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_GPS2_HDT_USED)==SBG_ECOM_SOL_GPS2_HDT_USED) {
 		PX4_INFO("GPS2 heading used");
 	} else {
 		PX4_INFO("GPS2 heading not used");
 	}
-	if ((solutions & SBG_ECOM_SOL_ALIGN_VALID)==SBG_ECOM_SOL_ALIGN_VALID) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_ALIGN_VALID)==SBG_ECOM_SOL_ALIGN_VALID) {
 		PX4_INFO("sensor align valid");
 	} else {
 		PX4_INFO("sensor align not valid");
@@ -437,12 +438,19 @@ ModuleSBG::ModuleSBG()
 	nbEKF_QUAT=0;
 	nbEKF_NAV=0;
 	nbIMU_DATA=0;
-	solutions=0;
+	nbLOG_STATUS=0;
 }
 
 void ModuleSBG::processSBG_EKF_QUAT(const SbgBinaryLogData *pLogData) {
 	nbEKF_QUAT++;
 
+	sbg_status.timestamp=hrt_absolute_time();
+	sbg_status.solution_status=pLogData->ekfQuatData.status;
+	_sbg_status_pub.publish(sbg_status);
+
+	if ((pLogData->ekfQuatData.status & SBG_ECOM_SOL_ATTITUDE_VALID)!=SBG_ECOM_SOL_ATTITUDE_VALID) {
+		return;
+	}
 	g_attitude.timestamp = hrt_absolute_time();
 
 	matrix::Quatf q(pLogData->ekfQuatData.quaternion);
@@ -454,10 +462,26 @@ void ModuleSBG::processSBG_EKF_QUAT(const SbgBinaryLogData *pLogData) {
 void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	vehicle_global_position_s global_pos{};
 
+	sbg_status.timestamp=hrt_absolute_time();
+	sbg_status.solution_status=pLogData->ekfNavData.status;
+	_sbg_status_pub.publish(sbg_status);
 
 	nbEKF_NAV++;
 
-	global_pos.timestamp = hrt_absolute_time();
+	if ((pLogData->ekfQuatData.status & SBG_ECOM_SOL_ATTITUDE_VALID)!=SBG_ECOM_SOL_ATTITUDE_VALID) {
+		return;
+	}
+	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_POSITION_VALID)!=SBG_ECOM_SOL_POSITION_VALID) {
+		return;
+	}
+	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_VELOCITY_VALID)!=SBG_ECOM_SOL_VELOCITY_VALID) {
+		return;
+	}
+	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_HEADING_VALID)!=SBG_ECOM_SOL_HEADING_VALID) {
+		return;
+	}
+
+	global_pos.timestamp = sbg_status.timestamp;
 	global_pos.lat = pLogData->ekfNavData.position[0];
 	global_pos.lon = pLogData->ekfNavData.position[1];
 	global_pos.alt = pLogData->ekfNavData.position[2];
@@ -471,11 +495,7 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 
 	global_lat=lat;
 	global_lon=lon;
-	solutions=pLogData->ekfNavData.status;
 
-	sbg_status.timestamp=global_pos.timestamp;
-	sbg_status.solution_status=pLogData->ekfNavData.status;
-	_sbg_status_pub.publish(sbg_status);
 
 	if (!_local_proj_inited) {
 		_local_proj_inited = true;
@@ -525,30 +545,51 @@ void ModuleSBG::processSBG_IMU_DATA(const SbgBinaryLogData *pLogData) {
 	nbIMU_DATA++;
 	const uint64_t timestamp = hrt_absolute_time();
 
+	sbg_status.timestamp=timestamp;
+	sbg_status.imu_status=pLogData->imuData.status;
+	_sbg_status_pub.publish(sbg_status);
+
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_COM_OK)!=SBG_ECOM_IMU_COM_OK) {
+		return;
+	}
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_STATUS_BIT)!=SBG_ECOM_IMU_STATUS_BIT) {
+		return;
+	}
+
+
+
 	/* accelerometer */
+	if (((sbg_status.imu_status & SBG_ECOM_IMU_ACCELS_IN_RANGE)==SBG_ECOM_IMU_ACCELS_IN_RANGE)
+		&& ((sbg_status.imu_status & SBG_ECOM_IMU_ACCEL_X_BIT)==SBG_ECOM_IMU_ACCEL_X_BIT)
+		&& ((sbg_status.imu_status & SBG_ECOM_IMU_ACCEL_Y_BIT)==SBG_ECOM_IMU_ACCEL_Y_BIT)
+		&& ((sbg_status.imu_status & SBG_ECOM_IMU_ACCEL_Z_BIT)==SBG_ECOM_IMU_ACCEL_Z_BIT)) {
+		vehicle_acceleration_s va{};
+		va.timestamp = timestamp;
+		va.timestamp_sample = timestamp;
+		va.xyz[0]= pLogData->imuData.accelerometers[0];
+		va.xyz[1]= pLogData->imuData.accelerometers[1];
+		va.xyz[2]= pLogData->imuData.accelerometers[2];
+		_vehicle_acceleration_pub.publish(va);
 
-	vehicle_acceleration_s va{};
-	va.timestamp = timestamp;
-	va.timestamp_sample = timestamp;
-	va.xyz[0]= pLogData->imuData.accelerometers[0];
-	va.xyz[1]= pLogData->imuData.accelerometers[1];
-	va.xyz[2]= pLogData->imuData.accelerometers[2];
-	_vehicle_acceleration_pub.publish(va);
-
-
+	}
 	/* gyroscope */
-
-	vehicle_angular_velocity_s vav{};
-	vav.timestamp = timestamp;
-	vav.timestamp_sample = timestamp;
-	vav.xyz[0]= pLogData->imuData.gyroscopes[0];
-	vav.xyz[1]= pLogData->imuData.gyroscopes[1];
-	vav.xyz[2]= pLogData->imuData.gyroscopes[2];
-	_vehicle_angular_velocity_pub.publish(vav);
+	if (((sbg_status.imu_status & SBG_ECOM_IMU_GYROS_IN_RANGE)==SBG_ECOM_IMU_GYROS_IN_RANGE)
+		&& ((sbg_status.imu_status & SBG_ECOM_IMU_GYRO_X_BIT)==SBG_ECOM_IMU_GYRO_X_BIT)
+		&& ((sbg_status.imu_status & SBG_ECOM_IMU_GYRO_Y_BIT)==SBG_ECOM_IMU_GYRO_Y_BIT)
+		&& ((sbg_status.imu_status & SBG_ECOM_IMU_GYRO_Z_BIT)==SBG_ECOM_IMU_GYRO_Z_BIT)) {
+			vehicle_angular_velocity_s vav{};
+			vav.timestamp = timestamp;
+			vav.timestamp_sample = timestamp;
+			vav.xyz[0]= pLogData->imuData.gyroscopes[0];
+			vav.xyz[1]= pLogData->imuData.gyroscopes[1];
+			vav.xyz[2]= pLogData->imuData.gyroscopes[2];
+			_vehicle_angular_velocity_pub.publish(vav);
+	}
 
 }
 
 void ModuleSBG::processSBG_LOG_STATUS(const SbgBinaryLogData *pLogData) {
+	nbLOG_STATUS++;
 	sbg_status.timestamp=hrt_absolute_time();
 	sbg_status.general_status=pLogData->statusData.generalStatus;
 	sbg_status.com_status=pLogData->statusData.comStatus;
@@ -685,10 +726,14 @@ void ModuleSBG::prepareSBG() {
 	nbEKF_QUAT=0;
 	nbEKF_NAV=0;
 	nbIMU_DATA=0;
-	solutions=0;
+	nbLOG_STATUS=0;
+	sbg_status.solution_status=0;
 	sbg_status.aiding_status=0;
 	sbg_status.com_status=0;
 	sbg_status.general_status=0;
+	sbg_status.imu_status=0;
+	global_lat=0.0;
+	global_lon=0.0;
 	_serial_fd = ::open(PORT, O_RDWR | O_NOCTTY);
 
 		if (_serial_fd < 0) {

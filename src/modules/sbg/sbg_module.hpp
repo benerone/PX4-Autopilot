@@ -145,9 +145,9 @@ private:
 	int nbEKF_QUAT;
 	int nbEKF_NAV;
 	int nbIMU_DATA;
+	int nbLOG_STATUS;
 
 	double global_lat,global_lon;
-	uint32_t solutions;
 	sbg_status_s sbg_status;
 
 

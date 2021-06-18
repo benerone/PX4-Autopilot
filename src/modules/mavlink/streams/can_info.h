@@ -43,11 +43,13 @@ protected:
 				msg.sbg_general=sbg_status.general_status;
 				msg.sbg_com=sbg_status.com_status;
 				msg.sbg_aiding=sbg_status.aiding_status;
+				msg.sbg_imu=sbg_status.imu_status;
 			} else {
 				msg.sbg_solution=0;
 				msg.sbg_general=0;
 				msg.sbg_com=0;
 				msg.sbg_aiding=0;
+				msg.sbg_imu=0;
 			}
 			mavlink_msg_extra_status_send_struct(_mavlink->get_channel(), &msg);
 			return true;
