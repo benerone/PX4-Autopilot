@@ -686,6 +686,9 @@ void ModuleSBG::prepareSBG() {
 	nbEKF_NAV=0;
 	nbIMU_DATA=0;
 	solutions=0;
+	sbg_status.aiding_status=0;
+	sbg_status.com_status=0;
+	sbg_status.general_status=0;
 	_serial_fd = ::open(PORT, O_RDWR | O_NOCTTY);
 
 		if (_serial_fd < 0) {
