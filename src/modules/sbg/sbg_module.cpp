@@ -446,6 +446,9 @@ void ModuleSBG::processSBG_EKF_QUAT(const SbgBinaryLogData *pLogData) {
 
 	sbg_status.timestamp=hrt_absolute_time();
 	sbg_status.solution_status=pLogData->ekfQuatData.status;
+	sbg_status.roll_acc=pLogData->ekfQuatData.eulerStdDev[0];
+	sbg_status.pitch_acc=pLogData->ekfQuatData.eulerStdDev[1];
+	sbg_status.yaw_acc=pLogData->ekfQuatData.eulerStdDev[2];
 	_sbg_status_pub.publish(sbg_status);
 
 	if ((pLogData->ekfQuatData.status & SBG_ECOM_SOL_ATTITUDE_VALID)!=SBG_ECOM_SOL_ATTITUDE_VALID) {
@@ -464,6 +467,12 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 
 	sbg_status.timestamp=hrt_absolute_time();
 	sbg_status.solution_status=pLogData->ekfNavData.status;
+	sbg_status.vel_n_acc=pLogData->ekfNavData.velocityStdDev[0];
+	sbg_status.vel_e_acc=pLogData->ekfNavData.velocityStdDev[1];
+	sbg_status.vel_d_acc=pLogData->ekfNavData.velocityStdDev[2];
+	sbg_status.lat_acc=pLogData->ekfNavData.positionStdDev[0];
+	sbg_status.lon_acc=pLogData->ekfNavData.positionStdDev[1];
+	sbg_status.vert_acc=pLogData->ekfNavData.positionStdDev[2];
 	_sbg_status_pub.publish(sbg_status);
 
 	nbEKF_NAV++;
@@ -471,15 +480,8 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	if ((pLogData->ekfQuatData.status & SBG_ECOM_SOL_ATTITUDE_VALID)!=SBG_ECOM_SOL_ATTITUDE_VALID) {
 		return;
 	}
-	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_POSITION_VALID)!=SBG_ECOM_SOL_POSITION_VALID) {
-		return;
-	}
-	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_VELOCITY_VALID)!=SBG_ECOM_SOL_VELOCITY_VALID) {
-		return;
-	}
-	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_HEADING_VALID)!=SBG_ECOM_SOL_HEADING_VALID) {
-		return;
-	}
+
+
 
 	global_pos.timestamp = sbg_status.timestamp;
 	global_pos.lat = pLogData->ekfNavData.position[0];
@@ -515,10 +517,21 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	local_pos.ref_lat = math::radians(_local_proj_ref.lat_rad);
 	local_pos.ref_lon = math::radians(_local_proj_ref.lon_rad);
 	local_pos.ref_alt = _local_alt0;
-	local_pos.xy_valid = true;
-	local_pos.z_valid = true;
-	local_pos.v_xy_valid = true;
-	local_pos.v_z_valid = true;
+	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_POSITION_VALID)!=SBG_ECOM_SOL_POSITION_VALID) {
+		local_pos.xy_valid = false;
+		local_pos.z_valid = false;
+	} else {
+		local_pos.xy_valid = true;
+		local_pos.z_valid = true;
+	}
+	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_VELOCITY_VALID)!=SBG_ECOM_SOL_VELOCITY_VALID) {
+		local_pos.v_xy_valid = false;
+		local_pos.v_z_valid = false;
+	} else {
+		local_pos.v_xy_valid = true;
+		local_pos.v_z_valid = true;
+	}
+
 	local_pos.x = x;
 	local_pos.y = y;
 	local_pos.z = _local_alt0 - global_pos.alt;
@@ -527,9 +540,21 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	local_pos.vz = pLogData->ekfNavData.velocity[2];
 
 	matrix::Eulerf euler{matrix::Quatf(g_attitude.q)};
-	local_pos.heading = euler.psi();
-	local_pos.xy_global = true;
-	local_pos.z_global = true;
+	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_HEADING_VALID)!=SBG_ECOM_SOL_HEADING_VALID) {
+		local_pos.heading = 0.0f;
+	} else {
+		local_pos.heading = euler.psi();
+	}
+
+
+	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_POSITION_VALID)!=SBG_ECOM_SOL_POSITION_VALID) {
+		local_pos.xy_global = false;
+		local_pos.z_global = false;
+	} else {
+		local_pos.xy_global = true;
+		local_pos.z_global = true;
+	}
+
 	local_pos.vxy_max = INFINITY;
 	local_pos.vz_max = INFINITY;
 	local_pos.hagl_min = INFINITY;
