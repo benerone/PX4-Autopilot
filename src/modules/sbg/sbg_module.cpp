@@ -293,26 +293,6 @@ int ModuleSBG::print_status()
 			PX4_INFO("MODE: Unknown mode !!!!");
 	}
 
-	if ((sbg_status.solution_status & SBG_ECOM_SOL_MODE_VERTICAL_GYRO)==SBG_ECOM_SOL_MODE_VERTICAL_GYRO) {
-		PX4_INFO("The Kalman filter only rely on a vertical reference to compute roll and pitch angles. Heading and navigation data drift freely");
-	} else {
-		//PX4_INFO("Kalman filter ok");
-	}
-	if ((sbg_status.solution_status & SBG_ECOM_SOL_MODE_AHRS)==SBG_ECOM_SOL_MODE_AHRS) {
-		PX4_INFO("A heading reference is available, the Kalman filter provides full orientation but navigation data drift freely");
-	} else {
-		//PX4_INFO("Kalman filter ok");
-	}
-	if ((sbg_status.solution_status & SBG_ECOM_SOL_MODE_NAV_VELOCITY)==SBG_ECOM_SOL_MODE_NAV_VELOCITY) {
-		PX4_INFO("The Kalman filter computes orientation and velocity. Position is freely integrated from velocity estimation");
-	} else {
-		//PX4_INFO("Kalman filter ok");
-	}
-	if ((sbg_status.solution_status & SBG_ECOM_SOL_MODE_NAV_POSITION)==SBG_ECOM_SOL_MODE_NAV_POSITION) {
-		PX4_INFO("Nominal mode, the Kalman filter computes all parameters (attitude, velocity, position). Absolute position is provided");
-	} else {
-		//PX4_INFO("Kalman filter ok");
-	}
 	if ((sbg_status.solution_status & SBG_ECOM_SOL_ATTITUDE_VALID)==SBG_ECOM_SOL_ATTITUDE_VALID) {
 		PX4_INFO("Attitude valid");
 	} else {
