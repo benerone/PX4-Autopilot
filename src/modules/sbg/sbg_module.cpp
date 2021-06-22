@@ -28,6 +28,9 @@ SbgErrorCode onLogReceived(SbgEComHandle *pHandle, SbgEComClass msgClass, SbgECo
 	//
 	switch (msg)
 	{
+	case SBG_ECOM_LOG_STATUS:
+		((ModuleSBG*)pUserArg)->processSBG_LOG_STATUS(pLogData);
+		break;
 	case SBG_ECOM_LOG_IMU_DATA:
 		//PX4_INFO("SBG_ECOM_LOG_IMU_DATA");
 		((ModuleSBG*)pUserArg)->processSBG_IMU_DATA(pLogData);
@@ -80,10 +83,195 @@ int ModuleSBG::print_status()
 	PX4_INFO("nbEKF_QUAT: %d",nbEKF_QUAT);
 	PX4_INFO("nbEKF_NAV: %d",nbEKF_NAV);
 	PX4_INFO("nbIMU_DATA: %d",nbIMU_DATA);
+	PX4_INFO("nbLOG_STATUS: %d",nbLOG_STATUS);
 	PX4_INFO("lat: %f",global_lat);
 	PX4_INFO("lon: %f",global_lon);
+	PX4_INFO("************** SBG GENERAL *************");
+	if ((sbg_status.general_status & SBG_ECOM_GENERAL_MAIN_POWER_OK)==SBG_ECOM_GENERAL_MAIN_POWER_OK) {
+		PX4_INFO("Main Power:Ok");
+	} else {
+		PX4_INFO("Main Power:Fail");
+	}
+	if ((sbg_status.general_status & SBG_ECOM_GENERAL_IMU_POWER_OK)==SBG_ECOM_GENERAL_IMU_POWER_OK) {
+		PX4_INFO("Imu Power:Ok");
+	} else {
+		PX4_INFO("Imu Power:Fail");
+	}
+	if ((sbg_status.general_status & SBG_ECOM_GENERAL_GPS_POWER_OK)==SBG_ECOM_GENERAL_GPS_POWER_OK) {
+		PX4_INFO("Gps Power:Ok");
+	} else {
+		PX4_INFO("Gps Power:Fail");
+	}
+	if ((sbg_status.general_status & SBG_ECOM_GENERAL_SETTINGS_OK)==SBG_ECOM_GENERAL_SETTINGS_OK) {
+		PX4_INFO("Setting:Ok");
+	} else {
+		PX4_INFO("Setting:Fail");
+	}
+	if ((sbg_status.general_status & SBG_ECOM_GENERAL_TEMPERATURE_OK)==SBG_ECOM_GENERAL_TEMPERATURE_OK) {
+		PX4_INFO("Temperature:Ok");
+	} else {
+		PX4_INFO("Temperature:Fail");
+	}
+	if ((sbg_status.general_status & SBG_ECOM_GENERAL_DATALOGGER_OK)==SBG_ECOM_GENERAL_DATALOGGER_OK) {
+		PX4_INFO("DataLogger:Ok");
+	} else {
+		PX4_INFO("DataLogger:Fail");
+	}
+	if ((sbg_status.general_status & SBG_ECOM_GENERAL_CPU_OK)==SBG_ECOM_GENERAL_CPU_OK) {
+		PX4_INFO("CPU:Ok");
+	} else {
+		PX4_INFO("CPU:Fail");
+	}
+	PX4_INFO("************** SBG COM *************");
+	if ((sbg_status.com_status & SBG_ECOM_PORTA_VALID)==SBG_ECOM_PORTA_VALID) {
+		PX4_INFO("PortA:Ok");
+	} else {
+		PX4_INFO("PortA:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTA_RX_OK)==SBG_ECOM_PORTA_RX_OK) {
+		PX4_INFO("PortA RX:Ok");
+	} else {
+		PX4_INFO("PortA RX:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTA_TX_OK)==SBG_ECOM_PORTA_TX_OK) {
+		PX4_INFO("PortA TX:Ok");
+	} else {
+		PX4_INFO("PortA TX:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTB_VALID)==SBG_ECOM_PORTB_VALID) {
+		PX4_INFO("PortB:Ok");
+	} else {
+		PX4_INFO("PortB:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTB_RX_OK)==SBG_ECOM_PORTB_RX_OK) {
+		PX4_INFO("PortB RX:Ok");
+	} else {
+		PX4_INFO("PortB RX:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTB_TX_OK)==SBG_ECOM_PORTB_TX_OK) {
+		PX4_INFO("PortB TX:Ok");
+	} else {
+		PX4_INFO("PortB TX:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTC_VALID)==SBG_ECOM_PORTC_VALID) {
+		PX4_INFO("PortC:Ok");
+	} else {
+		PX4_INFO("PortC:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTC_RX_OK)==SBG_ECOM_PORTC_RX_OK) {
+		PX4_INFO("PortC RX:Ok");
+	} else {
+		PX4_INFO("PortC RX:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTC_TX_OK)==SBG_ECOM_PORTC_TX_OK) {
+		PX4_INFO("PortC TX:Ok");
+	} else {
+		PX4_INFO("PortC TX:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTD_VALID)==SBG_ECOM_PORTD_VALID) {
+		PX4_INFO("PortD:Ok");
+	} else {
+		PX4_INFO("PortD:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTD_RX_OK)==SBG_ECOM_PORTD_RX_OK) {
+		PX4_INFO("PortD RX:Ok");
+	} else {
+		PX4_INFO("PortD RX:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTD_TX_OK)==SBG_ECOM_PORTC_TX_OK) {
+		PX4_INFO("PortD TX:Ok");
+	} else {
+		PX4_INFO("PortD TX:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTE_VALID)==SBG_ECOM_PORTE_VALID) {
+		PX4_INFO("PortE:Ok");
+	} else {
+		PX4_INFO("PortE:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTE_RX_OK)==SBG_ECOM_PORTE_RX_OK) {
+		PX4_INFO("PortE RX:Ok");
+	} else {
+		PX4_INFO("PortE RX:Fail");
+	}
+	if ((sbg_status.com_status & SBG_ECOM_PORTE_TX_OK)==SBG_ECOM_PORTE_TX_OK) {
+		PX4_INFO("PortE TX:Ok");
+	} else {
+		PX4_INFO("PortE TX:Fail");
+	}
+	PX4_INFO("************** SBG AIDING *************");
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_GPS1_POS_RECV)==SBG_ECOM_AIDING_GPS1_POS_RECV) {
+		PX4_INFO("GPS1 Position:Ok");
+	} else {
+		PX4_INFO("GPS1 Position:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_GPS1_VEL_RECV)==SBG_ECOM_AIDING_GPS1_VEL_RECV) {
+		PX4_INFO("GPS1 Velocity:Ok");
+	} else {
+		PX4_INFO("GPS1 Velocity:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_GPS1_HDT_RECV)==SBG_ECOM_AIDING_GPS1_HDT_RECV) {
+		PX4_INFO("GPS1 True Heading:Ok");
+	} else {
+		PX4_INFO("GPS1 True Heading:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_GPS1_UTC_RECV)==SBG_ECOM_AIDING_GPS1_UTC_RECV) {
+		PX4_INFO("GPS1 UTC Time:Ok");
+	} else {
+		PX4_INFO("GPS1 UTC Time:Fail");
+	}
 
-	int smode=solutions & 0b1111;
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_GPS2_POS_RECV)==SBG_ECOM_AIDING_GPS2_POS_RECV) {
+		PX4_INFO("GPS2 Position:Ok");
+	} else {
+		PX4_INFO("GPS2 Position:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_GPS2_VEL_RECV)==SBG_ECOM_AIDING_GPS2_VEL_RECV) {
+		PX4_INFO("GPS2 Velocity:Ok");
+	} else {
+		PX4_INFO("GPS2 Velocity:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_GPS2_HDT_RECV)==SBG_ECOM_AIDING_GPS2_HDT_RECV) {
+		PX4_INFO("GPS2 True Heading:Ok");
+	} else {
+		PX4_INFO("GPS2 True Heading:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_GPS2_UTC_RECV)==SBG_ECOM_AIDING_GPS2_UTC_RECV) {
+		PX4_INFO("GPS2 UTC Time:Ok");
+	} else {
+		PX4_INFO("GPS2 UTC Time:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_MAG_RECV)==SBG_ECOM_AIDING_MAG_RECV) {
+		PX4_INFO("Magneto:Ok");
+	} else {
+		PX4_INFO("Magneto:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_ODO_RECV)==SBG_ECOM_AIDING_ODO_RECV) {
+		PX4_INFO("Odo:Ok");
+	} else {
+		PX4_INFO("Odo:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_DVL_RECV)==SBG_ECOM_AIDING_DVL_RECV) {
+		PX4_INFO("Dvl:Ok");
+	} else {
+		PX4_INFO("Dvl:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_USBL_RECV)==SBG_ECOM_AIDING_USBL_RECV) {
+		PX4_INFO("Usbl:Ok");
+	} else {
+		PX4_INFO("Usbl:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_DEPTH_RECV)==SBG_ECOM_AIDING_DEPTH_RECV) {
+		PX4_INFO("Depth sensor:Ok");
+	} else {
+		PX4_INFO("Depth sensor:Fail");
+	}
+	if ((sbg_status.aiding_status & SBG_ECOM_AIDING_AIR_DATA_RECV)==SBG_ECOM_AIDING_AIR_DATA_RECV) {
+		PX4_INFO("Air data:Ok");
+	} else {
+		PX4_INFO("Air data:Fail");
+	}
+	PX4_INFO("************** SBG SOLUTION *************");
+	int smode=sbg_status.solution_status & 0b1111;
 
 	switch(smode) {
 		case SBG_ECOM_SOL_MODE_UNINITIALIZED:
@@ -105,91 +293,126 @@ int ModuleSBG::print_status()
 			PX4_INFO("MODE: Unknown mode !!!!");
 	}
 
-	if ((solutions & SBG_ECOM_SOL_MODE_VERTICAL_GYRO)==SBG_ECOM_SOL_MODE_VERTICAL_GYRO) {
-		PX4_INFO("The Kalman filter only rely on a vertical reference to compute roll and pitch angles. Heading and navigation data drift freely");
-	} else {
-		//PX4_INFO("Kalman filter ok");
-	}
-	if ((solutions & SBG_ECOM_SOL_MODE_AHRS)==SBG_ECOM_SOL_MODE_AHRS) {
-		PX4_INFO("A heading reference is available, the Kalman filter provides full orientation but navigation data drift freely");
-	} else {
-		//PX4_INFO("Kalman filter ok");
-	}
-	if ((solutions & SBG_ECOM_SOL_MODE_NAV_VELOCITY)==SBG_ECOM_SOL_MODE_NAV_VELOCITY) {
-		PX4_INFO("The Kalman filter computes orientation and velocity. Position is freely integrated from velocity estimation");
-	} else {
-		//PX4_INFO("Kalman filter ok");
-	}
-	if ((solutions & SBG_ECOM_SOL_MODE_NAV_POSITION)==SBG_ECOM_SOL_MODE_NAV_POSITION) {
-		PX4_INFO("Nominal mode, the Kalman filter computes all parameters (attitude, velocity, position). Absolute position is provided");
-	} else {
-		//PX4_INFO("Kalman filter ok");
-	}
-	if ((solutions & SBG_ECOM_SOL_ATTITUDE_VALID)==SBG_ECOM_SOL_ATTITUDE_VALID) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_ATTITUDE_VALID)==SBG_ECOM_SOL_ATTITUDE_VALID) {
 		PX4_INFO("Attitude valid");
 	} else {
 		PX4_INFO("Attitude invalid");
 	}
-	if ((solutions & SBG_ECOM_SOL_HEADING_VALID)==SBG_ECOM_SOL_HEADING_VALID) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_HEADING_VALID)==SBG_ECOM_SOL_HEADING_VALID) {
 		PX4_INFO("Heading valid");
 	} else {
 		PX4_INFO("Heading invalid");
 	}
-	if ((solutions & SBG_ECOM_SOL_VELOCITY_VALID)==SBG_ECOM_SOL_VELOCITY_VALID) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_VELOCITY_VALID)==SBG_ECOM_SOL_VELOCITY_VALID) {
 		PX4_INFO("Velocity valid");
 	} else {
 		PX4_INFO("Velocity invalid");
 	}
-	if ((solutions & SBG_ECOM_SOL_POSITION_VALID)==SBG_ECOM_SOL_POSITION_VALID) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_POSITION_VALID)==SBG_ECOM_SOL_POSITION_VALID) {
 		PX4_INFO("Position valid");
 	} else {
 		PX4_INFO("Position invalid");
 	}
-	if ((solutions & SBG_ECOM_SOL_VERT_REF_USED)==SBG_ECOM_SOL_VERT_REF_USED) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_VERT_REF_USED)==SBG_ECOM_SOL_VERT_REF_USED) {
 		PX4_INFO("Vertical reference used");
 	} else {
 		PX4_INFO("Vertical reference not used");
 	}
-	if ((solutions & SBG_ECOM_SOL_MAG_REF_USED)==SBG_ECOM_SOL_MAG_REF_USED) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_MAG_REF_USED)==SBG_ECOM_SOL_MAG_REF_USED) {
 		PX4_INFO("Magneto used");
 	} else {
 		PX4_INFO("Magneto not used");
 	}
-	if ((solutions & SBG_ECOM_SOL_GPS1_VEL_USED)==SBG_ECOM_SOL_GPS1_VEL_USED) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_GPS1_VEL_USED)==SBG_ECOM_SOL_GPS1_VEL_USED) {
 		PX4_INFO("GPS1 vel used");
 	} else {
 		PX4_INFO("GPS1 vel not used");
 	}
-	if ((solutions & SBG_ECOM_SOL_GPS1_POS_USED)==SBG_ECOM_SOL_GPS1_POS_USED) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_GPS1_POS_USED)==SBG_ECOM_SOL_GPS1_POS_USED) {
 		PX4_INFO("GPS1 pos used");
 	} else {
 		PX4_INFO("GPS1 pos not used");
 	}
-	if ((solutions & SBG_ECOM_SOL_GPS1_HDT_USED)==SBG_ECOM_SOL_GPS1_HDT_USED) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_GPS1_HDT_USED)==SBG_ECOM_SOL_GPS1_HDT_USED) {
 		PX4_INFO("GPS1 heading used");
 	} else {
 		PX4_INFO("GPS1 heading not used");
 	}
-	if ((solutions & SBG_ECOM_SOL_GPS2_VEL_USED)==SBG_ECOM_SOL_GPS2_VEL_USED) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_GPS2_VEL_USED)==SBG_ECOM_SOL_GPS2_VEL_USED) {
 		PX4_INFO("GPS2 vel used");
 	} else {
 		PX4_INFO("GPS2 vel not used");
 	}
-	if ((solutions & SBG_ECOM_SOL_GPS2_POS_USED)==SBG_ECOM_SOL_GPS2_POS_USED) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_GPS2_POS_USED)==SBG_ECOM_SOL_GPS2_POS_USED) {
 		PX4_INFO("GPS2 pos used");
 	} else {
 		PX4_INFO("GPS2 pos not used");
 	}
-	if ((solutions & SBG_ECOM_SOL_GPS2_HDT_USED)==SBG_ECOM_SOL_GPS2_HDT_USED) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_GPS2_HDT_USED)==SBG_ECOM_SOL_GPS2_HDT_USED) {
 		PX4_INFO("GPS2 heading used");
 	} else {
 		PX4_INFO("GPS2 heading not used");
 	}
-	if ((solutions & SBG_ECOM_SOL_ALIGN_VALID)==SBG_ECOM_SOL_ALIGN_VALID) {
+	if ((sbg_status.solution_status & SBG_ECOM_SOL_ALIGN_VALID)==SBG_ECOM_SOL_ALIGN_VALID) {
 		PX4_INFO("sensor align valid");
 	} else {
 		PX4_INFO("sensor align not valid");
 	}
+	PX4_INFO("************** IMU DATA *************");
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_COM_OK)==SBG_ECOM_IMU_COM_OK) {
+		PX4_INFO("Imu com ok");
+	} else {
+		PX4_INFO("Imu com fail");
+	}
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_STATUS_BIT)==SBG_ECOM_IMU_STATUS_BIT) {
+		PX4_INFO("Imu status ok");
+	} else {
+		PX4_INFO("Imu status fail");
+	}
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_ACCEL_X_BIT)==SBG_ECOM_IMU_ACCEL_X_BIT) {
+		PX4_INFO("Imu Acc X ok");
+	} else {
+		PX4_INFO("Imu Acc X fail");
+	}
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_ACCEL_Y_BIT)==SBG_ECOM_IMU_ACCEL_Y_BIT) {
+		PX4_INFO("Imu Acc Y ok");
+	} else {
+		PX4_INFO("Imu Acc Y fail");
+	}
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_ACCEL_Z_BIT)==SBG_ECOM_IMU_ACCEL_Z_BIT) {
+		PX4_INFO("Imu Acc Z ok");
+	} else {
+		PX4_INFO("Imu Acc Z fail");
+	}
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_GYRO_X_BIT)==SBG_ECOM_IMU_GYRO_X_BIT) {
+		PX4_INFO("Imu Gyro X ok");
+	} else {
+		PX4_INFO("Imu Gyro X fail");
+	}
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_GYRO_Y_BIT)==SBG_ECOM_IMU_GYRO_Y_BIT) {
+		PX4_INFO("Imu Gyro Y ok");
+	} else {
+		PX4_INFO("Imu Gyro Y fail");
+	}
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_GYRO_Z_BIT)==SBG_ECOM_IMU_GYRO_Z_BIT) {
+		PX4_INFO("Imu Gyro Z ok");
+	} else {
+		PX4_INFO("Imu Gyro Z fail");
+	}
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_ACCELS_IN_RANGE)==SBG_ECOM_IMU_ACCELS_IN_RANGE) {
+		PX4_INFO("Imu Accel in range");
+	} else {
+		PX4_INFO("Imu Accel out of range");
+	}
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_GYROS_IN_RANGE)==SBG_ECOM_IMU_GYROS_IN_RANGE) {
+		PX4_INFO("Imu Gyro in range");
+	} else {
+		PX4_INFO("Imu Gyro out of range");
+	}
+	PX4_INFO("************** Accuracy *************");
+	PX4_INFO("Attitude (°) : Roll :%3.1f Pitch :%3.1f Yaw :%3.1f",(double)(sbg_status.roll_acc*180.0f/3.14159f),(double)(sbg_status.pitch_acc*180.0f/3.14159f),(double)(sbg_status.yaw_acc*180.0f/3.14159f));
+	PX4_INFO("Position (m): lat %3.1f lon: %3.1f vert:%3.1f",(double)sbg_status.lat_acc,(double)sbg_status.lon_acc,(double)sbg_status.vert_acc);
+	PX4_INFO("Velocity (m/s): VN %3.1f VE:%3.1f VD:%3.1f",(double)sbg_status.vel_n_acc,(double)sbg_status.vel_e_acc,(double)sbg_status.vel_d_acc);
 	return 0;
 }
 
@@ -249,12 +472,22 @@ ModuleSBG::ModuleSBG()
 	nbEKF_QUAT=0;
 	nbEKF_NAV=0;
 	nbIMU_DATA=0;
-	solutions=0;
+	nbLOG_STATUS=0;
 }
 
 void ModuleSBG::processSBG_EKF_QUAT(const SbgBinaryLogData *pLogData) {
 	nbEKF_QUAT++;
 
+	sbg_status.timestamp=hrt_absolute_time();
+	sbg_status.solution_status=pLogData->ekfQuatData.status;
+	sbg_status.roll_acc=pLogData->ekfQuatData.eulerStdDev[0];
+	sbg_status.pitch_acc=pLogData->ekfQuatData.eulerStdDev[1];
+	sbg_status.yaw_acc=pLogData->ekfQuatData.eulerStdDev[2];
+	_sbg_status_pub.publish(sbg_status);
+
+	if ((pLogData->ekfQuatData.status & SBG_ECOM_SOL_ATTITUDE_VALID)!=SBG_ECOM_SOL_ATTITUDE_VALID) {
+		return;
+	}
 	g_attitude.timestamp = hrt_absolute_time();
 
 	matrix::Quatf q(pLogData->ekfQuatData.quaternion);
@@ -265,29 +498,42 @@ void ModuleSBG::processSBG_EKF_QUAT(const SbgBinaryLogData *pLogData) {
 
 void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	vehicle_global_position_s global_pos{};
-	sbg_status_s sbg_status;
+
+	sbg_status.timestamp=hrt_absolute_time();
+	sbg_status.solution_status=pLogData->ekfNavData.status;
+	sbg_status.vel_n_acc=pLogData->ekfNavData.velocityStdDev[0];
+	sbg_status.vel_e_acc=pLogData->ekfNavData.velocityStdDev[1];
+	sbg_status.vel_d_acc=pLogData->ekfNavData.velocityStdDev[2];
+	sbg_status.lat_acc=pLogData->ekfNavData.positionStdDev[0];
+	sbg_status.lon_acc=pLogData->ekfNavData.positionStdDev[1];
+	sbg_status.vert_acc=pLogData->ekfNavData.positionStdDev[2];
+	_sbg_status_pub.publish(sbg_status);
 
 	nbEKF_NAV++;
 
-	global_pos.timestamp = hrt_absolute_time();
+	if ((pLogData->ekfQuatData.status & SBG_ECOM_SOL_ATTITUDE_VALID)!=SBG_ECOM_SOL_ATTITUDE_VALID) {
+		return;
+	}
+
+
+
+	global_pos.timestamp = sbg_status.timestamp;
 	global_pos.lat = pLogData->ekfNavData.position[0];
 	global_pos.lon = pLogData->ekfNavData.position[1];
 	global_pos.alt = pLogData->ekfNavData.position[2];
 	global_pos.eph = 2.0f;
 	global_pos.epv = 4.0f;
 
-	_global_pos_pub.publish(global_pos);
+	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_POSITION_VALID)==SBG_ECOM_SOL_POSITION_VALID) {
+		_global_pos_pub.publish(global_pos);
+	}
 
 	double lat =global_pos.lat;
 	double lon =global_pos.lon;
 
 	global_lat=lat;
 	global_lon=lon;
-	solutions=pLogData->ekfNavData.status;
 
-	sbg_status.timestamp=global_pos.timestamp;
-	sbg_status.solution_status=pLogData->ekfNavData.status;
-	_sbg_status_pub.publish(sbg_status);
 
 	if (!_local_proj_inited) {
 		_local_proj_inited = true;
@@ -307,10 +553,21 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	local_pos.ref_lat = math::radians(_local_proj_ref.lat_rad);
 	local_pos.ref_lon = math::radians(_local_proj_ref.lon_rad);
 	local_pos.ref_alt = _local_alt0;
-	local_pos.xy_valid = true;
-	local_pos.z_valid = true;
-	local_pos.v_xy_valid = true;
-	local_pos.v_z_valid = true;
+	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_POSITION_VALID)!=SBG_ECOM_SOL_POSITION_VALID) {
+		local_pos.xy_valid = false;
+		local_pos.z_valid = false;
+	} else {
+		local_pos.xy_valid = true;
+		local_pos.z_valid = true;
+	}
+	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_VELOCITY_VALID)!=SBG_ECOM_SOL_VELOCITY_VALID) {
+		local_pos.v_xy_valid = false;
+		local_pos.v_z_valid = false;
+	} else {
+		local_pos.v_xy_valid = true;
+		local_pos.v_z_valid = true;
+	}
+
 	local_pos.x = x;
 	local_pos.y = y;
 	local_pos.z = _local_alt0 - global_pos.alt;
@@ -319,9 +576,21 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	local_pos.vz = pLogData->ekfNavData.velocity[2];
 
 	matrix::Eulerf euler{matrix::Quatf(g_attitude.q)};
-	local_pos.heading = euler.psi();
-	local_pos.xy_global = true;
-	local_pos.z_global = true;
+	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_HEADING_VALID)!=SBG_ECOM_SOL_HEADING_VALID) {
+		local_pos.heading = 0.0f;
+	} else {
+		local_pos.heading = euler.psi();
+	}
+
+
+	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_POSITION_VALID)!=SBG_ECOM_SOL_POSITION_VALID) {
+		local_pos.xy_global = false;
+		local_pos.z_global = false;
+	} else {
+		local_pos.xy_global = true;
+		local_pos.z_global = true;
+	}
+
 	local_pos.vxy_max = INFINITY;
 	local_pos.vz_max = INFINITY;
 	local_pos.hagl_min = INFINITY;
@@ -337,29 +606,57 @@ void ModuleSBG::processSBG_IMU_DATA(const SbgBinaryLogData *pLogData) {
 	nbIMU_DATA++;
 	const uint64_t timestamp = hrt_absolute_time();
 
+	sbg_status.timestamp=timestamp;
+	sbg_status.imu_status=pLogData->imuData.status;
+	_sbg_status_pub.publish(sbg_status);
+
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_COM_OK)!=SBG_ECOM_IMU_COM_OK) {
+		return;
+	}
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_STATUS_BIT)!=SBG_ECOM_IMU_STATUS_BIT) {
+		return;
+	}
+
+
+
 	/* accelerometer */
+	if (((sbg_status.imu_status & SBG_ECOM_IMU_ACCELS_IN_RANGE)==SBG_ECOM_IMU_ACCELS_IN_RANGE)
+		&& ((sbg_status.imu_status & SBG_ECOM_IMU_ACCEL_X_BIT)==SBG_ECOM_IMU_ACCEL_X_BIT)
+		&& ((sbg_status.imu_status & SBG_ECOM_IMU_ACCEL_Y_BIT)==SBG_ECOM_IMU_ACCEL_Y_BIT)
+		&& ((sbg_status.imu_status & SBG_ECOM_IMU_ACCEL_Z_BIT)==SBG_ECOM_IMU_ACCEL_Z_BIT)) {
+		vehicle_acceleration_s va{};
+		va.timestamp = timestamp;
+		va.timestamp_sample = timestamp;
+		va.xyz[0]= pLogData->imuData.accelerometers[0];
+		va.xyz[1]= pLogData->imuData.accelerometers[1];
+		va.xyz[2]= pLogData->imuData.accelerometers[2];
+		_vehicle_acceleration_pub.publish(va);
 
-	vehicle_acceleration_s va{};
-	va.timestamp = timestamp;
-	va.timestamp_sample = timestamp;
-	va.xyz[0]= pLogData->imuData.accelerometers[0];
-	va.xyz[1]= pLogData->imuData.accelerometers[1];
-	va.xyz[2]= pLogData->imuData.accelerometers[2];
-	_vehicle_acceleration_pub.publish(va);
-
-
+	}
 	/* gyroscope */
-
-	vehicle_angular_velocity_s vav{};
-	vav.timestamp = timestamp;
-	vav.timestamp_sample = timestamp;
-	vav.xyz[0]= pLogData->imuData.gyroscopes[0];
-	vav.xyz[1]= pLogData->imuData.gyroscopes[1];
-	vav.xyz[2]= pLogData->imuData.gyroscopes[2];
-	_vehicle_angular_velocity_pub.publish(vav);
+	if (((sbg_status.imu_status & SBG_ECOM_IMU_GYROS_IN_RANGE)==SBG_ECOM_IMU_GYROS_IN_RANGE)
+		&& ((sbg_status.imu_status & SBG_ECOM_IMU_GYRO_X_BIT)==SBG_ECOM_IMU_GYRO_X_BIT)
+		&& ((sbg_status.imu_status & SBG_ECOM_IMU_GYRO_Y_BIT)==SBG_ECOM_IMU_GYRO_Y_BIT)
+		&& ((sbg_status.imu_status & SBG_ECOM_IMU_GYRO_Z_BIT)==SBG_ECOM_IMU_GYRO_Z_BIT)) {
+			vehicle_angular_velocity_s vav{};
+			vav.timestamp = timestamp;
+			vav.timestamp_sample = timestamp;
+			vav.xyz[0]= pLogData->imuData.gyroscopes[0];
+			vav.xyz[1]= pLogData->imuData.gyroscopes[1];
+			vav.xyz[2]= pLogData->imuData.gyroscopes[2];
+			_vehicle_angular_velocity_pub.publish(vav);
+	}
 
 }
 
+void ModuleSBG::processSBG_LOG_STATUS(const SbgBinaryLogData *pLogData) {
+	nbLOG_STATUS++;
+	sbg_status.timestamp=hrt_absolute_time();
+	sbg_status.general_status=pLogData->statusData.generalStatus;
+	sbg_status.com_status=pLogData->statusData.comStatus;
+	sbg_status.aiding_status=pLogData->statusData.aidingStatus;
+	_sbg_status_pub.publish(sbg_status);
+}
 
 void ModuleSBG::processHIL() {
 	_hil_local_proj_inited=false;
@@ -478,7 +775,9 @@ void ModuleSBG::processHIL() {
 			}
 
 			//FOR TEST ONLY
-
+			if (enable_sbg_in_hil) {
+				executeSBG();
+			}
 			usleep(100);
 	}
 }
@@ -488,7 +787,14 @@ void ModuleSBG::prepareSBG() {
 	nbEKF_QUAT=0;
 	nbEKF_NAV=0;
 	nbIMU_DATA=0;
-	solutions=0;
+	nbLOG_STATUS=0;
+	sbg_status.solution_status=0;
+	sbg_status.aiding_status=0;
+	sbg_status.com_status=0;
+	sbg_status.general_status=0;
+	sbg_status.imu_status=0;
+	global_lat=0.0;
+	global_lon=0.0;
 	_serial_fd = ::open(PORT, O_RDWR | O_NOCTTY);
 
 		if (_serial_fd < 0) {
@@ -567,12 +873,18 @@ void ModuleSBG::run()
 	//Mavlink id serve as id
 	sys_id=_param_mav_sys_id.get();
 	hil_mode=(_param_sys_hitl.get()!=0);
-
+	enable_sbg_in_hil=(_param_sbg_enable_hil.get()!=0);
 
 
 
 	if (hil_mode) {
+		if (enable_sbg_in_hil) {
+			prepareSBG();
+		}
 		processHIL();
+		if (enable_sbg_in_hil) {
+			terminateSBG();
+		}
 	} else {
 		prepareSBG();
 		while(!should_exit()) {

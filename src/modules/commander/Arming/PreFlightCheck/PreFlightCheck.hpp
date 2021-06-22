@@ -44,6 +44,7 @@
 #include <uORB/topics/vehicle_status_flags.h>
 
 #include <uORB/topics/vehicle_status.h>
+#include <uORB/topics/sbg_status.h>
 #include <drivers/drv_hrt.h>
 
 class PreFlightCheck
@@ -79,7 +80,7 @@ public:
 	**/
 	static bool preflightCheck(orb_advert_t *mavlink_log_pub, vehicle_status_s &status,
 				   vehicle_status_flags_s &status_flags, const bool checkGNSS, bool reportFailures, const bool prearm,
-				   const hrt_abstime &time_since_boot);
+				   const hrt_abstime &time_since_boot,sbg_status_s &sbg_status);
 
 	struct arm_requirements_t {
 		bool arm_authorization = false;

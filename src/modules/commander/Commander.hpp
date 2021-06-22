@@ -81,6 +81,7 @@
 #include <uORB/topics/vehicle_land_detected.h>
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vtol_vehicle_status.h>
+#include <uORB/topics/sbg_status.h>
 
 using math::constrain;
 using systemlib::Hysteresis;
@@ -381,6 +382,7 @@ private:
 	vehicle_land_detected_s	_land_detector{};
 	safety_s		_safety{};
 	vtol_vehicle_status_s	_vtol_status{};
+	sbg_status_s sbg_status{};
 
 	// Subscriptions
 	uORB::Subscription					_actuator_controls_sub{ORB_ID_VEHICLE_ATTITUDE_CONTROLS};
@@ -411,6 +413,7 @@ private:
 	uORB::Subscription					_telemetry_status_sub[ORB_MULTI_MAX_INSTANCES] {{ORB_ID(telemetry_status), 0}, {ORB_ID(telemetry_status), 1}, {ORB_ID(telemetry_status), 2}, {ORB_ID(telemetry_status), 3}};
 	uORB::Subscription					_vehicle_acceleration_sub{ORB_ID(vehicle_acceleration)};
 	uORB::Subscription					_vtol_vehicle_status_sub{ORB_ID(vtol_vehicle_status)};
+	uORB::Subscription					_sbg_status_sub{ORB_ID(sbg_status)};
 
 #if defined(BOARD_HAS_POWER_CONTROL)
 	uORB::Subscription					_power_button_state_sub {ORB_ID(power_button_state)};

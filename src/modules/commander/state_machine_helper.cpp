@@ -105,7 +105,7 @@ transition_result_t arming_state_transition(vehicle_status_s *status, const safe
 		const arming_state_t new_arming_state, actuator_armed_s *armed, const bool fRunPreArmChecks,
 		orb_advert_t *mavlink_log_pub, vehicle_status_flags_s *status_flags,
 		const PreFlightCheck::arm_requirements_t &arm_requirements,
-		const hrt_abstime &time_since_boot, arm_disarm_reason_t calling_reason)
+		const hrt_abstime &time_since_boot, arm_disarm_reason_t calling_reason,sbg_status_s &sbg_status)
 {
 	// Double check that our static arrays are still valid
 	static_assert(vehicle_status_s::ARMING_STATE_INIT == 0, "ARMING_STATE_INIT == 0");
@@ -134,7 +134,7 @@ transition_result_t arming_state_transition(vehicle_status_s *status, const safe
 		    && !hil_enabled) {
 
 			preflight_check_ret = PreFlightCheck::preflightCheck(mavlink_log_pub, *status, *status_flags,
-					      arm_requirements.global_position, true, true, time_since_boot);
+					      arm_requirements.global_position, true, true, time_since_boot,sbg_status);
 
 			if (preflight_check_ret) {
 				status_flags->condition_system_sensors_initialized = true;
@@ -154,7 +154,7 @@ transition_result_t arming_state_transition(vehicle_status_s *status, const safe
 
 				status_flags->condition_system_sensors_initialized = PreFlightCheck::preflightCheck(mavlink_log_pub, *status,
 						*status_flags, arm_requirements.global_position, false, status->arming_state != vehicle_status_s::ARMING_STATE_ARMED,
-						time_since_boot);
+						time_since_boot,sbg_status);
 
 				last_preflight_check = hrt_absolute_time();
 			}

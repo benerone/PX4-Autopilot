@@ -288,7 +288,12 @@ extern "C" __EXPORT int commander_main(int argc, char *argv[])
 	}
 
 	if (!strcmp(argv[1], "check")) {
-		bool preflight_check_res = PreFlightCheck::preflightCheck(nullptr, status, status_flags, true, true, true, 30_s);
+		uORB::Subscription					_sbg_status_sub{ORB_ID(sbg_status)};
+		sbg_status_s sbg_status{};
+		if(!_sbg_status_sub.update(&sbg_status)) {
+			sbg_status.solution_status=0;
+		}
+		bool preflight_check_res = PreFlightCheck::preflightCheck(nullptr, status, status_flags, true, true, true, 30_s,sbg_status);
 		PX4_INFO("Preflight check: %s", preflight_check_res ? "OK" : "FAILED");
 
 		bool prearm_check_res = PreFlightCheck::preArmCheck(nullptr, status_flags, safety_s{},
@@ -424,7 +429,7 @@ bool Commander::shutdown_if_allowed()
 {
 	return TRANSITION_DENIED != arming_state_transition(&status, _safety, vehicle_status_s::ARMING_STATE_SHUTDOWN,
 			&armed, false /* fRunPreArmChecks */, &mavlink_log_pub, &status_flags, _arm_requirements,
-			hrt_elapsed_time(&_boot_timestamp), arm_disarm_reason_t::SHUTDOWN);
+			hrt_elapsed_time(&_boot_timestamp), arm_disarm_reason_t::SHUTDOWN,sbg_status);
 }
 
 transition_result_t
@@ -443,7 +448,7 @@ Commander::arm_disarm(bool arm, bool run_preflight_checks, orb_advert_t *mavlink
 					     mavlink_log_pub_local,
 					     &status_flags,
 					     _arm_requirements,
-					     hrt_elapsed_time(&_boot_timestamp), calling_reason);
+					     hrt_elapsed_time(&_boot_timestamp), calling_reason,sbg_status);
 
 	if (arming_res == TRANSITION_CHANGED) {
 		const char *reason = "";
@@ -1346,7 +1351,7 @@ Commander::run()
 
 	// run preflight immediately to find all relevant parameters, but don't report
 	PreFlightCheck::preflightCheck(&mavlink_log_pub, status, status_flags, _arm_requirements.global_position, false, true,
-				       hrt_elapsed_time(&_boot_timestamp));
+				       hrt_elapsed_time(&_boot_timestamp),sbg_status);
 
 	while (!should_exit()) {
 
@@ -1448,6 +1453,10 @@ Commander::run()
 			_offboard_available.set_hysteresis_time_from(true, _param_com_of_loss_t.get());
 
 			param_init_forced = false;
+		}
+
+		if(!_sbg_status_sub.update(&sbg_status)) {
+			sbg_status.solution_status=0;
 		}
 
 		/* Update OA parameter */
@@ -1719,7 +1728,7 @@ Commander::run()
 			arming_ret = arming_state_transition(&status, _safety, vehicle_status_s::ARMING_STATE_STANDBY, &armed,
 							     true /* fRunPreArmChecks */, &mavlink_log_pub, &status_flags,
 							     _arm_requirements, hrt_elapsed_time(&_boot_timestamp),
-							     arm_disarm_reason_t::TRANSITION_TO_STANDBY);
+							     arm_disarm_reason_t::TRANSITION_TO_STANDBY,sbg_status);
 
 			if (arming_ret == TRANSITION_DENIED) {
 				/* do not complain if not allowed into standby */
@@ -1979,7 +1988,7 @@ Commander::run()
 					arming_ret = arming_state_transition(&status, _safety, vehicle_status_s::ARMING_STATE_STANDBY, &armed,
 									     true /* fRunPreArmChecks */,
 									     &mavlink_log_pub, &status_flags, _arm_requirements, hrt_elapsed_time(&_boot_timestamp),
-									     (arm_switch_to_disarm_transition ? arm_disarm_reason_t::RC_SWITCH : arm_disarm_reason_t::RC_STICK));
+									     (arm_switch_to_disarm_transition ? arm_disarm_reason_t::RC_SWITCH : arm_disarm_reason_t::RC_STICK),sbg_status);
 				}
 
 				_stick_off_counter++;
@@ -2034,7 +2043,7 @@ Commander::run()
 						arming_ret = arming_state_transition(&status, _safety, vehicle_status_s::ARMING_STATE_ARMED, &armed,
 										     !in_arming_grace_period /* fRunPreArmChecks */,
 										     &mavlink_log_pub, &status_flags, _arm_requirements, hrt_elapsed_time(&_boot_timestamp),
-										     (arm_switch_to_arm_transition ? arm_disarm_reason_t::RC_SWITCH : arm_disarm_reason_t::RC_STICK));
+										     (arm_switch_to_arm_transition ? arm_disarm_reason_t::RC_SWITCH : arm_disarm_reason_t::RC_STICK),sbg_status);
 
 						if (arming_ret != TRANSITION_CHANGED) {
 							px4_usleep(100000);
@@ -2427,7 +2436,7 @@ Commander::run()
 
 			// Evaluate current prearm status
 			if (!armed.armed && !status_flags.condition_calibration_enabled) {
-				bool preflight_check_res = PreFlightCheck::preflightCheck(nullptr, status, status_flags, true, false, true, 30_s);
+				bool preflight_check_res = PreFlightCheck::preflightCheck(nullptr, status, status_flags, true, false, true, 30_s,sbg_status);
 				bool prearm_check_res = PreFlightCheck::preArmCheck(nullptr, status_flags, _safety, _arm_requirements, status, false);
 				set_health_flags(subsystem_info_s::SUBSYSTEM_TYPE_PREARM_CHECK, true, true, (preflight_check_res
 						 && prearm_check_res), status);
@@ -3460,6 +3469,11 @@ void *commander_low_prio_loop(void *arg)
 			/* if we reach here, we have a valid command */
 			orb_copy(ORB_ID(vehicle_command), cmd_sub, &cmd);
 
+			uORB::Subscription					_sbg_status_sub{ORB_ID(sbg_status)};
+			sbg_status_s sbg_status{};
+			if(!_sbg_status_sub.update(&sbg_status)) {
+				sbg_status.solution_status=0;
+			}
 			/* only handle low-priority commands here */
 			switch (cmd.command) {
 			case vehicle_command_s::VEHICLE_CMD_PREFLIGHT_CALIBRATION: {
@@ -3479,7 +3493,7 @@ void *commander_low_prio_loop(void *arg)
 								false /* fRunPreArmChecks */, &mavlink_log_pub, &status_flags,
 								PreFlightCheck::arm_requirements_t{}, // arming requirements not relevant for switching to ARMING_STATE_INIT
 								30_s, // time since boot not relevant for switching to ARMING_STATE_INIT
-								(cmd.from_external ? arm_disarm_reason_t::COMMAND_EXTERNAL : arm_disarm_reason_t::COMMAND_INTERNAL))
+								(cmd.from_external ? arm_disarm_reason_t::COMMAND_EXTERNAL : arm_disarm_reason_t::COMMAND_INTERNAL),sbg_status)
 						   ) {
 
 							answer_command(cmd, vehicle_command_s::VEHICLE_CMD_RESULT_DENIED, command_ack_pub);
@@ -3565,7 +3579,7 @@ void *commander_low_prio_loop(void *arg)
 							tune_positive(true);
 
 							// time since boot not relevant here
-							if (PreFlightCheck::preflightCheck(&mavlink_log_pub, status, status_flags, false, false, true, 30_s)) {
+							if (PreFlightCheck::preflightCheck(&mavlink_log_pub, status, status_flags, false, false, true, 30_s,sbg_status)) {
 
 								status_flags.condition_system_sensors_initialized = true;
 							}
@@ -3575,7 +3589,7 @@ void *commander_low_prio_loop(void *arg)
 										&mavlink_log_pub, &status_flags,
 										PreFlightCheck::arm_requirements_t{}, // arming requirements not relevant for switching to ARMING_STATE_STANDBY
 										30_s, // time since boot not relevant for switching to ARMING_STATE_STANDBY
-										(cmd.from_external ? arm_disarm_reason_t::COMMAND_EXTERNAL : arm_disarm_reason_t::COMMAND_INTERNAL));
+										(cmd.from_external ? arm_disarm_reason_t::COMMAND_EXTERNAL : arm_disarm_reason_t::COMMAND_INTERNAL),sbg_status);
 
 						} else {
 							tune_negative(true);
@@ -3781,7 +3795,7 @@ void Commander::data_link_check()
 							if (!armed.armed && !status_flags.condition_calibration_enabled) {
 								// make sure to report preflight check failures to a connecting GCS
 								PreFlightCheck::preflightCheck(&mavlink_log_pub, status, status_flags,
-											       _arm_requirements.global_position, true, true, hrt_elapsed_time(&_boot_timestamp));
+											       _arm_requirements.global_position, true, true, hrt_elapsed_time(&_boot_timestamp),sbg_status);
 							}
 
 							if (_datalink_last_heartbeat_gcs != 0) {
@@ -4145,11 +4159,11 @@ void Commander::estimator_check(const vehicle_status_flags_s &vstatus_flags)
 			status_flags.condition_local_velocity_valid = false;
 
 		} else {
-			if (!_skip_pos_accuracy_check) {
+			//if (!_skip_pos_accuracy_check) {
 				// use global position message to determine validity
 				check_posvel_validity(true, gpos.eph, _eph_threshold_adj, gpos.timestamp, &_last_gpos_fail_time_us,
 						      &_gpos_probation_time_us, &status_flags.condition_global_position_valid, &_status_changed);
-			}
+			//}
 
 			// use local position message to determine validity
 			check_posvel_validity(lpos.xy_valid, lpos.eph, _eph_threshold_adj, lpos.timestamp, &_last_lpos_fail_time_us,
