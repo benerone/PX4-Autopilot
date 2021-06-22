@@ -36,6 +36,7 @@
  */
 
 #include "PreFlightCheck.hpp"
+#include <sbgECom/src/sbgEComLib.h>
 
 #include <drivers/drv_hrt.h>
 #include <HealthFlags.h>
@@ -57,14 +58,16 @@ static constexpr unsigned max_optional_baro_count = 1;
 
 bool PreFlightCheck::preflightCheck(orb_advert_t *mavlink_log_pub, vehicle_status_s &status,
 				    vehicle_status_flags_s &status_flags, const bool checkGNSS, bool reportFailures, const bool prearm,
-				    const hrt_abstime &time_since_boot)
+				    const hrt_abstime &time_since_boot,sbg_status_s &sbg_status)
 {
 	const bool hil_enabled = (status.hil_state == vehicle_status_s::HIL_STATE_ON);
 
 	reportFailures = (reportFailures && status_flags.condition_system_hotplug_timeout
 			  && !status_flags.condition_calibration_enabled);
 
-	const bool checkSensors = !hil_enabled;
+	//const bool checkSensors = !hil_enabled;
+	const bool checkSensors = false; //TEST sbg zapata
+	const bool checkSBG = !hil_enabled;
 	const bool checkDynamic = !hil_enabled;
 
 	bool checkAirspeed = false;
@@ -232,6 +235,9 @@ bool PreFlightCheck::preflightCheck(orb_advert_t *mavlink_log_pub, vehicle_statu
 		}
 	}
 
+
+
+
 	/* ---- AIRSPEED ---- */
 	if (checkAirspeed) {
 		int32_t optional = 0;
@@ -290,6 +296,25 @@ bool PreFlightCheck::preflightCheck(orb_advert_t *mavlink_log_pub, vehicle_statu
 		}
 	}
 
+	/* SBG */
+	if(checkSBG) {
+
+		int smode=sbg_status.solution_status & 0b1111;
+		if (smode<SBG_ECOM_SOL_MODE_VERTICAL_GYRO) {
+			if (reportFailures) {
+				mavlink_log_critical(mavlink_log_pub, "SBG MODE is unitialised - check failed");
+			}
+			failed = true;
+		} else {
+			if ((sbg_status.solution_status & SBG_ECOM_SOL_ATTITUDE_VALID)!=SBG_ECOM_SOL_ATTITUDE_VALID) {
+				if (reportFailures) {
+					mavlink_log_critical(mavlink_log_pub, "SBG ATTITUDE not valid - check failed");
+				}
+				failed = true;
+			}
+		}
+
+	}
 	/* ---- Failure Detector ---- */
 	if (!failureDetectorCheck(mavlink_log_pub, status, reportFailures, prearm)) {
 		failed = true;

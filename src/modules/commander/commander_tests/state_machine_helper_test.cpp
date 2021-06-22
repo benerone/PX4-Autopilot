@@ -280,6 +280,7 @@ bool StateMachineHelperTest::armingStateTransitionTest()
 	struct vehicle_status_flags_s status_flags = {};
 	struct safety_s         safety = {};
 	struct actuator_armed_s armed = {};
+	sbg_status_s sbg_status = {};
 
 	size_t cArmingTransitionTests = sizeof(rgArmingTransitionTests) / sizeof(rgArmingTransitionTests[0]);
 
@@ -306,7 +307,7 @@ bool StateMachineHelperTest::armingStateTransitionTest()
 					     &status_flags,
 					     arm_req,
 					     2e6, /* 2 seconds after boot, everything should be checked */
-					     arm_disarm_reason_t::UNIT_TEST);
+					     arm_disarm_reason_t::UNIT_TEST,sbg_status);
 
 		// Validate result of transition
 		ut_compare(test->assertMsg, test->expected_transition_result, result);

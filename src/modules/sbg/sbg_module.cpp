@@ -358,7 +358,61 @@ int ModuleSBG::print_status()
 	} else {
 		PX4_INFO("sensor align not valid");
 	}
-
+	PX4_INFO("************** IMU DATA *************");
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_COM_OK)==SBG_ECOM_IMU_COM_OK) {
+		PX4_INFO("Imu com ok");
+	} else {
+		PX4_INFO("Imu com fail");
+	}
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_STATUS_BIT)==SBG_ECOM_IMU_STATUS_BIT) {
+		PX4_INFO("Imu status ok");
+	} else {
+		PX4_INFO("Imu status fail");
+	}
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_ACCEL_X_BIT)==SBG_ECOM_IMU_ACCEL_X_BIT) {
+		PX4_INFO("Imu Acc X ok");
+	} else {
+		PX4_INFO("Imu Acc X fail");
+	}
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_ACCEL_Y_BIT)==SBG_ECOM_IMU_ACCEL_Y_BIT) {
+		PX4_INFO("Imu Acc Y ok");
+	} else {
+		PX4_INFO("Imu Acc Y fail");
+	}
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_ACCEL_Z_BIT)==SBG_ECOM_IMU_ACCEL_Z_BIT) {
+		PX4_INFO("Imu Acc Z ok");
+	} else {
+		PX4_INFO("Imu Acc Z fail");
+	}
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_GYRO_X_BIT)==SBG_ECOM_IMU_GYRO_X_BIT) {
+		PX4_INFO("Imu Gyro X ok");
+	} else {
+		PX4_INFO("Imu Gyro X fail");
+	}
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_GYRO_Y_BIT)==SBG_ECOM_IMU_GYRO_Y_BIT) {
+		PX4_INFO("Imu Gyro Y ok");
+	} else {
+		PX4_INFO("Imu Gyro Y fail");
+	}
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_GYRO_Z_BIT)==SBG_ECOM_IMU_GYRO_Z_BIT) {
+		PX4_INFO("Imu Gyro Z ok");
+	} else {
+		PX4_INFO("Imu Gyro Z fail");
+	}
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_ACCELS_IN_RANGE)==SBG_ECOM_IMU_ACCELS_IN_RANGE) {
+		PX4_INFO("Imu Accel in range");
+	} else {
+		PX4_INFO("Imu Accel out of range");
+	}
+	if ((sbg_status.imu_status & SBG_ECOM_IMU_GYROS_IN_RANGE)==SBG_ECOM_IMU_GYROS_IN_RANGE) {
+		PX4_INFO("Imu Gyro in range");
+	} else {
+		PX4_INFO("Imu Gyro out of range");
+	}
+	PX4_INFO("************** Accuracy *************");
+	PX4_INFO("Attitude (°) : Roll :%3.1f Pitch :%3.1f Yaw :%3.1f",(double)(sbg_status.roll_acc*180.0f/3.14159f),(double)(sbg_status.pitch_acc*180.0f/3.14159f),(double)(sbg_status.yaw_acc*180.0f/3.14159f));
+	PX4_INFO("Position (m): lat %3.1f lon: %3.1f vert:%3.1f",(double)sbg_status.lat_acc,(double)sbg_status.lon_acc,(double)sbg_status.vert_acc);
+	PX4_INFO("Velocity (m/s): VN %3.1f VE:%3.1f VD:%3.1f",(double)sbg_status.vel_n_acc,(double)sbg_status.vel_e_acc,(double)sbg_status.vel_d_acc);
 	return 0;
 }
 
@@ -470,7 +524,9 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	global_pos.eph = 2.0f;
 	global_pos.epv = 4.0f;
 
-	_global_pos_pub.publish(global_pos);
+	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_POSITION_VALID)==SBG_ECOM_SOL_POSITION_VALID) {
+		_global_pos_pub.publish(global_pos);
+	}
 
 	double lat =global_pos.lat;
 	double lon =global_pos.lon;
