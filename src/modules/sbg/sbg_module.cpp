@@ -784,6 +784,7 @@ void ModuleSBG::processHIL() {
 
 
 void ModuleSBG::prepareSBG() {
+	usleep(10000);
 	nbEKF_QUAT=0;
 	nbEKF_NAV=0;
 	nbIMU_DATA=0;
@@ -804,6 +805,7 @@ void ModuleSBG::prepareSBG() {
 
 	SbgErrorCode			errorCode;
 	errorCode = sbgInterfacePx4SerialCreate(&sbgInterface, _serial_fd, 115200);
+	//errorCode = sbgInterfacePx4SerialCreate(&sbgInterface, _serial_fd, 230400);
 
 	if (errorCode == SBG_NO_ERROR) {
 		sbgInterfaceInit=true;
