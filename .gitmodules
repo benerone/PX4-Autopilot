@@ -22,18 +22,10 @@
 	path = src/lib/ecl
 	url = https://github.com/PX4/ecl.git
 	branch = master
-[submodule "boards/atlflight/cmake_hexagon"]
-	path = boards/atlflight/cmake_hexagon
-	url = https://github.com/PX4/cmake_hexagon.git
-	branch = px4
 [submodule "src/drivers/gps/devices"]
 	path = src/drivers/gps/devices
 	url = https://github.com/PX4/GpsDrivers.git
 	branch = master
-[submodule "src/modules/micrortps_bridge/micro-CDR"]
-	path = src/modules/micrortps_bridge/micro-CDR
-	url = https://github.com/PX4/micro-CDR.git
-	branch = px4
 [submodule "platforms/nuttx/NuttX/nuttx"]
 	path = platforms/nuttx/NuttX/nuttx
 	url = https://github.com/PX4/NuttX.git

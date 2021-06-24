@@ -387,6 +387,7 @@ else
 		#unset BOARD_RC_SENSORS
 
 		#sh /etc/init.d/rc.sensors
+		adc start
 
 		if param compare -s BAT1_SOURCE 2
 		then

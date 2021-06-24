@@ -804,8 +804,7 @@ void ModuleSBG::prepareSBG() {
 		}
 
 	SbgErrorCode			errorCode;
-	errorCode = sbgInterfacePx4SerialCreate(&sbgInterface, _serial_fd, 115200);
-	//errorCode = sbgInterfacePx4SerialCreate(&sbgInterface, _serial_fd, 230400);
+	errorCode = sbgInterfacePx4SerialCreate(&sbgInterface, _serial_fd, 230400);
 
 	if (errorCode == SBG_NO_ERROR) {
 		sbgInterfaceInit=true;
