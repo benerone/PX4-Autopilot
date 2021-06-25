@@ -3,7 +3,7 @@
 px4_add_module(
 	MODULE modules__sgb
 	MAIN sbg
-	STACK_MAIN 10000
+	STACK_MAIN 20000
 	SRCS
 		sbg_module.cpp
 	DEPENDS

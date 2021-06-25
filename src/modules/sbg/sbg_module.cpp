@@ -440,7 +440,7 @@ int ModuleSBG::task_spawn(int argc, char *argv[])
 	_task_id = px4_task_spawn_cmd("sbg",
 				      SCHED_DEFAULT,
 				      SCHED_PRIORITY_DEFAULT,
-				      10000,
+				      20000,
 				      (px4_main_t)&run_trampoline,
 				      (char *const *)argv);
 
