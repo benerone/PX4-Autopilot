@@ -784,6 +784,7 @@ void ModuleSBG::processHIL() {
 
 
 void ModuleSBG::prepareSBG() {
+	usleep(10000);
 	nbEKF_QUAT=0;
 	nbEKF_NAV=0;
 	nbIMU_DATA=0;
