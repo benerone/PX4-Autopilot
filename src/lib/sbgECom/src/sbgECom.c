@@ -19,7 +19,7 @@
 SbgErrorCode sbgEComInit(SbgEComHandle *pHandle, SbgInterface *pInterface)
 {
 	SbgErrorCode errorCode = SBG_NO_ERROR;
-	
+
 	//
 	// Check input parameters
 	//
@@ -29,6 +29,7 @@ SbgErrorCode sbgEComInit(SbgEComHandle *pHandle, SbgInterface *pInterface)
 		// Initialize the sbgECom handle
 		//
 		pHandle->pReceiveLogCallback	= NULL;
+		pHandle->pReceiveLogRawCallback = NULL;
 		pHandle->pUserArg				= NULL;
 
 		//
@@ -38,7 +39,7 @@ SbgErrorCode sbgEComInit(SbgEComHandle *pHandle, SbgInterface *pInterface)
 		pHandle->cmdDefaultTimeOut	= SBG_ECOM_DEFAULT_CMD_TIME_OUT;
 
 		//
-		// Initialize the protocol 
+		// Initialize the protocol
 		//
 		errorCode = sbgEComProtocolInit(&pHandle->protocolHandle, pInterface);
 	}
@@ -111,6 +112,13 @@ SbgErrorCode sbgEComHandleOneLog(SbgEComHandle *pHandle)
 		//
 		if (sbgEComMsgClassIsALog((SbgEComClass)receivedMsgClass))
 		{
+			if (pHandle->pReceiveLogRawCallback)
+			{
+				//
+				// Call the binary log callback using the new method
+				//
+				errorCode = pHandle->pReceiveLogRawCallback(pHandle, payloadData,payloadSize, pHandle->pUserArg);
+			}
 			//
 			// The received frame is a binary log one
 			//
@@ -131,6 +139,7 @@ SbgErrorCode sbgEComHandleOneLog(SbgEComHandle *pHandle)
 					//
 					errorCode = pHandle->pReceiveLogCallback(pHandle, (SbgEComClass)receivedMsgClass, receivedMsg, &logData, pHandle->pUserArg);
 				}
+
 			}
 			else
 			{
@@ -153,7 +162,7 @@ SbgErrorCode sbgEComHandleOneLog(SbgEComHandle *pHandle)
 		//
 		SBG_LOG_WARNING(errorCode, "Invalid frame received");
 	}
-	
+
 	return errorCode;
 }
 
@@ -165,7 +174,7 @@ SbgErrorCode sbgEComHandleOneLog(SbgEComHandle *pHandle)
 SbgErrorCode sbgEComHandle(SbgEComHandle *pHandle)
 {
 	SbgErrorCode		errorCode = SBG_NO_ERROR;
-	
+
 	//
 	// Check input arguments
 	//
@@ -180,7 +189,7 @@ SbgErrorCode sbgEComHandle(SbgEComHandle *pHandle)
 		//
 		errorCode = sbgEComHandleOneLog(pHandle);
 	} while (errorCode != SBG_NOT_READY);
-	
+
 	return errorCode;
 }
 
@@ -213,6 +222,38 @@ SbgErrorCode sbgEComSetReceiveLogCallback(SbgEComHandle *pHandle, SbgEComReceive
 
 	return errorCode;
 }
+
+/*!
+ *	Define the callback that should be called each time a new binary raw log is received.
+ *	\param[in]	pHandle							A valid sbgECom handle.
+ *	\param[in]	pReceiveLogRawCallback			Pointer on the callback to call when a new raw log is received.
+ *	\param[in]	pUserArg						Optional user argument that will be passed to the callback method.
+ *	\return										SBG_NO_ERROR if the callback and user argument have been defined successfully.
+ */
+SbgErrorCode sbgEComSetReceiveLogRawCallback(SbgEComHandle *pHandle, SbgEComReceiveLogRawFunc pReceiveLogRawCallback, void *pUserArg)
+{
+	SbgErrorCode errorCode = SBG_NO_ERROR;
+
+	//
+	// Test that we have a valid protocol handle
+	//
+	if (pHandle)
+	{
+		//
+		// Define the callback and the user argument
+		//
+		pHandle->pReceiveLogRawCallback = pReceiveLogRawCallback;
+		pHandle->pUserArg = pUserArg;
+	}
+	else
+	{
+		errorCode = SBG_NULL_POINTER;
+	}
+
+	return errorCode;
+}
+
+
 
 /*!
  * Define the default number of trials that should be done when a command is send to the device as well as the time out.
@@ -251,13 +292,13 @@ void sbgEComErrorToString(SbgErrorCode errorCode, char errorMsg[256])
 		switch (errorCode)
 		{
 		case SBG_NO_ERROR:
-			strcpy(errorMsg, "SBG_NO_ERROR: No error."); 
+			strcpy(errorMsg, "SBG_NO_ERROR: No error.");
 			break;
 		case SBG_ERROR:
-			strcpy(errorMsg, "SBG_ERROR: Generic error."); 
+			strcpy(errorMsg, "SBG_ERROR: Generic error.");
 			break;
 		case SBG_NULL_POINTER:
-			strcpy(errorMsg, "SBG_NULL_POINTER: A pointer is null."); 
+			strcpy(errorMsg, "SBG_NULL_POINTER: A pointer is null.");
 			break;
 		case SBG_INVALID_CRC:
 			strcpy(errorMsg, "SBG_INVALID_CRC: The received frame has an invalid CRC.");

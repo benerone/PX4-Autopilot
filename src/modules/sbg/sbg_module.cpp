@@ -1,5 +1,6 @@
 #include <ecl/geo/geo.h>
 #include <systemlib/px4_macros.h>
+#include <px4_platform_common/time.h>
 #include <math.h>
 
 
@@ -60,6 +61,13 @@ SbgErrorCode onLogReceived(SbgEComHandle *pHandle, SbgEComClass msgClass, SbgECo
 }
 
 
+SbgErrorCode onLogRawReceived(SbgEComHandle *pHandle,uint8_t * buffer,size_t bufferSize , void *pUserArg) {
+	ModuleSBG* host=((ModuleSBG*)pUserArg);
+	host->writeSbgRawLog(buffer,bufferSize);
+	return SBG_NO_ERROR;
+
+}
+
 
 int ModuleSBG::print_status()
 {
@@ -77,6 +85,11 @@ int ModuleSBG::print_status()
 	if (comHandleInit) {
 		PX4_INFO("SBG:Init Ok");
 		PX4_INFO("SBG:Device : %u found", deviceInfo.serialNumber);
+		if (rawlog_enabled) {
+			PX4_INFO("SBG: Raw log enabled %d",nbRawDataWritten);
+		} else {
+			PX4_INFO("SBG: Raw log disabled");
+		}
 	} else {
 		PX4_INFO("SBG:Init Fail");
 	}
@@ -469,10 +482,12 @@ ModuleSBG::ModuleSBG()
 	hil_mode=false;
 	sbgInterfaceInit=false;
 	comHandleInit=false;
+	rawlog_enabled=false;
 	nbEKF_QUAT=0;
 	nbEKF_NAV=0;
 	nbIMU_DATA=0;
 	nbLOG_STATUS=0;
+	nbRawDataWritten=0;
 }
 
 void ModuleSBG::processSBG_EKF_QUAT(const SbgBinaryLogData *pLogData) {
@@ -783,12 +798,30 @@ void ModuleSBG::processHIL() {
 }
 
 
+void ModuleSBG::writeSbgRawLog(uint8_t * buffer,size_t bufferSize) {
+
+	//TODO
+	if (rawlog_enabled && (_fd >= 0) && bufferSize>0) {
+		ssize_t ret = ::write(_fd, buffer, bufferSize);
+		if (ret<0) {
+			PX4_ERR("SBG: Unable to write raw data, disabling raw log");
+			rawlog_enabled=false;
+			::close(_fd);
+			_fd = -1;
+		} else {
+			nbRawDataWritten+=bufferSize;
+			::fsync(_fd);
+		}
+	}
+}
+
 void ModuleSBG::prepareSBG() {
 	usleep(10000);
 	nbEKF_QUAT=0;
 	nbEKF_NAV=0;
 	nbIMU_DATA=0;
 	nbLOG_STATUS=0;
+	nbRawDataWritten=0;
 	sbg_status.solution_status=0;
 	sbg_status.aiding_status=0;
 	sbg_status.com_status=0;
@@ -805,6 +838,28 @@ void ModuleSBG::prepareSBG() {
 
 	SbgErrorCode			errorCode;
 	errorCode = sbgInterfacePx4SerialCreate(&sbgInterface, _serial_fd, 921600);
+
+	if (rawlog_enabled) {
+		//TODO open raw file, if fail disable rawlog
+		time_t utc_time_sec;
+
+		struct timespec ts = {};
+		px4_clock_gettime(CLOCK_REALTIME, &ts);
+		utc_time_sec = ts.tv_sec + (ts.tv_nsec / 1e9);
+
+		tm tt = {};
+		gmtime_r(&utc_time_sec, &tt);
+		char log_file_name_time[16] = "";
+		strftime(log_file_name_time, sizeof(log_file_name_time), "%H_%M_%S", &tt);
+		char log_file_name[64];
+		snprintf(log_file_name, 64, "/fs/microsd/%d_%s.sbg.bin",sys_id,log_file_name_time);
+		_fd = ::open(log_file_name, O_CREAT | O_WRONLY, PX4_O_MODE_666);
+		if (_fd < 0) {
+			PX4_ERR("Can't open sbg raw file %s, errno: %d", log_file_name, errno);
+			rawlog_enabled=false;
+		}
+
+	}
 
 	if (errorCode == SBG_NO_ERROR) {
 		sbgInterfaceInit=true;
@@ -826,6 +881,10 @@ void ModuleSBG::prepareSBG() {
 			}
 
 			sbgEComSetReceiveLogCallback(&comHandle, onLogReceived, this);
+			sbgEComSetReceiveLogRawCallback(&comHandle,onLogRawReceived,this);
+			if (comHandle.pReceiveLogRawCallback==NULL) {
+				PX4_ERR("SBG:sbgEComSetReceiveLogRawCallback not defined");
+			}
 
 		} else {
 			PX4_ERR("SBG:Unable to Unable to initialize the sbgECom library");
@@ -847,6 +906,11 @@ void ModuleSBG::terminateSBG() {
 		sbgInterfaceSerialDestroy(&sbgInterface);
 		sbgInterfaceInit=false;
 	}
+	if (rawlog_enabled && (_fd >= 0)) {
+		//TODO close raw file
+		::close(_fd);
+		_fd = -1;
+	}
 
 	if (_serial_fd >= 0) {
 		::close(_serial_fd);
@@ -858,6 +922,9 @@ void ModuleSBG::executeSBG() {
 	SbgErrorCode			errorCode;
 
 	if(comHandleInit) {
+		if (comHandle.pReceiveLogRawCallback==NULL) {
+				PX4_ERR("SBG:sbgEComSetReceiveLogRawCallback not defined");
+		}
 		errorCode = sbgEComHandle(&comHandle);
 		if (errorCode == SBG_NOT_READY) {
 			//PX4_ERR("SBG: Not Ready");
@@ -874,6 +941,7 @@ void ModuleSBG::run()
 	//Mavlink id serve as id
 	sys_id=_param_mav_sys_id.get();
 	hil_mode=(_param_sys_hitl.get()!=0);
+	rawlog_enabled=(_param_sbg_enable_rawlog.get()!=0);
 	enable_sbg_in_hil=(_param_sbg_enable_hil.get()!=0);
 
 

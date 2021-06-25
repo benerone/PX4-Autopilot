@@ -5,13 +5,13 @@
  *
  *	\brief		Contains main sbgECom methods.
  *
- *	\section CodeCopyright Copyright Notice 
+ *	\section CodeCopyright Copyright Notice
  *	Copyright (C) 2007-2013, SBG Systems SAS. All rights reserved.
- *	
+ *
  *	This source code is intended for use only by SBG Systems SAS and
  *	those that have explicit written permission to use it from
  *	SBG Systems SAS.
- *	
+ *
  *	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
  *	KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
  *	IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
@@ -60,6 +60,16 @@ typedef struct _SbgEComHandle SbgEComHandle;
  */
 typedef SbgErrorCode (*SbgEComReceiveLogFunc)(SbgEComHandle *pHandle, SbgEComClass msgClass, SbgEComMsgId msg, const SbgBinaryLogData *pLogData, void *pUserArg);
 
+/*!
+ *	Callback definition called each time a new raw log is received.
+ *	\param[in]	pHandle									Valid handle on the sbgECom instance that has called this callback.
+ *	\param[in]	buffer								    raw buffer
+ *	\param[in]	bufferSize								raw buffer
+ *	\param[in]	pUserArg								Optional user supplied argument.
+ *	\return												SBG_NO_ERROR if the received log has been used successfully.
+ */
+typedef SbgErrorCode (*SbgEComReceiveLogRawFunc)(SbgEComHandle *pHandle,uint8_t * buffer,size_t bufferSize , void *pUserArg);
+
 //----------------------------------------------------------------------//
 //- Structures definitions                                             -//
 //----------------------------------------------------------------------//
@@ -70,10 +80,11 @@ typedef SbgErrorCode (*SbgEComReceiveLogFunc)(SbgEComHandle *pHandle, SbgEComCla
 struct _SbgEComHandle
 {
 	SbgEComProtocol				 protocolHandle;			/*!< Handle on the protocol system. */
-	
+
 	SbgEComReceiveLogFunc		 pReceiveLogCallback;		/*!< Pointer on the method called each time a new binary log is received. */
+	SbgEComReceiveLogRawFunc     pReceiveLogRawCallback;    /*!< Pointer on the method called each time a new binary raw log is received. */
 	void						*pUserArg;					/*!< Optional user supplied argument for callbacks. */
-	
+
 	uint32_t					 numTrials;					/*!< Number of trials when a command is sent (default is 3). */
 	uint32_t					 cmdDefaultTimeOut;			/*!< Default time out in ms to get an answer from the device (default 500 ms). */
 };
@@ -119,6 +130,16 @@ SbgErrorCode sbgEComHandle(SbgEComHandle *pHandle);
  *	\return										SBG_NO_ERROR if the callback and user argument have been defined successfully.
  */
 SbgErrorCode sbgEComSetReceiveLogCallback(SbgEComHandle *pHandle, SbgEComReceiveLogFunc pReceiveLogCallback, void *pUserArg);
+
+/*!
+ *	Define the callback that should be called each time a new binary raw log is received.
+ *	\param[in]	pHandle							A valid sbgECom handle.
+ *	\param[in]	pReceiveLogRawCallback			Pointer on the callback to call when a new raw log is received.
+ *	\param[in]	pUserArg						Optional user argument that will be passed to the callback method.
+ *	\return										SBG_NO_ERROR if the callback and user argument have been defined successfully.
+ */
+SbgErrorCode sbgEComSetReceiveLogRawCallback(SbgEComHandle *pHandle, SbgEComReceiveLogRawFunc pReceiveLogRawCallback, void *pUserArg);
+
 
 /*!
  * Define the default number of trials that should be done when a command is send to the device as well as the time out.

@@ -65,7 +65,7 @@ public:
 	void processSBG_EKF_NAV(const SbgBinaryLogData *pLogData);
 	void processSBG_IMU_DATA(const SbgBinaryLogData *pLogData);
 	void processSBG_LOG_STATUS(const SbgBinaryLogData *pLogData);
-
+	void writeSbgRawLog(uint8_t * buffer,size_t bufferSize);
 private:
 
 	uORB::Publication<airspeed_s>				_airspeed_pub{ORB_ID(airspeed)};
@@ -116,11 +116,14 @@ private:
 
 		(ParamFloat<px4::params::EKF2_PI_MUL_HE>) _param_ekf2_pi_mul_he,
 		(ParamFloat<px4::params::EKF2_PI_LIM_HE>) _param_ekf2_pi_lim_he,
-		(ParamInt<px4::params::SBG_ENABLE_HIL>) _param_sbg_enable_hil
+		(ParamInt<px4::params::SBG_ENABLE_HIL>) _param_sbg_enable_hil,
+		(ParamInt<px4::params::SBG_ENA_RAWLOG>) _param_sbg_enable_rawlog,
+		(ParamInt<px4::params::SDLOG_UTC_OFFSET>) _param_sdlog_utc_offset
 	)
 
 	int32_t sys_id;
 	bool hil_mode;
+	bool rawlog_enabled;
 
 	map_projection_reference_s	_hil_local_proj_ref{};
 	float				_hil_local_alt0{0.0f};
@@ -146,9 +149,13 @@ private:
 	int nbEKF_NAV;
 	int nbIMU_DATA;
 	int nbLOG_STATUS;
+	int nbRawDataWritten;
 
 	double global_lat,global_lon;
 	sbg_status_s sbg_status;
+
+	//Raw data file descriptor
+	int	_fd = -1;
 
 
 };
