@@ -837,7 +837,7 @@ void ModuleSBG::prepareSBG() {
 		}
 
 	SbgErrorCode			errorCode;
-	errorCode = sbgInterfacePx4SerialCreate(&sbgInterface, _serial_fd, 460800);
+	errorCode = sbgInterfacePx4SerialCreate(&sbgInterface, _serial_fd, 921600);
 	sbgInterfacePx4SerialSetReadRawCallback(&sbgInterface,onLogRawReceived,this);
 
 
