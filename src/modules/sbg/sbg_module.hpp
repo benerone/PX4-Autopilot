@@ -27,6 +27,7 @@
 #include <uORB/topics/pipepos_correction.h>
 #include <uORB/topics/vehicle_share_position.h>
 #include <uORB/topics/sbg_status.h>
+#include <uORB/topics/sbg_utc.h>
 
 
 #include <sbgECom/src/sbgEComLib.h>
@@ -65,6 +66,7 @@ public:
 	void processSBG_EKF_NAV(const SbgBinaryLogData *pLogData);
 	void processSBG_IMU_DATA(const SbgBinaryLogData *pLogData);
 	void processSBG_LOG_STATUS(const SbgBinaryLogData *pLogData);
+	void processSBG_UTC(const SbgBinaryLogData *pLogData);
 	void writeSbgRawLog(uint8_t * buffer,size_t bufferSize);
 private:
 
@@ -77,6 +79,7 @@ private:
 	uORB::PublicationData<vehicle_share_position_s>		_vehicle_share_position_pub{ORB_ID(vehicle_share_position)};
 	uORB::Publication<pipepos_correction_s> 		_pipepos_correction_pub{ORB_ID(pipepos_correction)};
 	uORB::Publication<sbg_status_s> 		_sbg_status_pub{ORB_ID(sbg_status)};
+	uORB::Publication<sbg_utc_s> 		_sbg_utc_pub{ORB_ID(sbg_utc)};
 
 
 
@@ -149,6 +152,7 @@ private:
 	int nbEKF_NAV;
 	int nbIMU_DATA;
 	int nbLOG_STATUS;
+	int nbUTC;
 	int nbRawDataWritten;
 
 	double global_lat,global_lon;

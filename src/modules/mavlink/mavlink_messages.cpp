@@ -53,6 +53,7 @@
 #include "streams/correction_info.h"
 #include "streams/rcinput_changed.h"
 #include "streams/can_info.h"
+#include "streams/sbg_utc.h"
 
 #include <commander/px4_custom_mode.h>
 #include <drivers/drv_pwm_output.h>
@@ -5412,7 +5413,8 @@ static const StreamListItem streams_list[] = {
 	create_stream_list_item<MavlinkStreamIntegrale>(),
 	create_stream_list_item<MavlinkStreamCorrection>(),
 	create_stream_list_item<MavlinkStreamRCInputChanged>(),
-	create_stream_list_item<MavlinkStreamCanStatus>()
+	create_stream_list_item<MavlinkStreamCanStatus>(),
+	create_stream_list_item<MavlinkStreamSbgUTC>()
 };
 
 const char *get_stream_name(const uint16_t msg_id)

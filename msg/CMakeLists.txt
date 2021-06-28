@@ -121,6 +121,7 @@ set(msg_files
 	safety.msg
 	satellite_info.msg
 	sbg_status.msg
+	sbg_utc.msg
 	sensor_accel.msg
 	sensor_accel_fifo.msg
 	sensor_baro.msg

@@ -53,6 +53,9 @@ SbgErrorCode onLogReceived(SbgEComHandle *pHandle, SbgEComClass msgClass, SbgECo
 		//PX4_INFO("SBG_ECOM_LOG_EKF_NAV");
 		((ModuleSBG*)pUserArg)->processSBG_EKF_NAV(pLogData);
 		break;
+	case SBG_ECOM_LOG_UTC_TIME:
+		((ModuleSBG*)pUserArg)->processSBG_UTC(pLogData);
+		break;
 	default:
 		break;
 	}
@@ -97,6 +100,7 @@ int ModuleSBG::print_status()
 	PX4_INFO("nbEKF_NAV: %d",nbEKF_NAV);
 	PX4_INFO("nbIMU_DATA: %d",nbIMU_DATA);
 	PX4_INFO("nbLOG_STATUS: %d",nbLOG_STATUS);
+	PX4_INFO("nbUTC: %d",nbUTC);
 	PX4_INFO("lat: %f",global_lat);
 	PX4_INFO("lon: %f",global_lon);
 	PX4_INFO("************** SBG GENERAL *************");
@@ -487,6 +491,7 @@ ModuleSBG::ModuleSBG()
 	nbEKF_NAV=0;
 	nbIMU_DATA=0;
 	nbLOG_STATUS=0;
+	nbUTC=0;
 	nbRawDataWritten=0;
 }
 
@@ -673,6 +678,25 @@ void ModuleSBG::processSBG_LOG_STATUS(const SbgBinaryLogData *pLogData) {
 	_sbg_status_pub.publish(sbg_status);
 }
 
+void ModuleSBG::processSBG_UTC(const SbgBinaryLogData *pLogData) {
+	nbUTC++;
+	uint16 status=pLogData->utcData.status;
+	uint16 status_utc=status>>SBG_ECOM_CLOCK_UTC_STATUS_SHIFT;
+	if (status_utc==SBG_ECOM_UTC_VALID) {
+		sbg_utc_s sbg_utc;
+		sbg_utc.timestamp=hrt_absolute_time();
+		sbg_utc.year=pLogData->utcData.year;
+		sbg_utc.month=pLogData->utcData.month;
+		sbg_utc.day=pLogData->utcData.day;
+		sbg_utc.hour=pLogData->utcData.hour;
+		sbg_utc.minute=pLogData->utcData.minute;
+		sbg_utc.second=pLogData->utcData.second;
+		_sbg_utc_pub.publish(sbg_utc);
+	}
+
+
+}
+
 void ModuleSBG::processHIL() {
 	_hil_local_proj_inited=false;
 
@@ -821,6 +845,7 @@ void ModuleSBG::prepareSBG() {
 	nbEKF_NAV=0;
 	nbIMU_DATA=0;
 	nbLOG_STATUS=0;
+	nbUTC=0;
 	nbRawDataWritten=0;
 	sbg_status.solution_status=0;
 	sbg_status.aiding_status=0;

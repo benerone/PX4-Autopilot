@@ -1592,6 +1592,7 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 		//configure_stream_local("CORRECTION", 0.5f);
 		configure_stream_local("ACTUATOR_CONTROL_TARGET0", 2.0f);
 		configure_stream_local("EXTRA_STATUS", 1.0f);
+		configure_stream_local("UTC_SBG", 0.1f);
 		//configure_stream_local("CAMERA_IMAGE_CAPTURED", unlimited_rate);
 		//configure_stream_local("COLLISION", unlimited_rate);
 		//configure_stream_local("DEBUG", 1.0f);
@@ -1763,6 +1764,7 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 		configure_stream_local("INTEGRALE", 50.0f);
 		configure_stream_local("CORRECTION", 50.0f);
 		configure_stream_local("EXTRA_STATUS", 1.0f);
+		configure_stream_local("UTC_SBG", 1.0f);
 		configure_stream_local("ACTUATOR_CONTROL_TARGET0", 30.0f);
 		configure_stream_local("ADSB_VEHICLE", unlimited_rate);
 		configure_stream_local("ALTITUDE", 10.0f);
