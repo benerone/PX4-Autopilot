@@ -61,7 +61,7 @@ SbgErrorCode onLogReceived(SbgEComHandle *pHandle, SbgEComClass msgClass, SbgECo
 }
 
 
-SbgErrorCode onLogRawReceived(SbgEComHandle *pHandle,uint8_t * buffer,size_t bufferSize , void *pUserArg) {
+SbgErrorCode onLogRawReceived(uint8_t * buffer,size_t bufferSize , void *pUserArg) {
 	ModuleSBG* host=((ModuleSBG*)pUserArg);
 	host->writeSbgRawLog(buffer,bufferSize);
 	return SBG_NO_ERROR;
@@ -837,7 +837,9 @@ void ModuleSBG::prepareSBG() {
 		}
 
 	SbgErrorCode			errorCode;
-	errorCode = sbgInterfacePx4SerialCreate(&sbgInterface, _serial_fd, 921600);
+	errorCode = sbgInterfacePx4SerialCreate(&sbgInterface, _serial_fd, 460800);
+	sbgInterfacePx4SerialSetReadRawCallback(&sbgInterface,onLogRawReceived,this);
+
 
 	if (rawlog_enabled) {
 		//TODO open raw file, if fail disable rawlog
@@ -881,10 +883,7 @@ void ModuleSBG::prepareSBG() {
 			}
 
 			sbgEComSetReceiveLogCallback(&comHandle, onLogReceived, this);
-			sbgEComSetReceiveLogRawCallback(&comHandle,onLogRawReceived,this);
-			if (comHandle.pReceiveLogRawCallback==NULL) {
-				PX4_ERR("SBG:sbgEComSetReceiveLogRawCallback not defined");
-			}
+
 
 		} else {
 			PX4_ERR("SBG:Unable to Unable to initialize the sbgECom library");
@@ -922,9 +921,7 @@ void ModuleSBG::executeSBG() {
 	SbgErrorCode			errorCode;
 
 	if(comHandleInit) {
-		if (comHandle.pReceiveLogRawCallback==NULL) {
-				PX4_ERR("SBG:sbgEComSetReceiveLogRawCallback not defined");
-		}
+
 		errorCode = sbgEComHandle(&comHandle);
 		if (errorCode == SBG_NOT_READY) {
 			//PX4_ERR("SBG: Not Ready");
@@ -941,7 +938,7 @@ void ModuleSBG::run()
 	//Mavlink id serve as id
 	sys_id=_param_mav_sys_id.get();
 	hil_mode=(_param_sys_hitl.get()!=0);
-	rawlog_enabled=(_param_sbg_enable_rawlog.get()!=0);
+	rawlog_enabled=false;//(_param_sbg_enable_rawlog.get()!=0);
 	enable_sbg_in_hil=(_param_sbg_enable_hil.get()!=0);
 
 

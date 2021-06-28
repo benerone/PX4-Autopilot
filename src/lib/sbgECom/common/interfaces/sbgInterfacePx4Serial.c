@@ -80,6 +80,7 @@ SbgErrorCode sbgInterfacePx4SerialCreate(SbgInterface *pSbgInterface, int serial
 			if (pPx4Interface)
 			{
 				pPx4Interface->readCallback = NULL;
+				pPx4Interface->rawReadCallback = NULL;
 
 				pPx4Interface->serialHandle = serialHandle;
 
@@ -195,6 +196,10 @@ SbgErrorCode sbgInterfacePx4SerialRead(SbgInterface *pSbgInterface, void *pBuffe
 	{
 	   pPx4Interface->readCallback(pBuffer, pBytesRead, pPx4Interface->userArg);
 	}
+	if (errorCode == SBG_NO_ERROR && pPx4Interface->rawReadCallback)
+	{
+	   pPx4Interface->rawReadCallback(pBuffer, *pBytesRead, pPx4Interface->userArgRaw);
+	}
 
 	return errorCode;
 }
@@ -280,6 +285,20 @@ void sbgInterfacePx4SerialSetReadCallback(SbgInterface *pSbgInterface, SbgInterf
 	pPx4Interface->userArg = user_arg;
 }
 
+void sbgInterfacePx4SerialSetReadRawCallback(SbgInterface *pSbgInterface, SbgEComReceiveLogRawFunc callback, void *user_arg) {
+	SbgInterfacePx4Serial				*pPx4Interface;
+
+	assert(pSbgInterface);
+	assert(callback);
+	assert(user_arg);
+
+	pPx4Interface = pSbgInterface->handle;
+
+	assert(pPx4Interface);
+
+	pPx4Interface->rawReadCallback = callback;
+	pPx4Interface->userArgRaw = user_arg;
+}
 void sbgInterfacePx4SerialSetWriteCallback(SbgInterface *pSbgInterface, SbgInterfaceCallbackWriteFunc callback, void* user_arg)
 {
 	SbgInterfacePx4Serial				*pPx4Interface;
@@ -293,5 +312,6 @@ void sbgInterfacePx4SerialSetWriteCallback(SbgInterface *pSbgInterface, SbgInter
 	assert(pPx4Interface);
 
 	pPx4Interface->writeCallback = callback;
+
 	pPx4Interface->userArg = user_arg;
 }

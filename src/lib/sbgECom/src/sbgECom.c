@@ -29,7 +29,6 @@ SbgErrorCode sbgEComInit(SbgEComHandle *pHandle, SbgInterface *pInterface)
 		// Initialize the sbgECom handle
 		//
 		pHandle->pReceiveLogCallback	= NULL;
-		pHandle->pReceiveLogRawCallback = NULL;
 		pHandle->pUserArg				= NULL;
 
 		//
@@ -112,14 +111,7 @@ SbgErrorCode sbgEComHandleOneLog(SbgEComHandle *pHandle)
 		//
 		if (sbgEComMsgClassIsALog((SbgEComClass)receivedMsgClass))
 		{
-			if (pHandle->pReceiveLogRawCallback)
-			{
-				//
-				// Call the binary log callback using the new method
-				//
-				errorCode = pHandle->pReceiveLogRawCallback(pHandle, payloadData,payloadSize, pHandle->pUserArg);
-			}
-			//
+
 			// The received frame is a binary log one
 			//
 			errorCode = sbgEComBinaryLogParse((SbgEComClass)receivedMsgClass, (SbgEComMsgId)receivedMsg, payloadData, payloadSize, &logData);
@@ -222,37 +214,6 @@ SbgErrorCode sbgEComSetReceiveLogCallback(SbgEComHandle *pHandle, SbgEComReceive
 
 	return errorCode;
 }
-
-/*!
- *	Define the callback that should be called each time a new binary raw log is received.
- *	\param[in]	pHandle							A valid sbgECom handle.
- *	\param[in]	pReceiveLogRawCallback			Pointer on the callback to call when a new raw log is received.
- *	\param[in]	pUserArg						Optional user argument that will be passed to the callback method.
- *	\return										SBG_NO_ERROR if the callback and user argument have been defined successfully.
- */
-SbgErrorCode sbgEComSetReceiveLogRawCallback(SbgEComHandle *pHandle, SbgEComReceiveLogRawFunc pReceiveLogRawCallback, void *pUserArg)
-{
-	SbgErrorCode errorCode = SBG_NO_ERROR;
-
-	//
-	// Test that we have a valid protocol handle
-	//
-	if (pHandle)
-	{
-		//
-		// Define the callback and the user argument
-		//
-		pHandle->pReceiveLogRawCallback = pReceiveLogRawCallback;
-		pHandle->pUserArg = pUserArg;
-	}
-	else
-	{
-		errorCode = SBG_NULL_POINTER;
-	}
-
-	return errorCode;
-}
-
 
 
 /*!
