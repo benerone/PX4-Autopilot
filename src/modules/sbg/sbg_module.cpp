@@ -529,6 +529,7 @@ ModuleSBG::ModuleSBG()
 	nbUTC=0;
 	nbAIR_DATA=0;
 	nbRawDataWritten=0;
+	nbAIR_DATA=0;
 	_airdataStatus=0;
 }
 
@@ -540,7 +541,7 @@ void ModuleSBG::processSBG_EKF_QUAT(const SbgBinaryLogData *pLogData) {
 	sbg_status.roll_acc=pLogData->ekfQuatData.eulerStdDev[0];
 	sbg_status.pitch_acc=pLogData->ekfQuatData.eulerStdDev[1];
 	sbg_status.yaw_acc=pLogData->ekfQuatData.eulerStdDev[2];
-	_sbg_status_pub.publish(sbg_status);
+	//_sbg_status_pub.publish(sbg_status);
 
 	if ((pLogData->ekfQuatData.status & SBG_ECOM_SOL_ATTITUDE_VALID)!=SBG_ECOM_SOL_ATTITUDE_VALID) {
 		return;
@@ -555,6 +556,7 @@ void ModuleSBG::processSBG_EKF_QUAT(const SbgBinaryLogData *pLogData) {
 
 void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	vehicle_global_position_s global_pos{};
+	vehicle_gps_position_s gps_pos{};
 
 	sbg_status.timestamp=hrt_absolute_time();
 	sbg_status.solution_status=pLogData->ekfNavData.status;
@@ -564,7 +566,7 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	sbg_status.lat_acc=pLogData->ekfNavData.positionStdDev[0];
 	sbg_status.lon_acc=pLogData->ekfNavData.positionStdDev[1];
 	sbg_status.vert_acc=pLogData->ekfNavData.positionStdDev[2];
-	_sbg_status_pub.publish(sbg_status);
+	//_sbg_status_pub.publish(sbg_status);
 
 	nbEKF_NAV++;
 
@@ -581,8 +583,13 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	global_pos.eph = 2.0f;
 	global_pos.epv = 4.0f;
 
+	gps_pos.lat=(int32_t)((double)1e7)*global_pos.lat;
+	gps_pos.lon=(int32_t)((double)1e7)*global_pos.lon;
+	gps_pos.alt=(int32_t)(1000.0)*global_pos.alt;
+
 	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_POSITION_VALID)==SBG_ECOM_SOL_POSITION_VALID) {
 		_global_pos_pub.publish(global_pos);
+		_gps_pos_pub.publish(gps_pos);
 	}
 
 	double lat =global_pos.lat;
@@ -712,7 +719,7 @@ void ModuleSBG::processSBG_LOG_STATUS(const SbgBinaryLogData *pLogData) {
 	sbg_status.general_status=pLogData->statusData.generalStatus;
 	sbg_status.com_status=pLogData->statusData.comStatus;
 	sbg_status.aiding_status=pLogData->statusData.aidingStatus;
-	_sbg_status_pub.publish(sbg_status);
+	//_sbg_status_pub.publish(sbg_status);
 }
 
 void ModuleSBG::processSBG_UTC(const SbgBinaryLogData *pLogData) {
@@ -733,20 +740,17 @@ void ModuleSBG::processSBG_UTC(const SbgBinaryLogData *pLogData) {
 }
 
 void ModuleSBG::processSBG_AIR_DATA(const SbgBinaryLogData *pLogData) {
-	nbUTC++;
+	nbAIR_DATA++;
 	const uint64_t timestamp = hrt_absolute_time();
 	_airdataStatus=pLogData->airData.status;
 	vehicle_air_data_s airdata{};
-	airdata.timestamp=;
-	uint64_t timestamp_sample;
-	uint32_t baro_device_id;
-	float baro_alt_meter;
-	float baro_temp_celcius;
-	float baro_pressure_pa;
-	float rho;
-			out.timestamp_sample = timestamp_sample;
-			out.baro_device_id = baro.device_id;
-			out.baro_temp_celcius = baro.temperature;
+	airdata.timestamp=timestamp;
+	airdata.timestamp_sample=timestamp;
+	airdata.baro_device_id=0;
+	airdata.baro_alt_meter=pLogData->airData.altitude;
+	airdata.baro_temp_celcius=pLogData->airData.airTemperature;
+	airdata.baro_pressure_pa=pLogData->airData.pressureAbs;
+	airdata.rho=0;
 	_vehicle_air_data_pub.publish(airdata);
 }
 
@@ -784,6 +788,8 @@ void ModuleSBG::processHIL() {
 				/* global position */
 				{
 					vehicle_global_position_s hil_global_pos{};
+					//vehicle_gps_position_s gps_pos{};
+
 
 					hil_global_pos.timestamp = timestamp;
 					hil_global_pos.lat = hil_state.lat / ((double)1e7);
@@ -792,7 +798,14 @@ void ModuleSBG::processHIL() {
 					hil_global_pos.eph = 2.0f;
 					hil_global_pos.epv = 4.0f;
 
+					//gps_pos.lat=hil_state.lat;
+					//gps_pos.lon=hil_state.lon;
+					//gps_pos.alt=hil_state.alt;
+
 					_global_pos_pub.publish(hil_global_pos);
+					//_gps_pos_pub.publish(gps_pos);
+
+
 				}
 
 				/* local position + (share)*/
@@ -899,6 +912,7 @@ void ModuleSBG::prepareSBG() {
 	nbIMU_DATA=0;
 	nbLOG_STATUS=0;
 	nbUTC=0;
+	nbAIR_DATA=0;
 	nbRawDataWritten=0;
 	sbg_status.solution_status=0;
 	sbg_status.aiding_status=0;

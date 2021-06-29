@@ -2166,6 +2166,7 @@ MavlinkReceiver::handle_message_hil_sensor(mavlink_message_t *msg)
 
 	const uint64_t timestamp = hrt_absolute_time();
 
+	/*
 	// temperature only updated with baro
 	float temperature = NAN;
 
@@ -2244,6 +2245,19 @@ MavlinkReceiver::handle_message_hil_sensor(mavlink_message_t *msg)
 
 		_differential_pressure_pub.publish(report);
 	}
+	*/
+	vehicle_air_data_s airdata{};
+	airdata.timestamp=timestamp;
+	airdata.timestamp_sample=timestamp;
+	airdata.baro_device_id=0;
+	if ((hil_sensor.fields_updated & SensorSource::BARO) == SensorSource::BARO) {
+		airdata.baro_temp_celcius= hil_sensor.temperature;
+		airdata.baro_pressure_pa= hil_sensor.abs_pressure*100;
+		airdata.baro_alt_meter=hil_sensor.pressure_alt;
+		airdata.rho=0;
+		_vehicle_air_data_pub.publish(airdata);
+	}
+
 
 	// battery status
 	{

@@ -105,6 +105,7 @@
 #include <uORB/topics/vehicle_acceleration.h>
 #include <uORB/topics/vehicle_angular_acceleration.h>
 #include <uORB/topics/vehicle_angular_velocity.h>
+#include <uORB/topics/vehicle_air_data.h>
 #include <uORB/topics/hil_state_quaternion.h>
 
 class Mavlink;
@@ -268,7 +269,7 @@ private:
 	uORB::Publication<vehicle_angular_acceleration_s> _vehicle_angular_acceleration_pub{ORB_ID(vehicle_angular_acceleration)};
 	uORB::Publication<vehicle_angular_velocity_s> _vehicle_angular_velocity_pub{ORB_ID(vehicle_angular_velocity)};
 	uORB::Publication<hil_state_quaternion_s> _hil_state_quaternion_pub{ORB_ID(hil_state_quaternion)};
-
+	uORB::Publication<vehicle_air_data_s>		_vehicle_air_data_pub{ORB_ID(vehicle_air_data)};
 
 
 	// ORB publications (multi)
