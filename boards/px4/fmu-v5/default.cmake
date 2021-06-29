@@ -11,14 +11,12 @@ px4_add_board(
 	TESTING
 	UAVCAN_INTERFACES 2
 	SERIAL_PORTS
-		GPS1:/dev/ttyS0
 		TEL1:/dev/ttyS1
 		TEL2:/dev/ttyS2
 		TEL3:/dev/ttyS4
 		TEL4:/dev/ttyS3
 	DRIVERS
 		adc
-		gps
 		lights/rgbled_pwm
 		pwm_out
 		pwm_out_sim
