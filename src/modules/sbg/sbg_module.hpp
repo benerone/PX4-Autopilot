@@ -20,9 +20,11 @@
 #include <uORB/topics/airspeed.h>
 #include <uORB/topics/vehicle_attitude.h>
 #include <uORB/topics/vehicle_global_position.h>
+#include <uORB/topics/vehicle_gps_position.h>
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_acceleration.h>
 #include <uORB/topics/vehicle_angular_velocity.h>
+#include <uORB/topics/vehicle_air_data.h>
 #include <uORB/topics/hil_state_quaternion.h>
 #include <uORB/topics/pipepos_correction.h>
 #include <uORB/topics/vehicle_share_position.h>
@@ -67,14 +69,17 @@ public:
 	void processSBG_IMU_DATA(const SbgBinaryLogData *pLogData);
 	void processSBG_LOG_STATUS(const SbgBinaryLogData *pLogData);
 	void processSBG_UTC(const SbgBinaryLogData *pLogData);
+	void processSBG_AIR_DATA(const SbgBinaryLogData *pLogData);
 	void writeSbgRawLog(uint8_t * buffer,size_t bufferSize);
 private:
 
 	uORB::Publication<airspeed_s>				_airspeed_pub{ORB_ID(airspeed)};
 	uORB::Publication<vehicle_attitude_s>			_attitude_pub{ORB_ID(vehicle_attitude)};
 	uORB::Publication<vehicle_global_position_s>		_global_pos_pub{ORB_ID(vehicle_global_position)};
+	uORB::Publication<vehicle_gps_position_s>		_gps_pos_pub{ORB_ID(vehicle_gps_position)};
 	uORB::Publication<vehicle_local_position_s>		_local_pos_pub{ORB_ID(vehicle_local_position)};
 	uORB::Publication<vehicle_acceleration_s>               _vehicle_acceleration_pub{ORB_ID(vehicle_acceleration)};
+	uORB::Publication<vehicle_air_data_s>		_vehicle_air_data_pub{ORB_ID(vehicle_air_data)};
 	uORB::Publication<vehicle_angular_velocity_s> _vehicle_angular_velocity_pub{ORB_ID(vehicle_angular_velocity)};
 	uORB::PublicationData<vehicle_share_position_s>		_vehicle_share_position_pub{ORB_ID(vehicle_share_position)};
 	uORB::Publication<pipepos_correction_s> 		_pipepos_correction_pub{ORB_ID(pipepos_correction)};
@@ -147,12 +152,16 @@ private:
 	bool				_local_proj_inited{false};
 	vehicle_attitude_s  g_attitude{};
 
+	vehicle_air_data_s _airdata;
+	uint16 _airdataStatus;
+
 	//Stat
 	int nbEKF_QUAT;
 	int nbEKF_NAV;
 	int nbIMU_DATA;
 	int nbLOG_STATUS;
 	int nbUTC;
+	int nbAIR_DATA;
 	int nbRawDataWritten;
 
 	double global_lat,global_lon;

@@ -56,6 +56,9 @@ SbgErrorCode onLogReceived(SbgEComHandle *pHandle, SbgEComClass msgClass, SbgECo
 	case SBG_ECOM_LOG_UTC_TIME:
 		((ModuleSBG*)pUserArg)->processSBG_UTC(pLogData);
 		break;
+	case SBG_ECOM_LOG_AIR_DATA:
+		((ModuleSBG*)pUserArg)->processSBG_AIR_DATA(pLogData);
+		break;
 	default:
 		break;
 	}
@@ -101,6 +104,7 @@ int ModuleSBG::print_status()
 	PX4_INFO("nbIMU_DATA: %d",nbIMU_DATA);
 	PX4_INFO("nbLOG_STATUS: %d",nbLOG_STATUS);
 	PX4_INFO("nbUTC: %d",nbUTC);
+	PX4_INFO("nbAIR_DATA: %d",nbAIR_DATA);
 	PX4_INFO("lat: %f",global_lat);
 	PX4_INFO("lon: %f",global_lon);
 	PX4_INFO("************** SBG GENERAL *************");
@@ -426,6 +430,37 @@ int ModuleSBG::print_status()
 	} else {
 		PX4_INFO("Imu Gyro out of range");
 	}
+	PX4_INFO("************** AIR DATA *************");
+	if ((_airdataStatus & SBG_ECOM_AIR_DATA_TIME_IS_DELAY)==SBG_ECOM_AIR_DATA_TIME_IS_DELAY) {
+		PX4_INFO("Measurement delay information");
+	} else {
+		PX4_INFO("Absolute timestamp information");
+	}
+	if ((_airdataStatus & SBG_ECOM_AIR_DATA_PRESSURE_ABS_VALID)==SBG_ECOM_AIR_DATA_PRESSURE_ABS_VALID) {
+		PX4_INFO("Absolute pressure valid");
+	} else {
+		PX4_INFO("Absolute pressure invalid");
+	}
+	if ((_airdataStatus & SBG_ECOM_AIR_DATA_ALTITUDE_VALID)==SBG_ECOM_AIR_DATA_ALTITUDE_VALID) {
+		PX4_INFO("Barometric altitude valid");
+	} else {
+		PX4_INFO("Barometric altitude invalid");
+	}
+	if ((_airdataStatus & SBG_ECOM_AIR_DATA_PRESSURE_DIFF_VALID)==SBG_ECOM_AIR_DATA_PRESSURE_DIFF_VALID) {
+		PX4_INFO("Differential pressure valid");
+	} else {
+		PX4_INFO("Differential pressure invalid");
+	}
+	if ((_airdataStatus & SBG_ECOM_AIR_DATA_AIRPSEED_VALID)==SBG_ECOM_AIR_DATA_AIRPSEED_VALID) {
+		PX4_INFO("True airspeed valid");
+	} else {
+		PX4_INFO("True airspeed invalid");
+	}
+	if ((_airdataStatus & SBG_ECOM_AIR_DATA_TEMPERATURE_VALID)==SBG_ECOM_AIR_DATA_TEMPERATURE_VALID) {
+		PX4_INFO("Temperature valid");
+	} else {
+		PX4_INFO("Temperature invalid");
+	}
 	PX4_INFO("************** Accuracy *************");
 	PX4_INFO("Attitude (°) : Roll :%3.1f Pitch :%3.1f Yaw :%3.1f",(double)(sbg_status.roll_acc*180.0f/3.14159f),(double)(sbg_status.pitch_acc*180.0f/3.14159f),(double)(sbg_status.yaw_acc*180.0f/3.14159f));
 	PX4_INFO("Position (m): lat %3.1f lon: %3.1f vert:%3.1f",(double)sbg_status.lat_acc,(double)sbg_status.lon_acc,(double)sbg_status.vert_acc);
@@ -492,7 +527,9 @@ ModuleSBG::ModuleSBG()
 	nbIMU_DATA=0;
 	nbLOG_STATUS=0;
 	nbUTC=0;
+	nbAIR_DATA=0;
 	nbRawDataWritten=0;
+	_airdataStatus=0;
 }
 
 void ModuleSBG::processSBG_EKF_QUAT(const SbgBinaryLogData *pLogData) {
@@ -693,8 +730,24 @@ void ModuleSBG::processSBG_UTC(const SbgBinaryLogData *pLogData) {
 		sbg_utc.second=pLogData->utcData.second;
 		_sbg_utc_pub.publish(sbg_utc);
 	}
+}
 
-
+void ModuleSBG::processSBG_AIR_DATA(const SbgBinaryLogData *pLogData) {
+	nbUTC++;
+	const uint64_t timestamp = hrt_absolute_time();
+	_airdataStatus=pLogData->airData.status;
+	vehicle_air_data_s airdata{};
+	airdata.timestamp=;
+	uint64_t timestamp_sample;
+	uint32_t baro_device_id;
+	float baro_alt_meter;
+	float baro_temp_celcius;
+	float baro_pressure_pa;
+	float rho;
+			out.timestamp_sample = timestamp_sample;
+			out.baro_device_id = baro.device_id;
+			out.baro_temp_celcius = baro.temperature;
+	_vehicle_air_data_pub.publish(airdata);
 }
 
 void ModuleSBG::processHIL() {
