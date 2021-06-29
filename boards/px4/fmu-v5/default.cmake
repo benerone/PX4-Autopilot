@@ -41,7 +41,7 @@ px4_add_board(
 		mc_rate_control
 		navigator
 		rc_update
-		# sensors
+		sensors
 	SYSTEMCMDS
 		bl_update
 		dmesg
