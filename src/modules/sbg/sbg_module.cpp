@@ -638,6 +638,7 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	local_pos.vx = pLogData->ekfNavData.velocity[0];
 	local_pos.vy = pLogData->ekfNavData.velocity[1];
 	local_pos.vz = pLogData->ekfNavData.velocity[2];
+	local_pos.z_deriv=INFINITY;
 
 	matrix::Eulerf euler{matrix::Quatf(g_attitude.q)};
 	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_HEADING_VALID)!=SBG_ECOM_SOL_HEADING_VALID) {
@@ -659,6 +660,9 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	local_pos.vz_max = INFINITY;
 	local_pos.hagl_min = INFINITY;
 	local_pos.hagl_max = INFINITY;
+
+	local_pos.dist_bottom = INFINITY;
+	local_pos.dist_bottom_valid = false;
 
 	processLocalPosition(local_pos);
 
@@ -841,6 +845,7 @@ void ModuleSBG::processHIL() {
 					hil_local_pos.vx = hil_state.vx / 100.0f;
 					hil_local_pos.vy = hil_state.vy / 100.0f;
 					hil_local_pos.vz = hil_state.vz / 100.0f;
+					hil_local_pos.z_deriv=INFINITY;
 
 					matrix::Eulerf euler{matrix::Quatf(hil_state.attitude_quaternion)};
 					hil_local_pos.heading = euler.psi();
@@ -851,9 +856,10 @@ void ModuleSBG::processHIL() {
 					hil_local_pos.hagl_min = INFINITY;
 					hil_local_pos.hagl_max = INFINITY;
 
-					// test/recherche en cours
-					// hil_local_pos.dist_bottom = static_cast<float>(hil_state.alt) / 1000.0f - _hil_local_alt0;
-					// hil_local_pos.dist_bottom_valid = false;
+
+					hil_local_pos.dist_bottom = INFINITY;
+					hil_local_pos.dist_bottom_valid = false;
+
 
 					processLocalPosition(hil_local_pos);
 
