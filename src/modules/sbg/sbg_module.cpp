@@ -614,8 +614,8 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	local_pos.timestamp = global_pos.timestamp;
 
 	local_pos.ref_timestamp = _local_proj_ref.timestamp;
-	local_pos.ref_lat = math::radians(_local_proj_ref.lat_rad);
-	local_pos.ref_lon = math::radians(_local_proj_ref.lon_rad);
+	local_pos.ref_lat = math::degrees(_local_proj_ref.lat_rad);
+	local_pos.ref_lon = math::degrees(_local_proj_ref.lon_rad);
 	local_pos.ref_alt = _local_alt0;
 	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_POSITION_VALID)!=SBG_ECOM_SOL_POSITION_VALID) {
 		local_pos.xy_valid = false;
@@ -828,8 +828,8 @@ void ModuleSBG::processHIL() {
 					hil_local_pos.timestamp = timestamp;
 
 					hil_local_pos.ref_timestamp = _hil_local_proj_ref.timestamp;
-					hil_local_pos.ref_lat = math::radians(_hil_local_proj_ref.lat_rad);
-					hil_local_pos.ref_lon = math::radians(_hil_local_proj_ref.lon_rad);
+					hil_local_pos.ref_lat = math::degrees(_hil_local_proj_ref.lat_rad);
+					hil_local_pos.ref_lon = math::degrees(_hil_local_proj_ref.lon_rad);
 					hil_local_pos.ref_alt = _hil_local_alt0;
 					hil_local_pos.xy_valid = true;
 					hil_local_pos.z_valid = true;
@@ -850,6 +850,10 @@ void ModuleSBG::processHIL() {
 					hil_local_pos.vz_max = INFINITY;
 					hil_local_pos.hagl_min = INFINITY;
 					hil_local_pos.hagl_max = INFINITY;
+
+					// test/recherche en cours
+					// hil_local_pos.dist_bottom = static_cast<float>(hil_state.alt) / 1000.0f - _hil_local_alt0;
+					// hil_local_pos.dist_bottom_valid = false;
 
 					processLocalPosition(hil_local_pos);
 
