@@ -635,10 +635,17 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	local_pos.x = x;
 	local_pos.y = y;
 	local_pos.z = _local_alt0 - global_pos.alt;
+	local_pos.delta_xy[0] = INFINITY;
+	local_pos.delta_xy[1] = INFINITY;
+	local_pos.delta_z = INFINITY;
 	local_pos.vx = pLogData->ekfNavData.velocity[0];
 	local_pos.vy = pLogData->ekfNavData.velocity[1];
 	local_pos.vz = pLogData->ekfNavData.velocity[2];
-	local_pos.z_deriv=INFINITY;
+	local_pos.z_deriv = INFINITY;
+
+	local_pos.ax = INFINITY;
+	local_pos.ay = INFINITY;
+	local_pos.az = INFINITY;
 
 	matrix::Eulerf euler{matrix::Quatf(g_attitude.q)};
 	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_HEADING_VALID)!=SBG_ECOM_SOL_HEADING_VALID) {
@@ -646,7 +653,7 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	} else {
 		local_pos.heading = euler.psi();
 	}
-
+	local_pos.delta_heading = INFINITY;
 
 	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_POSITION_VALID)!=SBG_ECOM_SOL_POSITION_VALID) {
 		local_pos.xy_global = false;
@@ -663,6 +670,17 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 
 	local_pos.dist_bottom = INFINITY;
 	local_pos.dist_bottom_valid = false;
+
+	local_pos.eph = INFINITY;
+	local_pos.epv = INFINITY;
+	local_pos.evh = INFINITY;
+	local_pos.evv = INFINITY;
+
+	local_pos.xy_reset_counter = 0;
+	local_pos.z_reset_counter = 0;
+	local_pos.vxy_reset_counter = 0;
+	local_pos.vz_reset_counter = 0;
+	local_pos.heading_reset_counter = 0;
 
 	processLocalPosition(local_pos);
 
@@ -828,38 +846,54 @@ void ModuleSBG::processHIL() {
 					float y = 0.0f;
 					map_projection_project(&_hil_local_proj_ref, lat, lon, &x, &y);
 
-					vehicle_local_position_s hil_local_pos{};
-					hil_local_pos.timestamp = timestamp;
+					matrix::Eulerf euler{matrix::Quatf(hil_state.attitude_quaternion)};
 
+					vehicle_local_position_s hil_local_pos{};
+
+					hil_local_pos.timestamp = timestamp;
 					hil_local_pos.ref_timestamp = _hil_local_proj_ref.timestamp;
 					hil_local_pos.ref_lat = math::degrees(_hil_local_proj_ref.lat_rad);
 					hil_local_pos.ref_lon = math::degrees(_hil_local_proj_ref.lon_rad);
 					hil_local_pos.ref_alt = _hil_local_alt0;
-					hil_local_pos.xy_valid = true;
-					hil_local_pos.z_valid = true;
-					hil_local_pos.v_xy_valid = true;
-					hil_local_pos.v_z_valid = true;
 					hil_local_pos.x = x;
 					hil_local_pos.y = y;
 					hil_local_pos.z = _hil_local_alt0 - hil_state.alt / 1000.0f;
+					hil_local_pos.delta_xy[0] = INFINITY;
+					hil_local_pos.delta_xy[1] = INFINITY;
+					hil_local_pos.delta_z = INFINITY;
 					hil_local_pos.vx = hil_state.vx / 100.0f;
 					hil_local_pos.vy = hil_state.vy / 100.0f;
 					hil_local_pos.vz = hil_state.vz / 100.0f;
-					hil_local_pos.z_deriv=INFINITY;
-
-					matrix::Eulerf euler{matrix::Quatf(hil_state.attitude_quaternion)};
+					hil_local_pos.z_deriv = INFINITY;
+					hil_local_pos.ax = INFINITY;
+					hil_local_pos.ay = INFINITY;
+					hil_local_pos.az = INFINITY;
 					hil_local_pos.heading = euler.psi();
-					hil_local_pos.xy_global = true;
-					hil_local_pos.z_global = true;
+					hil_local_pos.delta_heading = INFINITY;
+					hil_local_pos.dist_bottom = INFINITY;
+					hil_local_pos.eph = INFINITY;
+					hil_local_pos.epv = INFINITY;
+					hil_local_pos.evh = INFINITY;
+					hil_local_pos.evv = INFINITY;
 					hil_local_pos.vxy_max = INFINITY;
 					hil_local_pos.vz_max = INFINITY;
 					hil_local_pos.hagl_min = INFINITY;
 					hil_local_pos.hagl_max = INFINITY;
 
+					hil_local_pos.xy_valid = true;
+					hil_local_pos.z_valid = true;
+					hil_local_pos.v_xy_valid = true;
+					hil_local_pos.v_z_valid = true;
 
-					hil_local_pos.dist_bottom = INFINITY;
+					hil_local_pos.xy_reset_counter = 0;
+					hil_local_pos.z_reset_counter = 0;
+					hil_local_pos.vxy_reset_counter = 0;
+					hil_local_pos.vz_reset_counter = 0;
+					hil_local_pos.heading_reset_counter = 0;
+
+					hil_local_pos.xy_global = true;
+					hil_local_pos.z_global = true;
 					hil_local_pos.dist_bottom_valid = false;
-
 
 					processLocalPosition(hil_local_pos);
 
