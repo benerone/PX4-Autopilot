@@ -574,14 +574,19 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 		return;
 	}
 
-
+	float eph = std::sqrtf(pLogData->ekfNavData.positionStdDev[0]*pLogData->ekfNavData.positionStdDev[0]
+					+ pLogData->ekfNavData.positionStdDev[1]*pLogData->ekfNavData.positionStdDev[1]);
+	float epv = pLogData->ekfNavData.positionStdDev[2];
+	float evh = std::sqrtf(pLogData->ekfNavData.velocityStdDev[0]*pLogData->ekfNavData.velocityStdDev[0]
+					+ pLogData->ekfNavData.velocityStdDev[1]*pLogData->ekfNavData.velocityStdDev[1]);
+	float evv = pLogData->ekfNavData.velocityStdDev[2];
 
 	global_pos.timestamp = sbg_status.timestamp;
 	global_pos.lat = pLogData->ekfNavData.position[0];
 	global_pos.lon = pLogData->ekfNavData.position[1];
 	global_pos.alt = pLogData->ekfNavData.position[2];
-	global_pos.eph = 2.0f;
-	global_pos.epv = 4.0f;
+	global_pos.eph = eph;
+	global_pos.epv = epv;
 
 	gps_pos.lat=(int32_t)((double)1e7)*global_pos.lat;
 	gps_pos.lon=(int32_t)((double)1e7)*global_pos.lon;
@@ -671,10 +676,10 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	local_pos.dist_bottom = INFINITY;
 	local_pos.dist_bottom_valid = false;
 
-	local_pos.eph = INFINITY;
-	local_pos.epv = INFINITY;
-	local_pos.evh = INFINITY;
-	local_pos.evv = INFINITY;
+	local_pos.eph = eph;
+	local_pos.epv = epv;
+	local_pos.evh = evh;
+	local_pos.evv = evv;
 
 	local_pos.xy_reset_counter = 0;
 	local_pos.z_reset_counter = 0;
@@ -871,10 +876,10 @@ void ModuleSBG::processHIL() {
 					hil_local_pos.heading = euler.psi();
 					hil_local_pos.delta_heading = INFINITY;
 					hil_local_pos.dist_bottom = INFINITY;
-					hil_local_pos.eph = INFINITY;
-					hil_local_pos.epv = INFINITY;
-					hil_local_pos.evh = INFINITY;
-					hil_local_pos.evv = INFINITY;
+					hil_local_pos.eph = 0.0;
+					hil_local_pos.epv = 0.0;
+					hil_local_pos.evh = 0.0;
+					hil_local_pos.evv = 0.0;
 					hil_local_pos.vxy_max = INFINITY;
 					hil_local_pos.vz_max = INFINITY;
 					hil_local_pos.hagl_min = INFINITY;
