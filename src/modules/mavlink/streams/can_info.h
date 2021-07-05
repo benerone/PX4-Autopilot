@@ -53,6 +53,8 @@ protected:
 				msg.lat_acc=sbg_status.lat_acc;
 				msg.lon_acc=sbg_status.lon_acc;
 				msg.vert_acc=sbg_status.vert_acc;
+				msg.temperature=sbg_status.temperature;
+				msg.sbg_serial=sbg_status.serial_number;
 			} else {
 				msg.sbg_solution=0;
 				msg.sbg_general=0;
@@ -68,6 +70,8 @@ protected:
 				msg.lat_acc=0.0;
 				msg.lon_acc=0.0;
 				msg.vert_acc=0.0;
+				msg.temperature=0.0f;
+				msg.sbg_serial=0;
 			}
 			mavlink_msg_extra_status_send_struct(_mavlink->get_channel(), &msg);
 			return true;

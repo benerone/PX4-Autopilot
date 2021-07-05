@@ -108,6 +108,7 @@ int ModuleSBG::print_status()
 	PX4_INFO("lat: %f",global_lat);
 	PX4_INFO("lon: %f",global_lon);
 	PX4_INFO("************** SBG GENERAL *************");
+	PX4_INFO("Temperature: %f",(double)sbg_status.temperature);
 	if ((sbg_status.general_status & SBG_ECOM_GENERAL_MAIN_POWER_OK)==SBG_ECOM_GENERAL_MAIN_POWER_OK) {
 		PX4_INFO("Main Power:Ok");
 	} else {
@@ -531,6 +532,13 @@ ModuleSBG::ModuleSBG()
 	nbRawDataWritten=0;
 	nbAIR_DATA=0;
 	_airdataStatus=0;
+	deviceInfo={};
+	sbg_status.solution_status=0;
+	sbg_status.aiding_status=0;
+	sbg_status.com_status=0;
+	sbg_status.general_status=0;
+	sbg_status.imu_status=0;
+	sbg_status.temperature=0.0f;
 }
 
 void ModuleSBG::processSBG_EKF_QUAT(const SbgBinaryLogData *pLogData) {
@@ -699,6 +707,7 @@ void ModuleSBG::processSBG_IMU_DATA(const SbgBinaryLogData *pLogData) {
 
 	sbg_status.timestamp=timestamp;
 	sbg_status.imu_status=pLogData->imuData.status;
+	sbg_status.temperature=pLogData->imuData.temperature;
 	_sbg_status_pub.publish(sbg_status);
 
 	if ((sbg_status.imu_status & SBG_ECOM_IMU_COM_OK)!=SBG_ECOM_IMU_COM_OK) {
@@ -968,8 +977,10 @@ void ModuleSBG::prepareSBG() {
 	sbg_status.com_status=0;
 	sbg_status.general_status=0;
 	sbg_status.imu_status=0;
+	sbg_status.temperature=0.0f;
 	global_lat=0.0;
 	global_lon=0.0;
+	deviceInfo={};
 	_serial_fd = ::open(PORT, O_RDWR | O_NOCTTY);
 
 		if (_serial_fd < 0) {
@@ -1017,6 +1028,7 @@ void ModuleSBG::prepareSBG() {
 			if (errorCode == SBG_NO_ERROR)
 			{
 				PX4_INFO("Device : %u found", deviceInfo.serialNumber);
+				sbg_status.serial_number=deviceInfo.serialNumber;
 			}
 			else
 			{

@@ -1,6 +1,7 @@
 # sbg status
 
 uint64 timestamp
+uint32 serial_number
 uint32 solution_status
 uint32 general_status
 uint32 com_status
@@ -15,3 +16,5 @@ float32 vel_d_acc
 float32 lat_acc
 float32 lon_acc
 float32 vert_acc
+float32 temperature
+
