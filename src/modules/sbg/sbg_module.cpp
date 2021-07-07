@@ -599,6 +599,8 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	gps_pos.lat=(int32_t)((double)1e7)*global_pos.lat;
 	gps_pos.lon=(int32_t)((double)1e7)*global_pos.lon;
 	gps_pos.alt=(int32_t)(1000.0)*global_pos.alt;
+	gps_pos.eph=eph;
+	gps_pos.epv=epv;
 
 	//if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_POSITION_VALID)==SBG_ECOM_SOL_POSITION_VALID) {
 		_global_pos_pub.publish(global_pos);
@@ -668,13 +670,13 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	//}
 	local_pos.delta_heading = INFINITY;
 
-	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_POSITION_VALID)!=SBG_ECOM_SOL_POSITION_VALID) {
+	/*if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_POSITION_VALID)!=SBG_ECOM_SOL_POSITION_VALID) {
 		local_pos.xy_global = false;
 		local_pos.z_global = false;
-	} else {
+	} else {*/
 		local_pos.xy_global = true;
 		local_pos.z_global = true;
-	}
+	//}
 
 	local_pos.vxy_max = INFINITY;
 	local_pos.vz_max = INFINITY;
@@ -980,6 +982,7 @@ void ModuleSBG::prepareSBG() {
 	sbg_status.temperature=0.0f;
 	global_lat=0.0;
 	global_lon=0.0;
+	_local_proj_inited=false;
 	deviceInfo={};
 	_serial_fd = ::open(PORT, O_RDWR | O_NOCTTY);
 

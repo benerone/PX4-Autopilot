@@ -1604,8 +1604,8 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 		configure_stream_local("GLOBAL_POSITION_INT", 2.0f);
 		//configure_stream_local("GPS2_RAW", 1.0f);
 		//configure_stream_local("GPS_RAW_INT", 1.0f);
-		//configure_stream_local("HOME_POSITION", 0.5f);
-		//configure_stream_local("LOCAL_POSITION_NED", 1.0f);
+		configure_stream_local("HOME_POSITION", 0.5f);
+		configure_stream_local("LOCAL_POSITION_NED", 1.0f);
 		//configure_stream_local("NAMED_VALUE_FLOAT", 1.0f);
 		//configure_stream_local("NAV_CONTROLLER_OUTPUT", 1.0f);
 		//configure_stream_local("OBSTACLE_DISTANCE", 1.0f);
@@ -1620,7 +1620,7 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 		configure_stream_local("SYS_STATUS", 1.0f);
 		//configure_stream_local("UTM_GLOBAL_POSITION", 0.5f);
 		//configure_stream_local("VFR_HUD", 4.0f);
-		configure_stream_local("VIBRATION", 0.1f);
+		//configure_stream_local("VIBRATION", 0.1f);
 		//configure_stream_local("WIND_COV", 0.5f);
 		break;
 

@@ -237,6 +237,9 @@ KMixer::mix(float *outputs, unsigned space)
 					input);
 
 				input=math::constrain(input*_pinfo->controls[i].scaler,-1.0f, 1.0f);
+				if (input<0.0f) {
+					input=input*2.0f;
+				}
 				if ((input<0.0f && useNeg) || (input>0.0f && usePos)) {
 					sum+=input;
 				}
@@ -252,8 +255,11 @@ KMixer::mix(float *outputs, unsigned space)
 				_pinfo->controls[i].control_group,
 				_pinfo->controls[i].control_index,
 				input);
-
-			sum += math::constrain(_pinfo->controls[i].scaler*input,-1.0f, 1.0f);
+			input=math::constrain(_pinfo->controls[i].scaler*input,-1.0f, 1.0f);
+			if (input<0.0f) {
+				input=input*2.0f;
+			}
+			sum += input;
 		}
 	}
 
