@@ -618,7 +618,7 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 		_local_proj_inited = true;
 		_local_alt0 = global_pos.alt;
 
-		map_projection_init(&_hil_local_proj_ref, lat, lon);
+		map_projection_init(&_local_proj_ref, lat, lon);
 	}
 
 	float x = 0.0f;
