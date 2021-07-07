@@ -214,7 +214,7 @@ KMixer::mix(float *outputs, unsigned space)
 				_pinfo->controls[_pinfo->throttle_index].control_index,
 				inputTr);
 
-		float throttle_sum=inputTr*_pinfo->controls[_pinfo->throttle_index].scaler;
+		float throttle_sum=math::constrain(inputTr*_pinfo->controls[_pinfo->throttle_index].scaler,-1.0f, 1.0f);
 
 		bool useNeg=true;
 		bool usePos=true;
@@ -236,7 +236,7 @@ KMixer::mix(float *outputs, unsigned space)
 					_pinfo->controls[i].control_index,
 					input);
 
-				input=input*_pinfo->controls[i].scaler;
+				input=math::constrain(input*_pinfo->controls[i].scaler,-1.0f, 1.0f);
 				if ((input<0.0f && useNeg) || (input>0.0f && usePos)) {
 					sum+=input;
 				}
@@ -253,7 +253,7 @@ KMixer::mix(float *outputs, unsigned space)
 				_pinfo->controls[i].control_index,
 				input);
 
-			sum += _pinfo->controls[i].scaler*input;
+			sum += math::constrain(_pinfo->controls[i].scaler*input,-1.0f, 1.0f);
 		}
 	}
 

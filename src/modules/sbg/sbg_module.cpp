@@ -551,9 +551,9 @@ void ModuleSBG::processSBG_EKF_QUAT(const SbgBinaryLogData *pLogData) {
 	sbg_status.yaw_acc=pLogData->ekfQuatData.eulerStdDev[2];
 	//_sbg_status_pub.publish(sbg_status);
 
-	if ((pLogData->ekfQuatData.status & SBG_ECOM_SOL_ATTITUDE_VALID)!=SBG_ECOM_SOL_ATTITUDE_VALID) {
+	/*if ((pLogData->ekfQuatData.status & SBG_ECOM_SOL_ATTITUDE_VALID)!=SBG_ECOM_SOL_ATTITUDE_VALID) {
 		return;
-	}
+	}*/
 	g_attitude.timestamp = hrt_absolute_time();
 
 	matrix::Quatf q(pLogData->ekfQuatData.quaternion);
@@ -578,9 +578,9 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 
 	nbEKF_NAV++;
 
-	if ((pLogData->ekfQuatData.status & SBG_ECOM_SOL_ATTITUDE_VALID)!=SBG_ECOM_SOL_ATTITUDE_VALID) {
+	/*if ((pLogData->ekfQuatData.status & SBG_ECOM_SOL_ATTITUDE_VALID)!=SBG_ECOM_SOL_ATTITUDE_VALID) {
 		return;
-	}
+	}*/
 
 	float eph = std::sqrtf(pLogData->ekfNavData.positionStdDev[0]*pLogData->ekfNavData.positionStdDev[0]
 					+ pLogData->ekfNavData.positionStdDev[1]*pLogData->ekfNavData.positionStdDev[1]);
@@ -600,10 +600,10 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	gps_pos.lon=(int32_t)((double)1e7)*global_pos.lon;
 	gps_pos.alt=(int32_t)(1000.0)*global_pos.alt;
 
-	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_POSITION_VALID)==SBG_ECOM_SOL_POSITION_VALID) {
+	//if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_POSITION_VALID)==SBG_ECOM_SOL_POSITION_VALID) {
 		_global_pos_pub.publish(global_pos);
 		_gps_pos_pub.publish(gps_pos);
-	}
+	//}
 
 	double lat =global_pos.lat;
 	double lon =global_pos.lon;
@@ -630,20 +630,20 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	local_pos.ref_lat = math::degrees(_local_proj_ref.lat_rad);
 	local_pos.ref_lon = math::degrees(_local_proj_ref.lon_rad);
 	local_pos.ref_alt = _local_alt0;
-	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_POSITION_VALID)!=SBG_ECOM_SOL_POSITION_VALID) {
+	/*if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_POSITION_VALID)!=SBG_ECOM_SOL_POSITION_VALID) {
 		local_pos.xy_valid = false;
 		local_pos.z_valid = false;
-	} else {
+	} else {*/
 		local_pos.xy_valid = true;
 		local_pos.z_valid = true;
-	}
-	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_VELOCITY_VALID)!=SBG_ECOM_SOL_VELOCITY_VALID) {
+	//}
+	/*if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_VELOCITY_VALID)!=SBG_ECOM_SOL_VELOCITY_VALID) {
 		local_pos.v_xy_valid = false;
 		local_pos.v_z_valid = false;
-	} else {
+	} else {*/
 		local_pos.v_xy_valid = true;
 		local_pos.v_z_valid = true;
-	}
+	//}
 
 	local_pos.x = x;
 	local_pos.y = y;
@@ -661,11 +661,11 @@ void ModuleSBG::processSBG_EKF_NAV(const SbgBinaryLogData *pLogData) {
 	local_pos.az = INFINITY;
 
 	matrix::Eulerf euler{matrix::Quatf(g_attitude.q)};
-	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_HEADING_VALID)!=SBG_ECOM_SOL_HEADING_VALID) {
+	/*if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_HEADING_VALID)!=SBG_ECOM_SOL_HEADING_VALID) {
 		local_pos.heading = 0.0f;
-	} else {
+	} else {*/
 		local_pos.heading = euler.psi();
-	}
+	//}
 	local_pos.delta_heading = INFINITY;
 
 	if ((pLogData->ekfNavData.status & SBG_ECOM_SOL_POSITION_VALID)!=SBG_ECOM_SOL_POSITION_VALID) {
@@ -710,20 +710,20 @@ void ModuleSBG::processSBG_IMU_DATA(const SbgBinaryLogData *pLogData) {
 	sbg_status.temperature=pLogData->imuData.temperature;
 	_sbg_status_pub.publish(sbg_status);
 
-	if ((sbg_status.imu_status & SBG_ECOM_IMU_COM_OK)!=SBG_ECOM_IMU_COM_OK) {
+	/*if ((sbg_status.imu_status & SBG_ECOM_IMU_COM_OK)!=SBG_ECOM_IMU_COM_OK) {
 		return;
 	}
 	if ((sbg_status.imu_status & SBG_ECOM_IMU_STATUS_BIT)!=SBG_ECOM_IMU_STATUS_BIT) {
 		return;
-	}
+	}*/
 
 
 
 	/* accelerometer */
-	if (((sbg_status.imu_status & SBG_ECOM_IMU_ACCELS_IN_RANGE)==SBG_ECOM_IMU_ACCELS_IN_RANGE)
+	/*if (((sbg_status.imu_status & SBG_ECOM_IMU_ACCELS_IN_RANGE)==SBG_ECOM_IMU_ACCELS_IN_RANGE)
 		&& ((sbg_status.imu_status & SBG_ECOM_IMU_ACCEL_X_BIT)==SBG_ECOM_IMU_ACCEL_X_BIT)
 		&& ((sbg_status.imu_status & SBG_ECOM_IMU_ACCEL_Y_BIT)==SBG_ECOM_IMU_ACCEL_Y_BIT)
-		&& ((sbg_status.imu_status & SBG_ECOM_IMU_ACCEL_Z_BIT)==SBG_ECOM_IMU_ACCEL_Z_BIT)) {
+		&& ((sbg_status.imu_status & SBG_ECOM_IMU_ACCEL_Z_BIT)==SBG_ECOM_IMU_ACCEL_Z_BIT)) {*/
 		vehicle_acceleration_s va{};
 		va.timestamp = timestamp;
 		va.timestamp_sample = timestamp;
@@ -732,12 +732,12 @@ void ModuleSBG::processSBG_IMU_DATA(const SbgBinaryLogData *pLogData) {
 		va.xyz[2]= pLogData->imuData.accelerometers[2];
 		_vehicle_acceleration_pub.publish(va);
 
-	}
+	/*}*/
 	/* gyroscope */
-	if (((sbg_status.imu_status & SBG_ECOM_IMU_GYROS_IN_RANGE)==SBG_ECOM_IMU_GYROS_IN_RANGE)
+	/*if (((sbg_status.imu_status & SBG_ECOM_IMU_GYROS_IN_RANGE)==SBG_ECOM_IMU_GYROS_IN_RANGE)
 		&& ((sbg_status.imu_status & SBG_ECOM_IMU_GYRO_X_BIT)==SBG_ECOM_IMU_GYRO_X_BIT)
 		&& ((sbg_status.imu_status & SBG_ECOM_IMU_GYRO_Y_BIT)==SBG_ECOM_IMU_GYRO_Y_BIT)
-		&& ((sbg_status.imu_status & SBG_ECOM_IMU_GYRO_Z_BIT)==SBG_ECOM_IMU_GYRO_Z_BIT)) {
+		&& ((sbg_status.imu_status & SBG_ECOM_IMU_GYRO_Z_BIT)==SBG_ECOM_IMU_GYRO_Z_BIT)) {*/
 			vehicle_angular_velocity_s vav{};
 			vav.timestamp = timestamp;
 			vav.timestamp_sample = timestamp;
@@ -745,7 +745,7 @@ void ModuleSBG::processSBG_IMU_DATA(const SbgBinaryLogData *pLogData) {
 			vav.xyz[1]= pLogData->imuData.gyroscopes[1];
 			vav.xyz[2]= pLogData->imuData.gyroscopes[2];
 			_vehicle_angular_velocity_pub.publish(vav);
-	}
+	//}
 
 }
 
@@ -760,9 +760,9 @@ void ModuleSBG::processSBG_LOG_STATUS(const SbgBinaryLogData *pLogData) {
 
 void ModuleSBG::processSBG_UTC(const SbgBinaryLogData *pLogData) {
 	nbUTC++;
-	uint16 status=pLogData->utcData.status;
-	uint16 status_utc=status>>SBG_ECOM_CLOCK_UTC_STATUS_SHIFT;
-	if (status_utc==SBG_ECOM_UTC_VALID) {
+	//uint16 status=pLogData->utcData.status;
+	//uint16 status_utc=status>>SBG_ECOM_CLOCK_UTC_STATUS_SHIFT;
+	//if (status_utc==SBG_ECOM_UTC_VALID) {
 		sbg_utc_s sbg_utc;
 		sbg_utc.timestamp=hrt_absolute_time();
 		sbg_utc.year=pLogData->utcData.year;
@@ -772,7 +772,7 @@ void ModuleSBG::processSBG_UTC(const SbgBinaryLogData *pLogData) {
 		sbg_utc.minute=pLogData->utcData.minute;
 		sbg_utc.second=pLogData->utcData.second;
 		_sbg_utc_pub.publish(sbg_utc);
-	}
+	//}
 }
 
 void ModuleSBG::processSBG_AIR_DATA(const SbgBinaryLogData *pLogData) {
