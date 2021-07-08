@@ -70,6 +70,7 @@ KMixer::from_text(Mixer::ControlCallback control_cb, uintptr_t cb_handle, const 
 	kmixer_s *mixinfo = nullptr;
 	unsigned inputs;
 	int minV,maxV;
+	int negScaleInt=10000;
 	const char *end = buf + buflen;
 
 	/* enforce that the mixer ends with a new line */
@@ -78,9 +79,12 @@ KMixer::from_text(Mixer::ControlCallback control_cb, uintptr_t cb_handle, const 
 	}
 
 	/* get the base info for the mixer */
-	if (sscanf(buf, "K: %u %d %d", &inputs, &minV,&maxV) != 3) {
-		debug("K parse failed on '%s'", buf);
-		goto out;
+	if (sscanf(buf, "K: %u %d %d %d", &inputs, &minV,&maxV,&negScaleInt) != 4) {
+		negScaleInt=10000;
+		if (sscanf(buf, "K: %u %d %d", &inputs, &minV,&maxV) != 3) {
+			debug("K parse failed on '%s'", buf);
+			goto out;
+		}
 	}
 
 	/* at least 1 input is required */
@@ -106,6 +110,7 @@ KMixer::from_text(Mixer::ControlCallback control_cb, uintptr_t cb_handle, const 
 	mixinfo->control_count = inputs;
 	mixinfo->min=minV/10000.0f;
 	mixinfo->max=maxV/10000.0f;
+	mixinfo->negScale=negScaleInt/10000.0f;
 	mixinfo->throttle_index=-1;
 
 	for (unsigned i = 0; i < inputs; i++) {
@@ -178,8 +183,8 @@ KMixer::groups_required(uint32_t &groups)
 	}
 }
 void  KMixer::print(PrinterFunction pF) {
-	(*pF)("K Mixer with %d controls and min:%f max:%f thIndex:%d trim:%f",_pinfo->control_count,
-	(double)_pinfo->min,(double)_pinfo->max,_pinfo->throttle_index,(double)_trim);
+	(*pF)("K Mixer with %d controls and min:%f max:%f thIndex:%d trim:%f negScale:%f",_pinfo->control_count,
+	(double)_pinfo->min,(double)_pinfo->max,_pinfo->throttle_index,(double)_trim,(double)_pinfo->negScale);
 
 	for(int i=0;i<(int)_pinfo->control_count;i++) {
 		(*pF)("->Ctrl %d (%c)[%d:%d]: %f ",i,i==_pinfo->throttle_index?'T':' ',_pinfo->controls[i].control_group,_pinfo->controls[i].control_index,
@@ -238,7 +243,7 @@ KMixer::mix(float *outputs, unsigned space)
 
 				input=math::constrain(input*_pinfo->controls[i].scaler,-1.0f, 1.0f);
 				if (input<0.0f) {
-					input=input*2.0f;
+					input=input*_pinfo->negScale;
 				}
 				if ((input<0.0f && useNeg) || (input>0.0f && usePos)) {
 					sum+=input;
@@ -257,7 +262,7 @@ KMixer::mix(float *outputs, unsigned space)
 				input);
 			input=math::constrain(_pinfo->controls[i].scaler*input,-1.0f, 1.0f);
 			if (input<0.0f) {
-				input=input*2.0f;
+				input=input*_pinfo->negScale;
 			}
 			sum += input;
 		}

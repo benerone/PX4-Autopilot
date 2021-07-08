@@ -49,6 +49,7 @@ struct kmixer_s {
 	uint8_t			control_count;	/**< number of inputs */
 	float min;
 	float max;
+	float negScale;
 	int throttle_index;
 	kmixer_control_s	controls[];	/**< actual size of the array is set by control_count */
 };
